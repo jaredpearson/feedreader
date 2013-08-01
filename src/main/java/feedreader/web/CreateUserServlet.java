@@ -7,8 +7,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import common.ioc.Container;
 import common.persist.EntityManager;
-
 import feedreader.User;
 
 public class CreateUserServlet extends HttpServlet {
@@ -17,7 +17,8 @@ public class CreateUserServlet extends HttpServlet {
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-		EntityManager em = (EntityManager)getServletContext().getAttribute("feedreader.entityManager");
+		Container container = ContainerFilter.getContainerFromRequest(request);
+		EntityManager em = container.getComponent(EntityManager.class);
 		
 		String email = request.getParameter("email");
 		if(email == null || email.trim().length() == 0) {

@@ -9,8 +9,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import common.ioc.Container;
 import common.persist.EntityManager;
-
 import feedreader.User;
 import feedreader.UserSession;
 
@@ -20,7 +20,8 @@ public class SignInServlet extends HttpServlet {
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-		EntityManager entityManager = (EntityManager)getServletContext().getAttribute("feedreader.entityManager");
+		Container container = ContainerFilter.getContainerFromRequest(request);
+		EntityManager entityManager = container.getComponent(EntityManager.class);
 		
 		//get the user information
 		String email = request.getParameter("email");

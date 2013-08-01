@@ -8,7 +8,20 @@ import java.util.List;
  * @author jared.pearson
  */
 public class Container {
+	private final Container parent;
 	private List<ComponentAdapter<?>> componentAdapters = new ArrayList<ComponentAdapter<?>>();
+	
+	public Container() {
+		this.parent = null;
+	}
+	
+	/**
+	 * Creates a new container with a parent container. If this container does not
+	 * have a component registered, then the parent is invoked.
+	 */
+	public Container(Container parent) {
+		this.parent = parent;
+	}
 	
 	/**
 	 * Adds an adapter to the container.
@@ -40,9 +53,16 @@ public class Container {
 			}
 		}
 		
-		if(selected == null) {
-			return null;
+		//if a component was found in this container, then return it
+		if(selected != null) {
+			return (T)selected.getComponentInstance(this);
 		}
-		return (T)selected.getComponentInstance(this);
+		
+		//if there is a parent, check the parent container
+		if(this.parent != null) {
+			return this.parent.getComponent(parameterType);
+		}
+		
+		return null;
 	}
 }

@@ -12,8 +12,8 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import common.ioc.Container;
 import common.persist.EntityManager;
-
 import feedreader.UserSession;
 
 /**
@@ -22,18 +22,15 @@ import feedreader.UserSession;
  */
 public class AuthorizationFilter implements Filter {
 	public static final String SESSION_ID_COOKIE_NAME = "sid";
-	private EntityManager entityManager;
-
-	@Override
-	public void init(FilterConfig filterConfig) throws ServletException {
-		this.entityManager = (EntityManager)filterConfig.getServletContext().getAttribute("feedreader.entityManager");
-	}
 
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) 
 			throws IOException, ServletException {
 		HttpServletRequest httpRequest = (HttpServletRequest)request;
 		HttpServletResponse httpResponse = (HttpServletResponse)response;
+		
+		Container container = ContainerFilter.getContainerFromRequest(httpRequest);
+		EntityManager entityManager = container.getComponent(EntityManager.class);
 		
 		//attempt to get the session ID from cookie
 		int sessionId = getSessionId(httpRequest);
@@ -53,10 +50,13 @@ public class AuthorizationFilter implements Filter {
 		
 		chain.doFilter(httpRequest, httpResponse);
 	}
+	
+	@Override
+	public void init(FilterConfig filterConfig) throws ServletException {
+	}
 
 	@Override
 	public void destroy() {
-		
 	}
 
 	/**
