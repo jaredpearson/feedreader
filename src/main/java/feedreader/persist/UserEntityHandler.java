@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import common.persist.DbUtils;
@@ -135,7 +136,7 @@ public class UserEntityHandler implements EntityManager.EntityHandler {
 	
 	private List<Object> asList(User user) {
 		if(user == null) {
-			return null;
+			return Collections.emptyList();
 		}
 		ArrayList<Object> users = new ArrayList<Object>(1);
 		users.add(user);
