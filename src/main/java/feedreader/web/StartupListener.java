@@ -1,7 +1,9 @@
 package feedreader.web;
 
+import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.Properties;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
@@ -11,7 +13,6 @@ import org.postgresql.ds.PGSimpleDataSource;
 
 import common.persist.EntityManager;
 import common.persist.EntityManager.EntityHandler;
-
 import feedreader.Feed;
 import feedreader.FeedItem;
 import feedreader.User;
@@ -28,13 +29,25 @@ public class StartupListener implements ServletContextListener {
 	public void contextInitialized(ServletContextEvent servletContextEvent) {
 		ServletContext servletContext = servletContextEvent.getServletContext();
 		
+		String configProperties = servletContext.getInitParameter("configProperties");
+		if(configProperties == null) {
+			throw new RuntimeException("Unable to find configProperties context-param. Ensure that the context-param is set in the web.xml to the location of the configuration properties file.");
+		}
+		
+		Properties configuration = new Properties();
+		try {
+			configuration.load(StartupListener.class.getResourceAsStream(configProperties));
+		} catch(IOException exc) {
+			throw new RuntimeException(exc);
+		}
+		
 		//add the datasource to servlet context
 		PGSimpleDataSource dataSource = new PGSimpleDataSource();
-		dataSource.setServerName("127.0.0.1");
-		dataSource.setPortNumber(5432);
-		dataSource.setDatabaseName("feedreader");
-		dataSource.setUser("jared.pearson");
-		dataSource.setPassword("");
+		dataSource.setServerName(configuration.getProperty("dataSource.serverName"));
+		dataSource.setPortNumber(Integer.valueOf(configuration.getProperty("dataSource.portNumber")));
+		dataSource.setDatabaseName(configuration.getProperty("dataSource.databaseName"));
+		dataSource.setUser(configuration.getProperty("dataSource.user"));
+		dataSource.setPassword(configuration.getProperty("dataSource.password"));
 		servletContext.setAttribute("feedreader.dataSource", dataSource);
 		
 		//add the entity manager
@@ -50,6 +63,5 @@ public class StartupListener implements ServletContextListener {
 	
 	@Override
 	public void contextDestroyed(ServletContextEvent servletContextEvent) {
-		
 	}
 }

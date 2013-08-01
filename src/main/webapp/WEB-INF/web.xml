@@ -10,6 +10,11 @@
     <welcome-file>index.jsp</welcome-file>
   </welcome-file-list>
   
+  <context-param>
+  	<param-name>configProperties</param-name>
+  	<param-value>/feedreader/config.properties</param-value>
+  </context-param>
+  
   <listener>
     <listener-class>feedreader.web.StartupListener</listener-class>
   </listener>
