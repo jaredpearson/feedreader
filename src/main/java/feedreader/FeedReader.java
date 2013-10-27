@@ -6,6 +6,7 @@ import java.util.List;
 
 import javax.xml.stream.XMLStreamException;
 
+import common.Provider;
 import common.persist.EntityManager;
 import feedreader.fetch.FeedLoader;
 

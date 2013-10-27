@@ -1,4 +1,4 @@
-package feedreader;
+package common;
 
 public class Providers {
 	private Providers() {

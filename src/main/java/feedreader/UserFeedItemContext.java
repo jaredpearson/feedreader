@@ -4,7 +4,10 @@ import java.util.Date;
 
 import common.DateUtils;
 
-
+/**
+ * An item within an RSS feed for a specific user.
+ * @author jared.pearson
+ */
 public class UserFeedItemContext {
 	private Integer id;
 	private FeedItem feedItem;

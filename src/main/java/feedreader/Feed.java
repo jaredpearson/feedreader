@@ -6,6 +6,12 @@ import java.util.List;
 
 import common.DateUtils;
 
+/**
+ * Represents an RSS feed. This instance is shared among all users so it should
+ * never contain any user specific information; see UserFeedContext for the 
+ * user specific instance.
+ * @author jared.pearson
+ */
 public class Feed {
 	private Integer id;
 	private long created = -1;

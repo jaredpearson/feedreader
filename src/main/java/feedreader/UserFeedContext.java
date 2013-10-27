@@ -6,6 +6,11 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * An RSS feed for a specific user. Each user subscribed to a feed will have
+ * an instance of UserFeedContext.
+ * @author jared.pearson
+ */
 public class UserFeedContext {
 	private final Feed feed;
 	private List<UserFeedItemContext> userFeedItems;

@@ -4,6 +4,10 @@ import java.util.Date;
 
 import common.DateUtils;
 
+/**
+ * Represents one item within a feed.
+ * @author jared.pearson
+ */
 public class FeedItem {
 	private Integer id;
 	private Feed feed;
