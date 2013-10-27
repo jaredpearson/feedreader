@@ -16,3 +16,6 @@ The application is designed to use PostgreSQL so that will need to be installed.
     \i src/main/sql/create.sql
      
 You should now have a database named "feedreader" installed in PostgreSQL. 
+
+## Application Setup
+The application loads its configuration from properties files loaded at runtime. To override any properties, add a properties file at `src/main/resources/feedreader/config-user.properties`. In the config-user.properties file you must specify at least the `dataSource.user`, which is the user used to connect to the PostgreSQL instance. For other properties that can be overridden, see the `config-default.properties` file.

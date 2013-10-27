@@ -1,9 +1,11 @@
 package feedreader.web;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Properties;
+import java.util.logging.Logger;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
@@ -28,7 +30,13 @@ import feedreader.persist.UserEntityHandler;
 import feedreader.persist.UserFeedItemContextEntityHandler;
 import feedreader.persist.UserSessionEntityHandler;
 
+/**
+ * Listener invoked when the application is first started.
+ * @author jared.pearson
+ */
 public class StartupListener implements ServletContextListener {
+	private static final Logger logger = Logger.getLogger(StartupListener.class.getName());
+	
 	@Override
 	public void contextInitialized(ServletContextEvent servletContextEvent) {
 		ServletContext servletContext = servletContextEvent.getServletContext();
@@ -39,13 +47,8 @@ public class StartupListener implements ServletContextListener {
 			throw new RuntimeException("Unable to find configProperties context-param. Ensure that the context-param is set in the web.xml to the location of the configuration properties file.");
 		}
 		
-		//load the properties file specified by the context-param
-		final Properties configuration = new Properties();
-		try {
-			configuration.load(StartupListener.class.getResourceAsStream(configProperties));
-		} catch(IOException exc) {
-			throw new RuntimeException(exc);
-		}
+		//load the properties files specified by the context-param
+		final Properties configuration = loadProperties(configProperties);
 		
 		//create the application container
 		Container container = new Container();
@@ -93,5 +96,34 @@ public class StartupListener implements ServletContextListener {
 	
 	@Override
 	public void contextDestroyed(ServletContextEvent servletContextEvent) {
+	}
+	
+	/**
+	 * Loads properties files from the specified comma-separated, resource paths.
+	 */
+	private Properties loadProperties(final String value) {
+		assert value != null;
+		String[] filePaths = value.split(",");
+		Properties rootProperties = null;
+		for(String filePath : filePaths) {
+			//skip any empty paths
+			if(filePath.trim().length() == 0) {
+				continue;
+			}
+			
+			Properties configuration = new Properties(rootProperties);
+			try {
+				InputStream stream = StartupListener.class.getResourceAsStream(filePath.trim());
+				if(stream == null) {
+					logger.fine("Unable to find configuration properties: " + filePath);
+					continue;
+				}
+				configuration.load(stream);
+			} catch(IOException exc) {
+				throw new RuntimeException(exc);
+			}
+			rootProperties = configuration;
+		}
+		return rootProperties;
 	}
 }

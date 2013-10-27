@@ -12,7 +12,7 @@
   
   <context-param>
   	<param-name>configProperties</param-name>
-  	<param-value>/feedreader/config.properties</param-value>
+  	<param-value>/feedreader/config-default.properties,/feedreader/config-user.properties</param-value>
   </context-param>
   
   <listener>
