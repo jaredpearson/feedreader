@@ -122,7 +122,7 @@ public class JsonWriterTest {
 	public void testDateProperty() throws IOException {
 		Calendar calendar = Calendar.getInstance();
 		calendar.clear();
-		calendar.set(Calendar.MONTH, 7);
+		calendar.set(Calendar.MONTH, 7); //august
 		calendar.set(Calendar.DATE, 10);
 		calendar.set(Calendar.YEAR, 2013);
 		
@@ -139,7 +139,7 @@ public class JsonWriterTest {
 			}
 		}
 		
-		String expected = "{\"created\":1376107200000}";
+		String expected = "{\"created\":1376118000000}";
 		String actual = stringWriter.toString();
 		assertEquals(expected, actual);
 	}

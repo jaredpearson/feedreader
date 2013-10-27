@@ -15,13 +15,13 @@ public class DateUtilsTest {
 	public void testToMillis() {
 		Calendar calendar = Calendar.getInstance();
 		calendar.clear();
-		calendar.set(Calendar.MONTH, 7);
+		calendar.set(Calendar.MONTH, 7); //august
 		calendar.set(Calendar.DATE, 10);
 		calendar.set(Calendar.YEAR, 2013);
 		
 		long actual = DateUtils.toMillis(calendar.getTime());
 		
-		assertEquals(1376107200000l, actual);
+		assertEquals(1376118000000l, actual);
 	}
 
 	@Test
@@ -34,11 +34,11 @@ public class DateUtilsTest {
 	public void testToDate() {
 		Calendar calendar = Calendar.getInstance();
 		calendar.clear();
-		calendar.set(Calendar.MONTH, 7);
+		calendar.set(Calendar.MONTH, 7); //august
 		calendar.set(Calendar.DATE, 10);
 		calendar.set(Calendar.YEAR, 2013);
 		
-		Date actual = DateUtils.toDate(1376107200000l);
+		Date actual = DateUtils.toDate(1376118000000l);
 		
 		assertTrue(calendar.getTime().equals(actual));
 	}
