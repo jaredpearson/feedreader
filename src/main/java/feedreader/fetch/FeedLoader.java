@@ -2,8 +2,10 @@ package feedreader.fetch;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.zip.GZIPInputStream;
 
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventReader;
@@ -27,11 +29,24 @@ public class FeedLoader {
 	private static final String PUBDATE_TAG = "pubDate";
 	private static final String GUID_TAG = "guid";
 	
-	public Feed loadFromUrl(String url) throws IOException, XMLStreamException {
+	public Feed loadFromUrl(final String urlAddress) throws IOException, XMLStreamException {
 		Feed feed = null;
 		InputStream inputStream = null;
 		try {
-			inputStream = new URL(url).openStream();
+			URL url = new URL(urlAddress);
+			HttpURLConnection urlConnection = (HttpURLConnection)url.openConnection();
+			urlConnection.setRequestProperty("Accept", "application/rss+xml;q=1.0,application/xml;q=0.9");
+			urlConnection.setRequestProperty("Accept-Charset", "utf-8");
+			urlConnection.setRequestProperty("Accept-Encoding", "gzip;q=1.0");
+			
+			inputStream = urlConnection.getInputStream();
+			if(urlConnection.getResponseCode() != 200) {
+				throw new RuntimeException("Response code returned: " + urlConnection.getResponseCode());
+			}
+			if("gzip".equals(urlConnection.getContentEncoding())) {
+				inputStream = new GZIPInputStream(inputStream);
+			}
+			
 			XMLInputFactory inputFactory = XMLInputFactory.newFactory();
 			XMLEventReader eventReader = inputFactory.createXMLEventReader(inputStream);
 			
@@ -45,7 +60,7 @@ public class FeedLoader {
 					}
 					
 					feed = parseRss(eventReader, nextEvent);
-					feed.setUrl(url);
+					feed.setUrl(urlAddress);
 				}
 			}
 		} finally {
