@@ -12,6 +12,7 @@ import common.json.JsonWriter;
 import common.persist.EntityManager;
 import feedreader.Feed;
 import feedreader.FeedReader;
+import feedreader.FeedRequest;
 import feedreader.UserFeedContext;
 import feedreader.UserFeedItemContext;
 
@@ -100,7 +101,7 @@ public class FeedResourceHandler {
 			throw new IllegalArgumentException();
 		}
 		
-		UserFeedContext userFeedContext = feedReader.addFeedFromUrl(url);
+		FeedRequest feedRequest = feedReader.addFeedFromUrl(url);
 		
 		//output the success
 		response.setContentType("application/json");
@@ -109,7 +110,7 @@ public class FeedResourceHandler {
 			out = new JsonWriter(response.getWriter());
 			out.startObject();
 			out.name("success").value(true);
-			out.name("id").value(userFeedContext.getId());
+			out.name("feedRequestId").value(feedRequest.getId());
 			out.endObject();
 		} finally {
 			if(out != null) {

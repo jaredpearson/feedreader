@@ -52,7 +52,8 @@ CREATE TABLE FeedRequests(
   url varchar(1024) NOT NULL,
   feedId integer REFERENCES Feeds(id),
   status varchar(10),
-  created timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+  created timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  createdBy integer NOT NULL REFERENCES Users(id)
 );
 ALTER SEQUENCE feedrequests_id_seq OWNED BY FeedRequests.id;
 

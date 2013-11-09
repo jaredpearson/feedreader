@@ -45,6 +45,19 @@
       <artifactId>postgresql</artifactId>
       <version>9.2-1003-jdbc4</version>
     </dependency>
+    
+    <!-- Qpid -->
+    <dependency>
+    	<groupId>org.apache.qpid</groupId>
+    	<artifactId>qpid-client</artifactId>
+    	<version>0.24</version>
+    	<scope>runtime</scope>
+    </dependency>
+    <dependency>
+    	<groupId>org.apache.geronimo.specs</groupId>
+    	<artifactId>geronimo-jms_1.1_spec</artifactId>
+    	<version>1.0</version>
+    </dependency>
   
   	<!-- Testing Dependencies -->
     <dependency>

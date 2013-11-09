@@ -15,6 +15,7 @@ import javax.servlet.http.HttpServletResponse;
 import common.ioc.ComponentAdapter;
 import common.ioc.ComponentAdapters;
 import common.ioc.Container;
+import common.messagequeue.MessageSender;
 import common.persist.EntityManager;
 import feedreader.FeedReader;
 import feedreader.User;
@@ -95,9 +96,10 @@ public class ContainerFilter implements Filter {
 			public FeedReader getComponentInstance(Container container) {
 				EntityManager entityManager = container.getComponent(EntityManager.class);
 				UserSession userSession = container.getComponent(UserSession.class);
+				MessageSender messageSender = container.getComponent(MessageSender.class);
 				User user = userSession.getUser();
 				
-				FeedReader feedReader = new FeedReader(entityManager, user);
+				FeedReader feedReader = new FeedReader(entityManager, user, messageSender);
 				return feedReader;
 			}
 		}));

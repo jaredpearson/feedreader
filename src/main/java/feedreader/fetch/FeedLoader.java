@@ -45,6 +45,7 @@ public class FeedLoader {
 					}
 					
 					feed = parseRss(eventReader, nextEvent);
+					feed.setUrl(url);
 				}
 			}
 		} finally {

@@ -1,61 +1,45 @@
 package feedreader;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.stream.XMLStreamException;
-
-import common.Provider;
+import common.messagequeue.MessageSender;
 import common.persist.EntityManager;
-import feedreader.fetch.FeedLoader;
+import feedreader.messagequeue.RetrieveFeedMessage;
 
 /**
  * Main service class for a user to interact with the FeedReader application
  * @author jared.pearson
  */
 public class FeedReader {
-	private EntityManager entityManager;
-	private User user;
-	private Provider<FeedLoader> feedLoaderProvider;
+	private final EntityManager entityManager;
+	private final User user;
+	private final MessageSender messageSender;
 	
-	public FeedReader(EntityManager entityManager, User user) {
+	public FeedReader(EntityManager entityManager, User user, MessageSender messageSender) {
 		this.entityManager = entityManager;
 		this.user = user;
-
-		this.feedLoaderProvider = new Provider<FeedLoader>() {
-			@Override
-			public FeedLoader get() {
-				return new FeedLoader();
-			}
-		};
+		this.messageSender = messageSender;
 	}
 	
 	/**
 	 * Adds a feed from the specified URL.
-	 * TODO: make this execute as a batch job instead of having the user wait
 	 */
-	public UserFeedContext addFeedFromUrl(String url) throws IOException {
-		FeedLoader feedLoader = feedLoaderProvider.get();
-		Feed feed = null;
-		try {
-			feed = feedLoader.loadFromUrl(url);
-		} catch (XMLStreamException exc) {
-			//FIXME: add a more specific exception
-			throw new RuntimeException(exc);
+	public FeedRequest addFeedFromUrl(final String url) throws IOException {
+		if(url == null) {
+			throw new IllegalArgumentException();
 		}
 		
-		feed.setCreatedBy(user);
-		feed.setUrl(url);
+		//create the request to retrieve the feed
+		final FeedRequest feedRequest = new FeedRequest();
+		feedRequest.setUrl(url);
+		feedRequest.setCreatedBy(user);
+		entityManager.persist(feedRequest);
 		
-		//save the feed to the database
-		entityManager.persist(feed);
-		for(FeedItem feedItem : feed.getItems()) {
-			entityManager.persist(feedItem);
-		}
+		//queue up the url to be processed async
+		messageSender.send("feedRequest", new RetrieveFeedMessage(feedRequest));
 		
-		UserFeedContext userFeedContext = new UserFeedContext(user, feed, new ArrayList<UserFeedItemContext>(0));
-		return userFeedContext;
+		return feedRequest;
 	}
 	
 	/**

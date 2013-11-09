@@ -56,7 +56,7 @@ public class FeedResourceHandlerTest {
 		when(feedContext.getTitle()).thenReturn("Test Feed");
 		
 		FeedReader feedReader = mock(FeedReader.class);
-		when(feedReader.addFeedFromUrl(eq("http://test.com"))).thenReturn(feedContext);
+		//when(feedReader.addFeedFromUrl(eq("http://test.com"))).thenReturn(feedContext);
 		
 		HttpServletRequest request = mock(HttpServletRequest.class);
 		when(request.getPathInfo()).thenReturn("/v1/feed");

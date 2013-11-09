@@ -8,8 +8,9 @@ public class FeedRequest {
 	private Integer id;
 	private String url;
 	private Feed feed;
-	private String status;
+	private FeedRequestStatus status = FeedRequestStatus.NOT_STARTED;
 	private long created = -1;
+	private User createdBy;
 	
 	public void setId(Integer id) {
 		this.id = id;
@@ -35,11 +36,11 @@ public class FeedRequest {
 		return feed;
 	}
 	
-	public void setStatus(String status) {
+	public void setStatus(FeedRequestStatus status) {
 		this.status = status;
 	}
 	
-	public String getStatus() {
+	public FeedRequestStatus getStatus() {
 		return status;
 	}
 	
@@ -49,5 +50,13 @@ public class FeedRequest {
 	
 	public void setCreated(Date created) {
 		this.created = DateUtils.toMillis(created);
+	}
+	
+	public User getCreatedBy() {
+		return createdBy;
+	}
+	
+	public void setCreatedBy(User createdBy) {
+		this.createdBy = createdBy;
 	}
 }

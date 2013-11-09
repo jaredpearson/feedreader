@@ -6,6 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 
 import javax.sql.DataSource;
 
@@ -109,4 +110,11 @@ public class DbUtils {
 		}
 	}
 	
+	public static void setInt(PreparedStatement stmt, int index, Integer value) throws SQLException {
+		if(value == null) {
+			stmt.setNull(index, Types.INTEGER);
+		} else {
+			stmt.setInt(index, value);
+		}
+	}
 }
