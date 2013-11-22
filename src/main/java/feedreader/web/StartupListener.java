@@ -31,6 +31,7 @@ import common.persist.EntityManager.EntityHandler;
 import feedreader.Feed;
 import feedreader.FeedItem;
 import feedreader.FeedRequest;
+import feedreader.FeedSubscription;
 import feedreader.User;
 import feedreader.UserFeedItemContext;
 import feedreader.UserSession;
@@ -40,6 +41,7 @@ import feedreader.messagequeue.RetrieveFeedMessageHandler;
 import feedreader.persist.FeedEntityHandler;
 import feedreader.persist.FeedItemEntityHandler;
 import feedreader.persist.FeedRequestEntityHandler;
+import feedreader.persist.FeedSubscriptionEntityHandler;
 import feedreader.persist.UserEntityHandler;
 import feedreader.persist.UserFeedItemContextEntityHandler;
 import feedreader.persist.UserSessionEntityHandler;
@@ -105,12 +107,13 @@ public class StartupListener implements ServletContextListener {
 			@Override
 			public EntityManager getComponentInstance(Container container) {
 				Map<Class<?>, EntityHandler> handlers = new Hashtable<Class<?>, EntityManager.EntityHandler>();
-				handlers.put(User.class, new UserEntityHandler());
-				handlers.put(UserSession.class, new UserSessionEntityHandler());
 				handlers.put(Feed.class, new FeedEntityHandler());
 				handlers.put(FeedItem.class, new FeedItemEntityHandler());
 				handlers.put(FeedRequest.class, new FeedRequestEntityHandler());
+				handlers.put(FeedSubscription.class, new FeedSubscriptionEntityHandler());
+				handlers.put(User.class, new UserEntityHandler());
 				handlers.put(UserFeedItemContext.class, new UserFeedItemContextEntityHandler());
+				handlers.put(UserSession.class, new UserSessionEntityHandler());
 				
 				DataSource dataSource = container.getComponent(DataSource.class);
 				EntityManager entityManager = new EntityManager(dataSource, handlers);

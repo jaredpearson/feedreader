@@ -5,6 +5,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import common.persist.DbUtils;
@@ -118,9 +120,59 @@ public class FeedEntityHandler implements EntityHandler {
 	}
 
 	@Override
-	public List<Object> executeNamedQuery(EntityManager.QueryContext queryContext, String query, Object... parameters)
+	public List<?> executeNamedQuery(EntityManager.QueryContext queryContext, String query, Object... parameters)
 			throws SQLException {
-		throw new UnsupportedOperationException();
+		
+		if("findFeedByUrl".equalsIgnoreCase(query)) {
+			Feed feed = findFeedByUrl(queryContext, (String)parameters[0]);
+			if(feed == null) {
+				return Collections.emptyList();
+			} else {
+				List<Feed> feeds = new ArrayList<Feed>();
+				feeds.add(feed);
+				return feeds;
+			}
+		} else {
+			throw new UnsupportedOperationException("Unsupported query specified: " + query);
+		}
+		
+	}
+	
+	/**
+	 * Attempts to find the Feed with the specified URL.
+	 */
+	private Feed findFeedByUrl(EntityManager.QueryContext queryContext, String url) throws SQLException {
+		Feed feed = null;
+		Connection cnn = null;
+		try {
+			cnn = queryContext.getConnection();
+			
+			PreparedStatement stmt = null;
+			try {
+				stmt = cnn.prepareStatement(SELECT_SQL_FRAGMENT
+						+ "where lower(f.url) = lower(?) "
+						+ "limit 1");
+				stmt.setString(1, url);
+				
+				ResultSet rst = null;
+				try {
+					rst = stmt.executeQuery();
+					while(rst.next()) {
+						feed = ROW_MAPPER.mapRow(rst);
+					}
+					
+				} finally {
+					DbUtils.close(rst);
+				}
+			} finally {
+				DbUtils.close(stmt);
+			}
+			
+		} finally {
+			queryContext.releaseConnection(cnn);
+		}
+		
+		return feed;
 	}
 	
 	private java.sql.Date toSqlDate(java.util.Date value) {

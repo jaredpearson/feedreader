@@ -47,7 +47,7 @@ CREATE TABLE FeedItems (
 ALTER SEQUENCE feeditems_id_seq OWNED BY FeedItems.id;
 
 CREATE SEQUENCE feedrequests_id_seq;
-CREATE TABLE FeedRequests(
+CREATE TABLE FeedRequests (
   id integer NOT NULL DEFAULT nextval('feedrequests_id_seq') PRIMARY KEY,
   url varchar(1024) NOT NULL,
   feedId integer REFERENCES Feeds(id),
@@ -66,3 +66,12 @@ CREATE TABLE UserFeedItemContexts (
   created timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 ALTER SEQUENCE userfeeditemcontexts_id_seq OWNED BY UserFeedItemContexts.id;
+
+CREATE SEQUENCE feedsubscriptions_id_seq;
+CREATE TABLE FeedSubscriptions (
+  id integer NOT NULL DEFAULT nextval('feedsubscriptions_id_seq') PRIMARY KEY,
+  feedId integer REFERENCES Feeds(id) ON DELETE CASCADE,
+  subscriber integer NOT NULL REFERENCES Users(id) ON DELETE CASCADE,
+  created timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+ALTER SEQUENCE feedsubscriptions_id_seq OWNED BY FeedSubscriptions.id;

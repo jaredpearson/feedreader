@@ -1,6 +1,7 @@
 package feedreader.messagequeue;
 
 import java.io.IOException;
+import java.util.List;
 
 import javax.xml.stream.XMLStreamException;
 
@@ -12,6 +13,8 @@ import feedreader.Feed;
 import feedreader.FeedItem;
 import feedreader.FeedRequest;
 import feedreader.FeedRequestStatus;
+import feedreader.FeedSubscription;
+import feedreader.User;
 import feedreader.fetch.FeedLoader;
 
 /**
@@ -44,6 +47,19 @@ public class RetrieveFeedMessageHandler implements MessageHandler {
 			return;
 		}
 		
+		//check to see if the URL has already been retrieved. if so, create a subscription for the user
+		//otherwise, let's go out and request the feed
+		List<Feed> matchingFeeds = entityManager.executeNamedQuery(Feed.class, "findFeedByUrl", feedRequest.getUrl());
+		if(!matchingFeeds.isEmpty()) {
+			final Feed feed = matchingFeeds.get(0);
+			subscribe(feed, feedRequest.getCreatedBy());
+			finalizeRequest(feedRequest, feed);
+		} else {
+			retrieveFeedFromUrl(feedRequest);
+		}
+	}
+	
+	private void retrieveFeedFromUrl(final FeedRequest feedRequest) throws IOException {
 		//retrieve the feed from the URL given in the request
 		final FeedLoader feedLoader = feedLoaderProvider.get();
 		Feed feed = null;
@@ -62,8 +78,23 @@ public class RetrieveFeedMessageHandler implements MessageHandler {
 		}
 		
 		//update the feed request
+		finalizeRequest(feedRequest, feed);
+		
+		//create a subscription for the user to the feed
+		subscribe(feed, feedRequest.getCreatedBy());
+	}
+	
+	private void finalizeRequest(final FeedRequest feedRequest, final Feed feed) {
 		feedRequest.setFeed(feed);
 		feedRequest.setStatus(FeedRequestStatus.FINISHED);
 		entityManager.persist(feedRequest);
+	}
+	
+	private FeedSubscription subscribe(final Feed feed, final User subscriber) {
+		FeedSubscription subscription = new FeedSubscription();
+		subscription.setFeed(feed);
+		subscription.setSubscriber(subscriber);
+		entityManager.persist(subscription);
+		return subscription;
 	}
 }
