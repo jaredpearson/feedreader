@@ -47,15 +47,25 @@ public class RetrieveFeedMessageHandler implements MessageHandler {
 			return;
 		}
 		
-		//check to see if the URL has already been retrieved. if so, create a subscription for the user
-		//otherwise, let's go out and request the feed
-		List<Feed> matchingFeeds = entityManager.executeNamedQuery(Feed.class, "findFeedByUrl", feedRequest.getUrl());
-		if(!matchingFeeds.isEmpty()) {
-			final Feed feed = matchingFeeds.get(0);
-			subscribe(feed, feedRequest.getCreatedBy());
-			finalizeRequest(feedRequest, feed);
-		} else {
-			retrieveFeedFromUrl(feedRequest);
+		try {
+			
+			//check to see if the URL has already been retrieved. if so, create a subscription for the user
+			//otherwise, let's go out and request the feed
+			List<Feed> matchingFeeds = entityManager.executeNamedQuery(Feed.class, "findFeedByUrl", feedRequest.getUrl());
+			if(!matchingFeeds.isEmpty()) {
+				final Feed feed = matchingFeeds.get(0);
+				subscribe(feed, feedRequest.getCreatedBy());
+				finalizeRequest(feedRequest, feed);
+			} else {
+				retrieveFeedFromUrl(feedRequest);
+			}
+		
+		} catch(RuntimeException exc) {
+			
+			feedRequest.setStatus(FeedRequestStatus.ERROR);
+			entityManager.persist(feedRequest);
+			
+			throw exc;
 		}
 	}
 	

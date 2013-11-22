@@ -6,8 +6,20 @@ package feedreader;
  * @see FeedRequest#getStatus()
  */
 public enum FeedRequestStatus {
+	/**
+	 * If the request has not been started
+	 */
 	NOT_STARTED("N"),
-	FINISHED("F");
+	
+	/**
+	 * If the request was finished
+	 */
+	FINISHED("F"),
+	
+	/**
+	 * If there was an error processing the request
+	 */
+	ERROR("E");
 	
 	private final String dbValue;
 	
