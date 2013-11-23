@@ -29,6 +29,7 @@ public class FeedItemRowMapper implements RowMapper<FeedItem> {
 		feedItem.setLink(rst.getString(prefix + "link"));
 		feedItem.setCreated(rst.getDate(prefix + "created"));
 		feedItem.setPubDate(rst.getDate(prefix + "pubDate"));
+		feedItem.setGuid(rst.getString(prefix + "guid"));
 		
 		//get the feed
 		Feed feed = feedRowMapper.mapRow(rst);

@@ -43,6 +43,7 @@ CREATE TABLE FeedItems (
   description text,
   link varchar(1024),
   pubDate timestamp,
+  guid varchar(256),
   created timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 ALTER SEQUENCE feeditems_id_seq OWNED BY FeedItems.id;

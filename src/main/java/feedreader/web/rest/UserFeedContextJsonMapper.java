@@ -68,6 +68,8 @@ class UserFeedContextJsonMapper implements JsonMapper<UserFeedContext> {
 			out.value(pubDate);
 		}
 		
+		out.name("guid").value(feedItem.getFeedItem().getGuid());
+		
 		out.endObject();
 	}
 }
