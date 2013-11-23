@@ -2,6 +2,7 @@ package common;
 
 import static org.junit.Assert.*;
 
+import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -47,5 +48,35 @@ public class DateUtilsTest {
 	public void testToDateWithNull() {
 		Date actual = DateUtils.toDate(-1l);
 		assertTrue(actual == null);
+	}
+
+	@Test(expected=ParseException.class)
+	public void testParseRfc0822WithInvalid() throws Exception {
+		Date date = DateUtils.parseRfc0822Date("not a date");
+		assertEquals(1055238061000l, date.getTime());
+	}
+	
+	@Test
+	public void testParseRfc0822WithDay() throws Exception {
+		Date date = DateUtils.parseRfc0822Date("Tue, 10 Jun 2003 09:41:01 GMT");
+		assertEquals(1055238061000l, date.getTime());
+	}
+	
+	@Test
+	public void testParseRfc0822WithoutDay() throws Exception {
+		Date date = DateUtils.parseRfc0822Date("10 Jun 2003 09:41:01 GMT");
+		assertEquals(1055238061000l, date.getTime());
+	}
+
+	@Test
+	public void testParseRfc0822WithDayWithRfc822TimeZone() throws Exception {
+		Date date = DateUtils.parseRfc0822Date("Tue, 10 Jun 2003 09:41:01 -0800");
+		assertEquals(1055266861000l, date.getTime());
+	}
+
+	@Test
+	public void testParseRfc0822WithoutDayWithRfc822TimeZone() throws Exception {
+		Date date = DateUtils.parseRfc0822Date("10 Jun 2003 09:41:01 -0800");
+		assertEquals(1055266861000l, date.getTime());
 	}
 }

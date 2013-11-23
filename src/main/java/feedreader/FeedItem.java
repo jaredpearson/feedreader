@@ -14,18 +14,18 @@ public class FeedItem {
 	private String title;
 	private String link;
 	private String description;
-	private String pubDate;
+	private long pubDate = -1;
 	private String guid;
 	private long created = -1;
 	
 	public FeedItem() {
 	}
 	
-	public FeedItem(String title, String link, String description, String pubDate, String guid) {
+	public FeedItem(final String title, final String link, final String description, final Date pubDate, final String guid) {
 		this.title = title;
 		this.link = link;
 		this.description = description;
-		this.pubDate = pubDate;
+		this.setPubDate(pubDate);
 		this.guid = guid;
 	}
 	
@@ -73,12 +73,12 @@ public class FeedItem {
 		return description;
 	}
 	
-	public void setPubDate(String pubDate) {
-		this.pubDate = pubDate;
+	public void setPubDate(Date pubDate) {
+		this.pubDate = DateUtils.toMillis(pubDate);
 	}
 	
-	public String getPubDate() {
-		return pubDate;
+	public Date getPubDate() {
+		return DateUtils.toDate(pubDate);
 	}
 	
 	public void setGuid(String guid) {

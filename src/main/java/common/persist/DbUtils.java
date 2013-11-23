@@ -117,4 +117,12 @@ public class DbUtils {
 			stmt.setInt(index, value);
 		}
 	}
+	
+	public static void setDate(PreparedStatement stmt, int index, java.util.Date date) throws SQLException {
+		if(date == null) {
+			stmt.setNull(index, Types.DATE);
+		} else {
+			stmt.setDate(index, new java.sql.Date(date.getTime()));
+		}
+	}
 }

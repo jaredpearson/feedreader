@@ -24,6 +24,7 @@ public class FeedItemEntityHandler implements EntityHandler {
 			+ "i.title feedItem_title, "
 			+ "i.description feedItem_description, "
 			+ "i.link feedItem_link, "
+			+ "i.pubDate feedItem_pubDate, "
 			+ "i.created feedItem_created, "
 			
 			//feed
@@ -52,11 +53,12 @@ public class FeedItemEntityHandler implements EntityHandler {
 			
 			PreparedStatement stmt = null;
 			try {
-				stmt = cnn.prepareStatement("insert into FeedItems (feedId, title, description, link) values (?, ?, ?, ?) returning id, created");
+				stmt = cnn.prepareStatement("insert into FeedItems (feedId, title, description, link, pubDate) values (?, ?, ?, ?, ?) returning id, created");
 				stmt.setInt(1, feedItem.getFeed().getId());
 				stmt.setString(2, feedItem.getTitle());
 				stmt.setString(3, feedItem.getDescription());
 				stmt.setString(4, feedItem.getLink());
+				DbUtils.setDate(stmt, 5, feedItem.getPubDate());
 				
 				if(stmt.execute()) {
 					ResultSet rst = null;

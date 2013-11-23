@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.zip.GZIPInputStream;
 
 import javax.xml.namespace.QName;
@@ -12,6 +14,8 @@ import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.XMLEvent;
+
+import common.DateUtils;
 
 import feedreader.Feed;
 import feedreader.FeedItem;
@@ -103,7 +107,7 @@ public class FeedLoader {
 		String title = null;
 		String link = null;
 		String description = null;
-		String pubDate = null;
+		Date pubDate = null;
 		String guid = null;
 		
 		while(eventReader.hasNext()) {
@@ -119,7 +123,7 @@ public class FeedLoader {
 			} else if(isStartElement(nextEvent, DESCRIPTION_TAG)) {
 				description = getText(eventReader);
 			} else if(isStartElement(nextEvent, PUBDATE_TAG)) {
-				pubDate = getText(eventReader);
+				pubDate = getTextAsDate(eventReader);
 			} else if(isStartElement(nextEvent, GUID_TAG)) {
 				guid = getText(eventReader);
 			}
@@ -141,6 +145,23 @@ public class FeedLoader {
 		return text;
 	}
 	
+	private Date getTextAsDate(XMLEventReader eventReader) throws XMLStreamException {
+		String text = getText(eventReader);
+		if(text == null || text.trim().length() == 0) {
+			return null;
+		}
+		
+		Date pubDate = null;
+		try {
+			pubDate = DateUtils.parseRfc0822Date(text);
+		} catch (ParseException exc) {
+			//TODO: add specific parsing exception instead of generic runtime
+			throw new RuntimeException(exc);
+		}
+		
+		return pubDate;
+	}
+	
 	private boolean isStartElement(XMLEvent event, String tag) {
 		return event.isStartElement() && event.asStartElement().getName().getLocalPart().equals(tag);
 	}
@@ -148,4 +169,5 @@ public class FeedLoader {
 	private boolean isEndElement(XMLEvent event, String tag) {
 		return event.isEndElement() && event.asEndElement().getName().getLocalPart().equals(tag);
 	}
+	
 }

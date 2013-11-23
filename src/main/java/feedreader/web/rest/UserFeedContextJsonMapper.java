@@ -1,6 +1,7 @@
 package feedreader.web.rest;
 
 import java.io.IOException;
+import java.util.Date;
 
 import common.json.JsonMapper;
 import common.json.JsonWriter;
@@ -42,18 +43,31 @@ class UserFeedContextJsonMapper implements JsonMapper<UserFeedContext> {
 		out.startArray();
 		
 		for(UserFeedItemContext feedItem : feed.getItems()) {
-			out.startObject();
-			
-			out.name("id").value(feedItem.getFeedItem().getId());
-			out.name("read").value(feedItem.isRead());
-			out.name("title").value(feedItem.getFeedItem().getTitle());
-			
-			out.endObject();
+			outputFeedItem(out, feedItem);
 		}
 		
 		out.endArray();
 		
 		out.endObject();
+		out.endObject();
+	}
+	
+	private void outputFeedItem(JsonWriter out, UserFeedItemContext feedItem) throws IOException {
+		out.startObject();
+		
+		out.name("id").value(feedItem.getFeedItem().getId());
+		out.name("read").value(feedItem.isRead());
+		out.name("title").value(feedItem.getFeedItem().getTitle());
+		
+		//output the pubDate
+		out.name("pubDate");
+		Date pubDate = feedItem.getFeedItem().getPubDate();
+		if(pubDate == null) {
+			out.nullValue();
+		} else {
+			out.value(pubDate);
+		}
+		
 		out.endObject();
 	}
 }
