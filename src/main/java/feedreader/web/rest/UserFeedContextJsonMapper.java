@@ -18,10 +18,6 @@ class UserFeedContextJsonMapper implements JsonMapper<UserFeedContext> {
 	public void write(JsonWriter out, UserFeedContext feed) throws IOException {
 		assert out != null;
 		assert feed != null;
-
-		out.startObject();
-		out.name("success").value(true);
-		out.name("data");
 		
 		//output the feed context
 		out.startObject();
@@ -47,7 +43,6 @@ class UserFeedContextJsonMapper implements JsonMapper<UserFeedContext> {
 		
 		out.endArray();
 		
-		out.endObject();
 		out.endObject();
 	}
 }

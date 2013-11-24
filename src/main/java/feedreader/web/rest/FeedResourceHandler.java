@@ -44,8 +44,15 @@ public class FeedResourceHandler {
 		JsonWriter out = null;
 		try {
 			out = new JsonWriter(response.getWriter());
+
+			out.startObject();
+			out.name("success").value(true);
+			out.name("data");
+			
 			UserFeedContextJsonMapper mapper = new UserFeedContextJsonMapper(new UserJsonMapper());
 			mapper.write(out, feedContext);
+			
+			out.endObject();
 		} finally {
 			if(out != null) {
 				out.close();
