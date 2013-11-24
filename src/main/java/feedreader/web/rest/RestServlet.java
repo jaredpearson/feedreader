@@ -115,7 +115,11 @@ public class RestServlet extends GenericServlet {
 		List<Class<?>> requestHandlerClasses = new ArrayList<Class<?>>(classNames.length);
 		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 		for(String className : classNames) {
-			Class<?> clazz = classLoader.loadClass(className);
+			if(className == null || className.trim().isEmpty()) {
+				continue;
+			}
+			
+			Class<?> clazz = classLoader.loadClass(className.trim());
 			requestHandlerClasses.add(clazz);
 		}
 		
