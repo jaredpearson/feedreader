@@ -1,8 +1,6 @@
 package feedreader.web.rest;
 
 import java.io.IOException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -11,6 +9,7 @@ import javax.servlet.http.HttpServletResponse;
 import common.json.JsonWriter;
 import common.persist.EntityManager;
 import common.web.rest.Method;
+import common.web.rest.PathParameter;
 import common.web.rest.RequestHandler;
 import feedreader.Feed;
 import feedreader.FeedReader;
@@ -23,21 +22,15 @@ import feedreader.UserFeedItemContext;
  * @author jared.pearson
  */
 public class FeedResourceHandler {
-	private static final Pattern PATTERN_FEED = Pattern.compile("^/v1/feed/([0-9]+)$");
-	private static final Pattern PATTERN_FEED_ITEM_READ = Pattern.compile("^/v1/feed/([0-9]+)/item/([0-9]+)/read$");
 	
 	/**
 	 * Gets the feed corresponding to the request
 	 */
 	@RequestHandler(value = "^/v1/feed/([0-9]+)$", method = Method.GET)
-	public void getFeed(HttpServletRequest request, HttpServletResponse response, FeedReader feedReader) throws IOException, ServletException {
-		Matcher matcher = PATTERN_FEED.matcher(request.getPathInfo());
-		if(!matcher.matches()) {
-			throw new IllegalStateException("Path does not match");
-		}
+	public void getFeed(HttpServletResponse response, FeedReader feedReader, @PathParameter(1) String feedIdValue) throws IOException, ServletException {
 		
 		//get the requested feed
-		int feedId = Integer.valueOf(matcher.group(1));
+		int feedId = Integer.valueOf(feedIdValue);
 		UserFeedContext feedContext = feedReader.getFeed(feedId);
 		
 		response.setContentType("application/json");
@@ -61,18 +54,16 @@ public class FeedResourceHandler {
 	}
 	
 	@RequestHandler(value = "^/v1/feed/([0-9]+)/item/([0-9]+)/read$", method = Method.POST)
-	public void markFeedItemRead(HttpServletRequest request, HttpServletResponse response, EntityManager entityManager, FeedReader feedReader) throws IOException, ServletException {
-		Matcher matcher = PATTERN_FEED_ITEM_READ.matcher(request.getPathInfo());
-		if(!matcher.matches()) {
-			throw new IllegalStateException("Path does not match");
-		}
+	public void markFeedItemRead(HttpServletResponse response, 
+			EntityManager entityManager, FeedReader feedReader, @PathParameter(1) String feedIdValue, 
+			@PathParameter(2) String feedItemIdValue) throws IOException, ServletException {
 		
 		//get the requested feed
-		int feedId = Integer.valueOf(matcher.group(1));
+		int feedId = Integer.valueOf(feedIdValue);
 		UserFeedContext feedContext = feedReader.getFeed(feedId);
 		
 		//get the request feed item
-		int feedItemId = Integer.valueOf(matcher.group(2));
+		int feedItemId = Integer.valueOf(feedItemIdValue);
 		UserFeedItemContext feedItem = feedContext.getItemWithFeedItemId(feedItemId);
 		
 		if(feedItem == null) {

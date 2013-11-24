@@ -43,7 +43,7 @@ public class FeedResourceHandlerTest {
 		when(response.getWriter()).thenReturn(new PrintWriter(writer));
 		
 		FeedResourceHandler handler = new FeedResourceHandler();
-		handler.getFeed(request, response, feedReader);
+		handler.getFeed(response, feedReader, "1");
 		
 		String expected = "{\"success\":true,\"data\":{\"id\":1,\"title\":\"Test Feed\",\"created\":null,\"url\":null,\"createdBy\":null,\"items\":[]}}";
 		assertEquals(expected, writer.toString());
@@ -95,7 +95,7 @@ public class FeedResourceHandlerTest {
 		when(response.getWriter()).thenReturn(new PrintWriter(writer));
 		
 		FeedResourceHandler handler = new FeedResourceHandler();
-		handler.markFeedItemRead(request, response, entityManager, feedReader);
+		handler.markFeedItemRead(response, entityManager, feedReader, "1", "1");
 		
 		verify(entityManager).persist(eq(feedItemContext));
 		

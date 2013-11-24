@@ -1,9 +1,11 @@
 package common.web.rest;
 
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.servlet.GenericServlet;
@@ -72,12 +74,9 @@ public class RestServlet extends GenericServlet {
 		HttpServletRequest httpRequest = (HttpServletRequest) request;
 		HttpServletResponse httpResponse = (HttpServletResponse) response;
 		
-		//get the container for the current request
-		Container container = ContainerFilter.getContainerFromRequest(httpRequest);
-		
 		try {
 			RequestHandlerMapping mapping = getMapping(httpRequest);
-			mapping.execute(container);
+			mapping.execute(httpRequest);
 		} catch(Exception exc) {
 			exc.printStackTrace(System.err);
 			httpResponse.sendError(500);
@@ -146,25 +145,36 @@ public class RestServlet extends GenericServlet {
 				return false;
 			}
 			
-			String pathInfo = request.getPathInfo();
-			return pattern.matcher(pathInfo).matches();
+			return getMatcher(request).matches();
 		}
 		
 		/**
 		 * Executes the handler against the specified request
 		 */
-		public void execute(Container container)
+		public void execute(final HttpServletRequest request)
 			throws ServletException, IOException {
 			
-			//from the parameter types specified on the method, look up the 
-			//objects corresponding to the types from the IOC container
+			//initialize the value retrievers
+			PathParameterValueRetriever pathParameterValueRetriever = PathParameterValueRetriever.createFromRequest(request, this);
+			ContainerValueRetriever containerValueRetriever = ContainerValueRetriever.createFromRequest(request);
+			
+			//we need to determine the value to be specified in the parameter.
+			Annotation[][] parameterAnnotations = handlerMethod.getParameterAnnotations();
 			Class<?>[] parameterTypes = handlerMethod.getParameterTypes();
 			Object[] values = new Object[parameterTypes.length];
 			for(int index = 0; index < parameterTypes.length; index++) {
-				
 				Class<?> parameterType = parameterTypes[index];
-				values[index] = container.getComponent(parameterType);
+				Annotation[] annotations = parameterAnnotations[index];
 				
+				//let's check to see if the path parameter annotation has been specified
+				if(pathParameterValueRetriever.handles(index, parameterType, annotations)) {
+					values[index] = pathParameterValueRetriever.getValue(index, parameterType, annotations);
+					continue;
+				}
+				
+				//from the parameter types specified on the method, look up the 
+				//objects corresponding to the types from the IOC container
+				values[index] = containerValueRetriever.getValue(index, parameterType, annotations);
 			}
 			
 			//invoke the handler method with parameters requested
@@ -177,6 +187,99 @@ public class RestServlet extends GenericServlet {
 			} catch (InvocationTargetException e) {
 				throw new ServletException(e);
 			}
+		}
+		
+		private Matcher getMatcher(HttpServletRequest request) {
+			String pathInfo = request.getPathInfo();
+			return pattern.matcher(pathInfo);
+		}
+	}
+	
+	private static interface ValueRetriever {
+		public boolean handles(int index, Class<?> parameterType, Annotation[] parameterAnnotations);
+		public Object getValue(int index, Class<?> parameterType, Annotation[] parameterAnnotations);
+	}
+	
+	/**
+	 * Retrieves the values from the Container.
+	 * @author jared.pearson
+	 */
+	private static class ContainerValueRetriever implements ValueRetriever {
+		private final Container container;
+		
+		public ContainerValueRetriever(final Container container) {
+			this.container = container;
+		}
+		
+		@Override
+		public boolean handles(int index, Class<?> parameterType, Annotation[] parameterAnnotations) {
+			return true;
+		}
+		
+		@Override
+		public Object getValue(int index, Class<?> parameterType, Annotation[] parameterAnnotations) {
+			return container.getComponent(parameterType);
+		}
+		
+		public static ContainerValueRetriever createFromRequest(final HttpServletRequest request) {
+			Container container = ContainerFilter.getContainerFromRequest(request);
+			return new ContainerValueRetriever(container);
+		}
+	}
+	
+	/**
+	 * Retrieves the values from the PathInfo using the {@link PathParameter} annotations.
+	 * @author jared.pearson
+	 */
+	private static class PathParameterValueRetriever implements ValueRetriever {
+		private final Matcher pathInfoMatcher;
+		
+		public PathParameterValueRetriever(final Matcher pathInfoMatcher) {
+			this.pathInfoMatcher = pathInfoMatcher;
+		}
+		
+		@Override
+		public boolean handles(int index, Class<?> parameterType, Annotation[] parameterAnnotations) {
+			return getPathParameterAnnotation(parameterAnnotations) != null;
+		}
+		
+		@Override
+		public Object getValue(int index, Class<?> parameterType, Annotation[] parameterAnnotations) {
+			//let's check to see if the path parameter annotation has been specified
+			PathParameter pathParameter = getPathParameterAnnotation(parameterAnnotations);
+			if(pathParameter == null) {
+				return null;
+			}
+			
+			if(!parameterType.isAssignableFrom(String.class)) {
+				throw new IllegalArgumentException("PathParameter must be of type String");
+			}
+			
+			int groupIndex = pathParameter.value();
+			
+			if(groupIndex > pathInfoMatcher.groupCount()) {
+				throw new IllegalArgumentException("Group index specified in PathParameter is out of bounds: " + groupIndex);
+			}
+			return pathInfoMatcher.group(groupIndex);
+		}
+		
+		public static PathParameterValueRetriever createFromRequest(final HttpServletRequest request, final RequestHandlerMapping mapping) {
+			Matcher pathInfoMatcher = mapping.getMatcher(request);
+			if(!pathInfoMatcher.matches()) {
+				throw new IllegalStateException("Expected the path to always match this handler's pattern");
+			}
+			return new PathParameterValueRetriever(pathInfoMatcher);
+		}
+		
+		private PathParameter getPathParameterAnnotation(Annotation[] annotations) {
+			PathParameter pathParameter = null;
+			for(Annotation annotation : annotations) {
+				if(annotation instanceof PathParameter) {
+					pathParameter = (PathParameter)annotation;
+					break;
+				}
+			}
+			return pathParameter;
 		}
 	}
 }
