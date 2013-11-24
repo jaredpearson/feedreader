@@ -7,7 +7,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import common.json.JsonWriter;
-
+import common.web.rest.Method;
+import common.web.rest.RequestHandler;
 import feedreader.FeedReader;
 import feedreader.Stream;
 import feedreader.UserFeedItemContext;

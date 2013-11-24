@@ -85,7 +85,7 @@
   
   <servlet>
     <servlet-name>Services</servlet-name>
-    <servlet-class>feedreader.web.rest.RestServlet</servlet-class>
+    <servlet-class>common.web.rest.RestServlet</servlet-class>
     <init-param>
       <param-name>classes</param-name>
       <param-value>

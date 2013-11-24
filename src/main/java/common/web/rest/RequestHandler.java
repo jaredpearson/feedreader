@@ -1,4 +1,4 @@
-package feedreader.web.rest;
+package common.web.rest;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

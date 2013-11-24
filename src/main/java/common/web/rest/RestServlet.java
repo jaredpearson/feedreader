@@ -1,4 +1,4 @@
-package feedreader.web.rest;
+package common.web.rest;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -15,7 +15,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import common.ioc.Container;
-
 import feedreader.web.ContainerFilter;
 
 /**

@@ -1,4 +1,4 @@
-package feedreader.web.rest;
+package common.web.rest;
 
 public enum Method {
 	GET,
