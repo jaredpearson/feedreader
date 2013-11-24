@@ -15,7 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import common.ioc.Container;
-import feedreader.web.ContainerFilter;
+import common.ioc.web.ContainerFilter;
 
 /**
  * Servlet for handling REST Api requests.

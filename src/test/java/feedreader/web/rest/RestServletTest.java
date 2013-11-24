@@ -9,9 +9,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.junit.Test;
 
 import common.ioc.Container;
+import common.ioc.web.ContainerFilter;
 import common.web.rest.RequestHandler;
 import common.web.rest.RestServlet;
-import feedreader.web.ContainerFilter;
 
 public class RestServletTest {
 	

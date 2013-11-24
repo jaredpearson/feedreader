@@ -13,6 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import common.ioc.Container;
+import common.ioc.web.ContainerFilter;
 import common.persist.EntityManager;
 import feedreader.UserSession;
 

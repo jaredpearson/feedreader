@@ -23,6 +23,7 @@ import common.Provider;
 import common.ioc.ComponentAdapter;
 import common.ioc.ComponentAdapters;
 import common.ioc.Container;
+import common.ioc.web.ContainerFilter;
 import common.messagequeue.MessageConsumer;
 import common.messagequeue.MessageHandler;
 import common.messagequeue.MessageSender;
@@ -69,7 +70,7 @@ public class StartupListener implements ServletContextListener {
 		//create the application container
 		//set the container in the servlet context
 		Container container = createContainer(configuration);
-		servletContext.setAttribute("feedreader.ioc.Container", container);
+		ContainerFilter.setContainerInServletContext(servletContext, container);
 		
 		//start the message consumer
 		(new Thread(container.getComponent(MessageConsumer.class))).start();
