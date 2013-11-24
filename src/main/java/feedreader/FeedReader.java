@@ -1,7 +1,12 @@
 package feedreader;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import common.messagequeue.MessageSender;
 import common.persist.EntityManager;
@@ -43,6 +48,23 @@ public class FeedReader {
 	}
 	
 	/**
+	 * Gets a stream for the current user. A stream is a collection of feed items the user is subscribed to.
+	 */
+	public Stream getStream() {
+		final int offset = 0;
+		final int size = 25;
+		List<FeedItem> feedItems = entityManager.executeNamedQuery(FeedItem.class, "getFeedItemsForStream", user.getId(), size, offset);
+		
+		//get all of the contexts for the user from the feed items
+		List<UserFeedItemContext> contexts = getFeedContexts(feedItems);
+		
+		//build the final list of feed items from the feed contexts retrieved
+		List<UserFeedItemContext> userFeedItems = fanoutFeedItems(feedItems, contexts);
+		
+		return new Stream(userFeedItems);
+	}
+	
+	/**
 	 * Gets the feed with the specified ID.
 	 */
 	public UserFeedContext getFeed(int feedId) {
@@ -56,9 +78,46 @@ public class FeedReader {
 		//load the context for the feed items
 		List<UserFeedItemContext> itemContexts = entityManager.executeNamedQuery(UserFeedItemContext.class, "getFeedItemsForUserFeed", userId, feedId);
 		
-		//get the user context for the feed
-		UserFeedContext feedContext = new UserFeedContext(user, feed, itemContexts);
+		//fanout all of the items so the user has a full set of feed items
+		List<UserFeedItemContext> userFeedItems = fanoutFeedItems(feed.getItems(), itemContexts);
 		
-		return feedContext;
+		//get the user context for the feed
+		return new UserFeedContext(feed, userFeedItems);
+	}
+	
+	private List<UserFeedItemContext> getFeedContexts(List<FeedItem> feedItems) {
+		Set<Integer> feedItemIds = new HashSet<Integer>(feedItems.size());
+		for(FeedItem feedItem : feedItems) {
+			feedItemIds.add(feedItem.getId());
+		}
+		
+		return entityManager.executeNamedQuery(UserFeedItemContext.class, "getUserFeedItemsForFeedItems", user.getId(), feedItemIds); 
+	}
+	
+	/**
+	 * Given all of the feed items and the persisted contexts, fanout the feed items so that there is a context for
+	 * each feed item. The order of the returned contexts are guaranteed to be the same as the given feed items. 
+	 */
+	private List<UserFeedItemContext> fanoutFeedItems(List<FeedItem> feedItems, List<UserFeedItemContext> contexts) {
+
+		//map each context by feed item id
+		Map<Integer, UserFeedItemContext> contextsByFeedItemId = new Hashtable<Integer, UserFeedItemContext>();
+		for(UserFeedItemContext context : contexts) {
+			contextsByFeedItemId.put(context.getFeedItem().getId(), context);
+		}
+		
+		//build the final list of feed items from the feed contexts retrieved
+		ArrayList<UserFeedItemContext> userFeedItems = new ArrayList<UserFeedItemContext>();
+		for(FeedItem feedItem : feedItems) {
+			if(contextsByFeedItemId.containsKey(feedItem.getId())) {
+				userFeedItems.add(contextsByFeedItemId.get(feedItem.getId()));
+			} else {
+				UserFeedItemContext context = new UserFeedItemContext();
+				context.setFeedItem(feedItem);
+				context.setOwner(user);
+				userFeedItems.add(context);
+			}
+		}
+		return userFeedItems;
 	}
 }

@@ -28,6 +28,11 @@ The application loads its configuration from properties files loaded at runtime.
 
 ## REST Examples
 
+### Viewing a stream
+To request the stream of feeds, run the following cURL command, where "<session_id>" is the ID of your session.
+
+    curl http://localhost:8080/services/v1/stream --header "Authorization:SID <session_id>"
+
 ### Adding a new feed
 To request a new feed be added to your reader, run the following cURL command, where "<session_id>" is the ID of your session.
 

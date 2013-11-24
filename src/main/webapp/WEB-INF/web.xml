@@ -88,7 +88,10 @@
     <servlet-class>feedreader.web.rest.RestServlet</servlet-class>
     <init-param>
       <param-name>classes</param-name>
-      <param-value>feedreader.web.rest.FeedResourceHandler</param-value>
+      <param-value>
+        feedreader.web.rest.FeedResourceHandler,
+        feedreader.web.rest.StreamResourceHandler
+      </param-value>
     </init-param>
   </servlet>
   <servlet-mapping>

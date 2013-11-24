@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import common.persist.DbUtils;
 import common.persist.EntityManager;
@@ -31,6 +32,8 @@ public class UserFeedItemContextEntityHandler implements EntityHandler {
 				+ "ci.title feedItem_title, "
 				+ "ci.description feedItem_description, "
 				+ "ci.link feedItem_link, "
+				+ "ci.pubDate feedItem_pubDate, "
+				+ "ci.guid feedItem_guid, "
 				+ "ci.created feedItem_created, "
 				
 				//feedItem.feed
@@ -100,10 +103,13 @@ public class UserFeedItemContextEntityHandler implements EntityHandler {
 	}
 	
 	@Override
+	@SuppressWarnings("unchecked")
 	public List<?> executeNamedQuery(EntityManager.QueryContext queryContext, String query, Object... parameters)
 			throws SQLException {
 		if(query.equalsIgnoreCase("getFeedItemsForUserFeed")) {
 			return getFeedItemsForUserFeed(queryContext, (Integer)parameters[0], (Integer)parameters[1]);
+		} else if(query.equalsIgnoreCase("getUserFeedItemsForFeedItems")) {
+			return getUserFeedItemsForFeedItems(queryContext, (Integer)parameters[0], (Set<Integer>)parameters[1]);
 		} else {
 			throw new UnsupportedOperationException();
 		}
@@ -131,6 +137,47 @@ public class UserFeedItemContextEntityHandler implements EntityHandler {
 				} finally {
 					DbUtils.close(rst);
 				}
+			} finally {
+				DbUtils.close(stmt);
+			}
+			
+		} finally {
+			queryContext.releaseConnection(cnn);
+		}
+		
+		return feedItemContexts;
+	}
+	
+	public List<UserFeedItemContext> getUserFeedItemsForFeedItems(EntityManager.QueryContext queryContext, int userId, Set<Integer> feedItemIds) throws SQLException {
+		List<UserFeedItemContext> feedItemContexts = new ArrayList<UserFeedItemContext>();
+		Connection cnn = null;
+		try {
+			cnn = queryContext.getConnection();
+			
+			PreparedStatement stmt = null;
+			try {
+				stmt = cnn.prepareStatement(SELECT_SQL_FRAGMENT + "where c.owner = ? and ci.id = ? ");
+				for(Integer feedItemId : feedItemIds) {
+					stmt.clearWarnings();
+					stmt.clearParameters();
+
+					//set the parameters
+					stmt.setInt(1, userId);
+					stmt.setInt(2, feedItemId);
+					
+					//execute the query
+					ResultSet rst = null;
+					try {
+						rst = stmt.executeQuery();
+						while(rst.next()) {
+							feedItemContexts.add(ROW_MAPPER.mapRow(rst));
+						}
+						
+					} finally {
+						DbUtils.close(rst);
+					}
+				}
+				
 			} finally {
 				DbUtils.close(stmt);
 			}

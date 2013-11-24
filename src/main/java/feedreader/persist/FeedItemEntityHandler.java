@@ -92,28 +92,13 @@ public class FeedItemEntityHandler implements EntityHandler {
 		try {
 			cnn = queryContext.getConnection();
 			
-			PreparedStatement stmt = null;
-			try {
-				stmt = cnn.prepareStatement(SELECT_SQL_FRAGMENT
-						+ "where i.id = ? "
-						+ "limit 1");
-				stmt.setInt(1, (Integer)id);
-				
-				ResultSet rst = null;
-				try {
-					rst = stmt.executeQuery();
-					if(rst.next()) {
-						feedItem = ROW_MAPPER.mapRow(rst);
-					}
-					
-				} finally {
-					DbUtils.close(rst);
-				}
-				
-			} finally {
-				DbUtils.close(stmt);
-			}
+			ArrayList<Integer> feedItemIds = new ArrayList<Integer>(1);
+			feedItemIds.add((Integer)id);
 			
+			List<FeedItem> feedItems = getFeedItems(cnn, feedItemIds);
+			if(!feedItems.isEmpty()) {
+				feedItem = feedItems.get(0);
+			}
 		} finally {
 			DbUtils.close(cnn);
 		}
@@ -125,11 +110,16 @@ public class FeedItemEntityHandler implements EntityHandler {
 			throws SQLException {
 		if(query.equalsIgnoreCase("getFeedItemsForFeed")) {
 			return getFeedItemsForFeed(queryContext, (Integer)parameters[0]);
+		} else if(query.equalsIgnoreCase("getFeedItemsForStream")) {
+			return getFeedItemsForStream(queryContext, (Integer)parameters[0], (Integer)parameters[1], (Integer)parameters[2]);
 		} else {
-			throw new UnsupportedOperationException();
+			throw new UnsupportedOperationException("No method registered with name: " + query);
 		}
 	}
 	
+	/**
+	 * Gets all of the feed items for the specified feed
+	 */
 	public List<FeedItem> getFeedItemsForFeed(QueryContext queryContext, int feedId) throws SQLException {
 		List<FeedItem> feedItems = new ArrayList<FeedItem>();
 		Connection cnn = null;
@@ -158,6 +148,91 @@ public class FeedItemEntityHandler implements EntityHandler {
 			
 		} finally {
 			DbUtils.close(cnn);
+		}
+		return feedItems;
+	}
+
+	/**
+	 * Gets all of the feed items the user is subscribed to.
+	 */
+	public List<FeedItem> getFeedItemsForStream(QueryContext queryContext, int userId, int size, int offset) throws SQLException {
+		List<FeedItem> feedItems = null;
+		Connection cnn = null;
+		try {
+			cnn = queryContext.getConnection();
+			
+			//get all of the feed item ids
+			final List<Integer> feedItemIds = getSubscribedFeedItemIds(cnn, userId, size, offset);
+			
+			//get all of the feed items that match
+			feedItems = getFeedItems(cnn, feedItemIds);
+			
+		} finally {
+			DbUtils.close(cnn);
+		}
+		return feedItems;
+	}
+	
+	/**
+	 * Gets the feed item IDs for all of the subscriptions for the given user
+	 */
+	private List<Integer> getSubscribedFeedItemIds(Connection cnn, int userId, int size, int offset) throws SQLException {
+		final ArrayList<Integer> feedItemIds = new ArrayList<Integer>(size);
+		PreparedStatement stmt = null;
+		try {
+			stmt = cnn.prepareStatement("select fi.id feedItemId "
+					+ "from FeedSubscriptions fs inner join FeedItems fi on fs.feedId = fi.feedId "
+					+ "where fs.subscriber = ? "
+					+ "order by fi.created desc limit " + size + " offset " + offset);
+			stmt.setInt(1, userId);
+			
+			ResultSet rst = null;
+			try {
+				rst = stmt.executeQuery();
+				while(rst.next()) {
+					feedItemIds.add(rst.getInt("feedItemId"));
+				}
+			} finally {
+				DbUtils.close(rst);
+			}
+		} finally {
+			DbUtils.close(stmt);
+		}
+		return feedItemIds;
+	}
+	
+	/**
+	 * Gets all of the specified feed items corresponding to the specified IDs
+	 */
+	private List<FeedItem> getFeedItems(final Connection cnn, final List<Integer> feedItemIds) throws SQLException {
+		final ArrayList<FeedItem> feedItems = new ArrayList<FeedItem>(feedItemIds.size());
+		PreparedStatement stmt = null;
+		try {
+			stmt = cnn.prepareStatement(SELECT_SQL_FRAGMENT
+					+ "where i.id = ? "
+					+ "limit 1");
+			
+			//TODO: create a procedure to do all of the looping in Postgresql instead of doing in JDBC
+			for(Integer feedItemId : feedItemIds) {
+				stmt.setInt(1, (Integer)feedItemId);
+				
+				ResultSet rst = null;
+				try {
+					rst = stmt.executeQuery();
+					
+					//limit 1 clause used in query so there is no need to check anything after the first
+					if(rst.next()) { 
+						FeedItem feedItem = ROW_MAPPER.mapRow(rst);
+						feedItems.add(feedItem);
+					}
+					
+				} finally {
+					DbUtils.close(rst);
+				}
+			}
+			
+		} finally {
+			DbUtils.close(stmt);
 		}
 		return feedItems;
 	}
