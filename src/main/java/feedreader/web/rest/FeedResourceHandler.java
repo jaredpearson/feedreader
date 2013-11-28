@@ -2,14 +2,14 @@ package feedreader.web.rest;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Date;
 
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
-import common.json.JsonWriter;
-import common.json.JsonWriterFactory;
 import common.persist.EntityManager;
 import common.web.rest.Method;
 import common.web.rest.PathParameter;
@@ -25,44 +25,45 @@ import feedreader.UserFeedItemContext;
  */
 public class FeedResourceHandler {
 	private final ObjectMapper objectMapper;
-	private final JsonWriterFactory jsonWriterFactory;
 	
 	public FeedResourceHandler() {
 		this.objectMapper = new ObjectMapper();
-		this.jsonWriterFactory = new JsonWriterFactory();
 	}
 	
 	/**
 	 * Gets the feed corresponding to the request
 	 */
 	@RequestHandler(value = "^/v1/feed/([0-9]+)$", method = Method.GET)
-	public void getFeed(HttpServletResponse response, FeedReader feedReader, @PathParameter(1) String feedIdValue) throws IOException, ServletException {
+	public void getFeed(HttpServletRequest request, HttpServletResponse response, FeedReader feedReader, @PathParameter(1) String feedIdValue) throws IOException, ServletException {
 		
 		//get the requested feed
 		int feedId = Integer.valueOf(feedIdValue);
 		UserFeedContext feedContext = feedReader.getFeed(feedId);
 		
-		//create the response model
-		GetFeedResponseModel responseModel = new GetFeedResponseModel();
-		responseModel.success = true;
+		final ResourceHrefBuilder hrefBuilder = new ResourceHrefBuilder(request, "v1");
 		
-		response.setContentType("application/json");
-		JsonWriter out = null;
-		try {
-			out = jsonWriterFactory.createWithWriter(response.getWriter());
+		//create the resource models
+		final FeedResource feedModel = new FeedResource();
+		feedModel.id = feedContext.getId();
+		feedModel.title = feedContext.getTitle();
+		feedModel.created = feedContext.getCreated();
+		feedModel.url = feedContext.getUrl();
+		feedModel.items = new FeedItemResource[feedContext.getItems().size()];
+		for(int index = 0; index < feedContext.getItems().size(); index++) {
+			UserFeedItemContext feedItem = feedContext.getItems().get(index);
 
-			out.startObject();
-			out.name("success").value(true);
-			out.name("data");
+			final FeedItemResource feedItemResource = FeedItemResource.fromFeedItem(feedItem, hrefBuilder);
 			
-			UserFeedContextJsonMapper mapper = new UserFeedContextJsonMapper(new UserJsonMapper());
-			mapper.write(out, feedContext);
-			
-			out.endObject();
+			feedModel.items[index] = feedItemResource;
+		}
+		
+		//output the model as JSON
+		response.setContentType("application/json");
+		Writer out = response.getWriter();
+		try {
+			objectMapper.writeValue(out, feedModel);
 		} finally {
-			if(out != null) {
-				out.close();
-			}
+			out.close();
 		}
 	}
 	
@@ -104,12 +105,15 @@ public class FeedResourceHandler {
 		}
 	}
 	
-	public static class GetFeedResponseModel {
-		public boolean success;
-		public Object data;
-	}
-	
 	public static class MarkReadResponseModel {
 		public boolean success;
+	}
+	
+	static class FeedResource {
+		public int id;
+		public String title;
+		public Date created;
+		public String url;
+		public FeedItemResource[] items;
 	}
 }

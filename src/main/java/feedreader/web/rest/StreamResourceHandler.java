@@ -1,13 +1,14 @@
 package feedreader.web.rest;
 
 import java.io.IOException;
+import java.io.Writer;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import common.json.JsonWriter;
-import common.json.JsonWriterFactory;
+import org.codehaus.jackson.map.ObjectMapper;
+
 import common.web.rest.Method;
 import common.web.rest.RequestHandler;
 import feedreader.FeedReader;
@@ -19,10 +20,10 @@ import feedreader.UserFeedItemContext;
  * @author jared.pearson
  */
 public class StreamResourceHandler {
-	private final JsonWriterFactory jsonWriterFactory;
+	private final ObjectMapper objectMapper;
 	
 	public StreamResourceHandler() {
-		this.jsonWriterFactory = new JsonWriterFactory();
+		this.objectMapper = new ObjectMapper();
 	}
 	
 	/**
@@ -30,29 +31,30 @@ public class StreamResourceHandler {
 	 */
 	@RequestHandler(value = "^/v1/stream$", method = Method.GET)
 	public void getStream(HttpServletRequest request, HttpServletResponse response, FeedReader feedReader) throws IOException, ServletException {
-		Stream feed = feedReader.getStream();
+		final Stream feed = feedReader.getStream();
+		
+		final ResourceHrefBuilder hrefBuilder = new ResourceHrefBuilder(request, "v1");
+		
+		//create the response models
+		final StreamResource streamResource = new StreamResource();
+		streamResource.items = new FeedItemResource[feed.getItems().size()];
+		for(int index = 0; index < feed.getItems().size(); index++) {
+			final UserFeedItemContext feedItem = feed.getItems().get(index);
+			final FeedItemResource feedItemResource = FeedItemResource.fromFeedItem(feedItem, hrefBuilder);
+			streamResource.items[index] = feedItemResource; 
+		}
 		
 		response.setContentType("application/json");
-		JsonWriter out = null;
+		Writer out = response.getWriter();
 		try {
-			out = jsonWriterFactory.createWithWriter(response.getWriter());
-			out.startObject();
-			out.name("items");
-			out.startArray();
-			
-			//output each feed item with all fields
-			UserFeedItemContextJsonMapper representation = UserFeedItemContextJsonMapper.buildWithAllFields().build();
-			for(UserFeedItemContext feedItem : feed.getItems()) {
-				representation.write(out, feedItem);
-			}
-			
-			out.endArray();
-			out.endObject();
+			objectMapper.writeValue(out, streamResource);
 		} finally {
-			if(out != null) {
-				out.close();
-			}
+			out.close();
 		}
+	}
+	
+	static class StreamResource {
+		public FeedItemResource[] items;
 	}
 	
 }

@@ -43,7 +43,7 @@ public class FeedResourceHandlerTest {
 		when(response.getWriter()).thenReturn(new PrintWriter(writer));
 		
 		FeedResourceHandler handler = new FeedResourceHandler();
-		handler.getFeed(response, feedReader, "1");
+		handler.getFeed(request, response, feedReader, "1");
 		
 		String expected = "{\"success\":true,\"data\":{\"id\":1,\"title\":\"Test Feed\",\"created\":null,\"url\":null,\"createdBy\":null,\"items\":[]}}";
 		assertEquals(expected, writer.toString());
