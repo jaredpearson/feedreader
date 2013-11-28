@@ -36,4 +36,4 @@ To request the stream of feeds, run the following cURL command, where "<session_
 ### Adding a new feed
 To request a new feed be added to your reader, run the following cURL command, where "<session_id>" is the ID of your session.
 
-    curl http://localhost:8080/services/v1/feed --header "Authorization:SID <session_id>" -X POST --data "url=http://www.nasa.gov/rss/dyn/breaking_news.rss"
+    curl http://localhost:8080/services/v1/feedSubscription -H "Authorization:SID <session_id>" -X POST -H "Content-Type: application/json" -d '{"url":"http://www.nasa.gov/rss/dyn/breaking_news.rss"}' 

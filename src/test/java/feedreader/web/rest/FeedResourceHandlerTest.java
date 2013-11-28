@@ -50,30 +50,6 @@ public class FeedResourceHandlerTest {
 	}
 	
 	@Test
-	public void testCreateFeed() throws Exception {
-		UserFeedContext feedContext = mock(UserFeedContext.class);
-		when(feedContext.getId()).thenReturn(1);
-		when(feedContext.getTitle()).thenReturn("Test Feed");
-		
-		FeedReader feedReader = mock(FeedReader.class);
-		//when(feedReader.addFeedFromUrl(eq("http://test.com"))).thenReturn(feedContext);
-		
-		HttpServletRequest request = mock(HttpServletRequest.class);
-		when(request.getPathInfo()).thenReturn("/v1/feed");
-		when(request.getParameter(eq("url"))).thenReturn("http://test.com");
-		
-		StringWriter writer = new StringWriter();
-		HttpServletResponse response = mock(HttpServletResponse.class);
-		when(response.getWriter()).thenReturn(new PrintWriter(writer));
-		
-		FeedResourceHandler handler = new FeedResourceHandler();
-		handler.createFeed(request, response, feedReader);
-		
-		String expected = "{\"success\":true,\"id\":1}";
-		assertEquals(expected, writer.toString());
-	}
-
-	@Test
 	public void testMarkRead() throws Exception {
 		UserFeedItemContext feedItemContext = mock(UserFeedItemContext.class);
 		

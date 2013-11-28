@@ -89,6 +89,7 @@
     <init-param>
       <param-name>classes</param-name>
       <param-value>
+        feedreader.web.rest.FeedSubscriptionResourceHandler,
         feedreader.web.rest.FeedResourceHandler,
         feedreader.web.rest.StreamResourceHandler
       </param-value>
