@@ -1,11 +1,15 @@
 package feedreader.web.rest;
 
 import java.io.IOException;
+import java.io.Writer;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
+import org.codehaus.jackson.map.ObjectMapper;
+
 import common.json.JsonWriter;
+import common.json.JsonWriterFactory;
 import common.persist.EntityManager;
 import common.web.rest.Method;
 import common.web.rest.PathParameter;
@@ -20,6 +24,13 @@ import feedreader.UserFeedItemContext;
  * @author jared.pearson
  */
 public class FeedResourceHandler {
+	private final ObjectMapper objectMapper;
+	private final JsonWriterFactory jsonWriterFactory;
+	
+	public FeedResourceHandler() {
+		this.objectMapper = new ObjectMapper();
+		this.jsonWriterFactory = new JsonWriterFactory();
+	}
 	
 	/**
 	 * Gets the feed corresponding to the request
@@ -31,10 +42,14 @@ public class FeedResourceHandler {
 		int feedId = Integer.valueOf(feedIdValue);
 		UserFeedContext feedContext = feedReader.getFeed(feedId);
 		
+		//create the response model
+		GetFeedResponseModel responseModel = new GetFeedResponseModel();
+		responseModel.success = true;
+		
 		response.setContentType("application/json");
 		JsonWriter out = null;
 		try {
-			out = new JsonWriter(response.getWriter());
+			out = jsonWriterFactory.createWithWriter(response.getWriter());
 
 			out.startObject();
 			out.name("success").value(true);
@@ -75,17 +90,26 @@ public class FeedResourceHandler {
 		//save the item
 		entityManager.persist(feedItem);
 		
+		//create the response model
+		MarkReadResponseModel model = new MarkReadResponseModel();
+		model.success = true;
+		
+		//output to the response
 		response.setContentType("application/json");
-		JsonWriter out = null;
+		Writer out = response.getWriter();
 		try {
-			out = new JsonWriter(response.getWriter());
-			out.startObject();
-			out.name("success").value(true);
-			out.endObject();
+			objectMapper.writeValue(out, model);
 		} finally {
-			if(out != null) {
-				out.close();
-			}
+			out.close();
 		}
+	}
+	
+	public static class GetFeedResponseModel {
+		public boolean success;
+		public Object data;
+	}
+	
+	public static class MarkReadResponseModel {
+		public boolean success;
 	}
 }

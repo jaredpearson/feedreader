@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import common.json.JsonWriter;
+import common.json.JsonWriterFactory;
 import common.web.rest.Method;
 import common.web.rest.RequestHandler;
 import feedreader.FeedReader;
@@ -18,6 +19,11 @@ import feedreader.UserFeedItemContext;
  * @author jared.pearson
  */
 public class StreamResourceHandler {
+	private final JsonWriterFactory jsonWriterFactory;
+	
+	public StreamResourceHandler() {
+		this.jsonWriterFactory = new JsonWriterFactory();
+	}
 	
 	/**
 	 * Gets the aggregate feed, which contains all feed items across multiple RSS feeds. 
@@ -29,7 +35,7 @@ public class StreamResourceHandler {
 		response.setContentType("application/json");
 		JsonWriter out = null;
 		try {
-			out = new JsonWriter(response.getWriter());
+			out = jsonWriterFactory.createWithWriter(response.getWriter());
 			out.startObject();
 			out.name("items");
 			out.startArray();

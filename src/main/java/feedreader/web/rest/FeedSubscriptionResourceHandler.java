@@ -17,6 +17,11 @@ import feedreader.FeedReader;
 import feedreader.FeedRequest;
 
 public class FeedSubscriptionResourceHandler {
+	private final ObjectMapper jsonObjectMapper;
+	
+	public FeedSubscriptionResourceHandler() {
+		this.jsonObjectMapper = new ObjectMapper();
+	}
 	
 	@RequestHandler(value="^/v1/feedSubscription$", method=Method.POST)
 	public void createSubscription(HttpServletRequest request, HttpServletResponse response, FeedReader feedReader) 
@@ -28,7 +33,7 @@ public class FeedSubscriptionResourceHandler {
 		CreateFeedSubscriptionRequestData input = null;
 		BufferedReader bufferedReader = request.getReader();
 		try {
-			input = new ObjectMapper().readValue(bufferedReader, CreateFeedSubscriptionRequestData.class);
+			input = jsonObjectMapper.readValue(bufferedReader, CreateFeedSubscriptionRequestData.class);
 		} catch(JsonMappingException exc) {
 			throw new InvalidRequestBodyException(exc);
 		} catch(JsonParseException exc) {
@@ -44,7 +49,7 @@ public class FeedSubscriptionResourceHandler {
 		CreateFeedSubscriptionResponse responseModel = new CreateFeedSubscriptionResponse();
 		responseModel.success = true;
 		responseModel.feedRequestId = feedRequest.getId();
-		new ObjectMapper().writeValue(response.getOutputStream(), responseModel);
+		jsonObjectMapper.writeValue(response.getOutputStream(), responseModel);
 	}
 	
 	public static class CreateFeedSubscriptionRequestData {

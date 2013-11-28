@@ -4,8 +4,10 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.io.Writer;
 import java.util.Calendar;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 
 import common.json.JsonWriter;
@@ -17,7 +19,7 @@ public class JsonWriterTest {
 		StringWriter stringWriter = new StringWriter();
 		JsonWriter writer = null;
 		try {
-			writer = new JsonWriter(stringWriter);
+			writer = createWithWriter(stringWriter);
 			writer.startObject();
 			writer.name("foo").value("bar");
 			writer.endObject();
@@ -37,7 +39,7 @@ public class JsonWriterTest {
 		StringWriter stringWriter = new StringWriter();
 		JsonWriter writer = null;
 		try {
-			writer = new JsonWriter(stringWriter);
+			writer = createWithWriter(stringWriter);
 			writer.startObject();
 			writer.name("closed").value(true);
 			writer.name("open").value(false);
@@ -58,7 +60,7 @@ public class JsonWriterTest {
 		StringWriter stringWriter = new StringWriter();
 		JsonWriter writer = null;
 		try {
-			writer = new JsonWriter(stringWriter);
+			writer = createWithWriter(stringWriter);
 			writer.startObject();
 			writer.name("count").value(Integer.valueOf(10));
 			writer.endObject();
@@ -78,7 +80,7 @@ public class JsonWriterTest {
 		StringWriter stringWriter = new StringWriter();
 		JsonWriter writer = null;
 		try {
-			writer = new JsonWriter(stringWriter);
+			writer = createWithWriter(stringWriter);
 			writer.startObject();
 			writer.name("foo").value("bar");
 			writer.name("user");
@@ -103,7 +105,7 @@ public class JsonWriterTest {
 		StringWriter stringWriter = new StringWriter();
 		JsonWriter writer = null;
 		try {
-			writer = new JsonWriter(stringWriter);
+			writer = createWithWriter(stringWriter);
 			writer.startObject();
 			writer.name("sum").value(10l);
 			writer.endObject();
@@ -129,7 +131,7 @@ public class JsonWriterTest {
 		StringWriter stringWriter = new StringWriter();
 		JsonWriter writer = null;
 		try {
-			writer = new JsonWriter(stringWriter);
+			writer = createWithWriter(stringWriter);
 			writer.startObject();
 			writer.name("created").value(calendar.getTime());
 			writer.endObject();
@@ -149,7 +151,7 @@ public class JsonWriterTest {
 		StringWriter stringWriter = new StringWriter();
 		JsonWriter writer = null;
 		try {
-			writer = new JsonWriter(stringWriter);
+			writer = createWithWriter(stringWriter);
 			writer.startArray();
 			writer.value(1);
 			writer.value(2);
@@ -176,7 +178,7 @@ public class JsonWriterTest {
 		StringWriter stringWriter = new StringWriter();
 		JsonWriter writer = null;
 		try {
-			writer = new JsonWriter(stringWriter);
+			writer = createWithWriter(stringWriter);
 			writer.startObject();
 			writer.name("values");
 			writer.startArray();
@@ -199,6 +201,11 @@ public class JsonWriterTest {
 		String expected = "{\"values\":[1,2,\"three\",{\"fruit\":\"apple\"}]}";
 		String actual = stringWriter.toString();
 		assertEquals(expected, actual);
+	}
+	
+	private JsonWriter createWithWriter(Writer writer) {
+		ObjectMapper objectMapper = new ObjectMapper();
+		return new JsonWriter(objectMapper.getJsonFactory(), writer);
 	}
 	
 }
