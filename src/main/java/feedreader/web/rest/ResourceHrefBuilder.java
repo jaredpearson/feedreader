@@ -14,7 +14,7 @@ class ResourceHrefBuilder {
 		this.protocol = (request.getProtocol().startsWith("HTTPS/")) ? "https" : "http";
 		this.serverName = request.getServerName();
 		this.serverPort = request.getServerPort();
-		this.servletPath = request.getServletPath();
+		this.servletPath = "/services";
 		this.version = version;
 	}
 	
