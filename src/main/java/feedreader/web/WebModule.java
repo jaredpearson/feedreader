@@ -8,6 +8,7 @@ import common.web.rest.ResourceHandler;
 import feedreader.web.rest.FeedResourceHandler;
 import feedreader.web.rest.FeedSubscriptionResourceHandler;
 import feedreader.web.rest.RestAuthorizationFilter;
+import feedreader.web.rest.ServiceResourceHandler;
 import feedreader.web.rest.StreamResourceHandler;
 
 /**
@@ -25,7 +26,6 @@ class WebModule extends ServletModule {
 
 	private void configureRestServices() {
 		filter("/reader").through(AuthorizationFilter.class);
-		filter("/services/*").through(RestAuthorizationFilter.class);
 		
 		bind(HomeServlet.class).in(Scopes.SINGLETON);
 		serve("/home").with(HomeServlet.class);
@@ -40,11 +40,13 @@ class WebModule extends ServletModule {
 		serve("/reader").with(ReaderServlet.class);
 		
 		//configure the rest servlet
+		filter("/services/*", "/services").through(RestAuthorizationFilter.class);
 		Multibinder<ResourceHandler> handlerBinder = Multibinder.newSetBinder(binder(), ResourceHandler.class);
 		handlerBinder.addBinding().to(FeedSubscriptionResourceHandler.class);
 		handlerBinder.addBinding().to(FeedResourceHandler.class);
+		handlerBinder.addBinding().to(ServiceResourceHandler.class);
 		handlerBinder.addBinding().to(StreamResourceHandler.class);
-		serve("/services/*").with(common.web.rest.RestServlet.class);
+		serve("/services/*", "/services").with(common.web.rest.RestServlet.class);
 	}
 
 }

@@ -19,6 +19,13 @@ class ResourceHrefBuilder {
 	}
 	
 	public String buildHref(String path) {
-		return protocol + "://" + serverName + ":" + serverPort + servletPath + "/" + version + path;
+		boolean showPort = (protocol.equalsIgnoreCase("http") && serverPort != 80) || (protocol.equalsIgnoreCase("https") && serverPort != 443);
+		
+		return protocol + "://" + serverName + 
+				((showPort) ? ":" + serverPort : "") + 
+				servletPath + 
+				(servletPath.endsWith("/") ? "" : "/") + 
+				version + 
+				(path == null ? "" : path);
 	}
 }

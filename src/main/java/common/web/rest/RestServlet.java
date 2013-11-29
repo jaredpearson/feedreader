@@ -156,6 +156,9 @@ public class RestServlet extends HttpServlet {
 		
 		private Matcher getMatcher(HttpServletRequest request) {
 			String pathInfo = request.getPathInfo();
+			if(pathInfo == null) {
+				pathInfo = "";
+			}
 			return pattern.matcher(pathInfo);
 		}
 	}
