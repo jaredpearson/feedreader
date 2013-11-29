@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -16,7 +17,6 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.XMLEvent;
 
 import common.DateUtils;
-
 import feedreader.Feed;
 import feedreader.FeedItem;
 
@@ -38,14 +38,14 @@ public class FeedLoader {
 		InputStream inputStream = null;
 		try {
 			URL url = new URL(urlAddress);
-			HttpURLConnection urlConnection = (HttpURLConnection)url.openConnection();
+			URLConnection urlConnection = url.openConnection();
 			urlConnection.setRequestProperty("Accept", "application/rss+xml;q=1.0,application/xml;q=0.9");
 			urlConnection.setRequestProperty("Accept-Charset", "utf-8");
 			urlConnection.setRequestProperty("Accept-Encoding", "gzip;q=1.0");
 			
 			inputStream = urlConnection.getInputStream();
-			if(urlConnection.getResponseCode() != 200) {
-				throw new RuntimeException("Response code returned: " + urlConnection.getResponseCode());
+			if(urlConnection instanceof HttpURLConnection && ((HttpURLConnection)urlConnection).getResponseCode() != 200) {
+				throw new RuntimeException("Response code returned: " + ((HttpURLConnection)urlConnection).getResponseCode());
 			}
 			if("gzip".equals(urlConnection.getContentEncoding())) {
 				inputStream = new GZIPInputStream(inputStream);
