@@ -2,6 +2,8 @@ package feedreader.web;
 
 import java.io.IOException;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -12,26 +14,31 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import common.ioc.Container;
-import common.ioc.web.ContainerFilter;
 import common.persist.EntityManager;
+import common.persist.EntityManagerFactory;
 import feedreader.UserSession;
 
 /**
  * Filter for checking if a web request is authorized.
  * @author jared.pearson
  */
+@Singleton
 public class AuthorizationFilter implements Filter {
 	public static final String SESSION_ID_COOKIE_NAME = "sid";
-
+	private EntityManagerFactory entityManagerFactory;
+	
+	@Inject
+	public void setEntityManagerProvider(EntityManagerFactory entityManagerFactory) {
+		this.entityManagerFactory = entityManagerFactory;
+	}
+	
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) 
 			throws IOException, ServletException {
 		HttpServletRequest httpRequest = (HttpServletRequest)request;
 		HttpServletResponse httpResponse = (HttpServletResponse)response;
 		
-		Container container = ContainerFilter.getContainerFromRequest(httpRequest);
-		EntityManager entityManager = container.getComponent(EntityManager.class);
+		EntityManager entityManager = entityManagerFactory.get();
 		
 		//attempt to get the session ID from cookie
 		int sessionId = getSessionId(httpRequest);

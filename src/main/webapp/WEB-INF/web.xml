@@ -16,87 +16,19 @@
   </context-param>
   
   <listener>
+  	<listener-class>feedreader.web.GuiceConfigListener</listener-class>
+  </listener>
+  <listener>
     <listener-class>feedreader.web.StartupListener</listener-class>
   </listener>
   
-  <!-- FIXME: we shouldn't instantiate the container filter for static resources -->
   <filter>
-  	<filter-name>ContainerFilter</filter-name>
-  	<filter-class>feedreader.web.ContainerFilter</filter-class>
+  	<filter-name>guice</filter-name>
+  	<filter-class>com.google.inject.servlet.GuiceFilter</filter-class>
   </filter>
   <filter-mapping>
-  	<filter-name>ContainerFilter</filter-name>
+  	<filter-name>guice</filter-name>
   	<url-pattern>/*</url-pattern>
   </filter-mapping>
   
-  <filter>
-    <filter-name>AuthorizationFilter</filter-name>
-    <filter-class>feedreader.web.AuthorizationFilter</filter-class>
-  </filter>
-  <filter-mapping>
-    <filter-name>AuthorizationFilter</filter-name>
-    <url-pattern>/reader</url-pattern>
-  </filter-mapping>
-  
-  <filter>
-  	<filter-name>RestAuthorizationFilter</filter-name>
-  	<filter-class>feedreader.web.rest.RestAuthorizationFilter</filter-class>
-  </filter>
-  <filter-mapping>
-  	<filter-name>RestAuthorizationFilter</filter-name>
-  	<url-pattern>/services/*</url-pattern>
-  </filter-mapping>
-  
-  <servlet>
-    <servlet-name>Home</servlet-name>
-    <servlet-class>feedreader.web.HomeServlet</servlet-class>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>Home</servlet-name>
-    <url-pattern>/home</url-pattern>
-  </servlet-mapping>
-  
-  <servlet>
-    <servlet-name>SignIn</servlet-name>
-    <servlet-class>feedreader.web.SignInServlet</servlet-class>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>SignIn</servlet-name>
-    <url-pattern>/signIn</url-pattern>
-  </servlet-mapping>
-  
-  <servlet>
-    <servlet-name>CreateUser</servlet-name>
-    <servlet-class>feedreader.web.CreateUserServlet</servlet-class>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>CreateUser</servlet-name>
-    <url-pattern>/createUser</url-pattern>
-  </servlet-mapping>
-  
-  <servlet>
-    <servlet-name>Reader</servlet-name>
-    <servlet-class>feedreader.web.ReaderServlet</servlet-class>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>Reader</servlet-name>
-    <url-pattern>/reader</url-pattern>
-  </servlet-mapping>
-  
-  <servlet>
-    <servlet-name>Services</servlet-name>
-    <servlet-class>common.web.rest.RestServlet</servlet-class>
-    <init-param>
-      <param-name>classes</param-name>
-      <param-value>
-        feedreader.web.rest.FeedSubscriptionResourceHandler,
-        feedreader.web.rest.FeedResourceHandler,
-        feedreader.web.rest.StreamResourceHandler
-      </param-value>
-    </init-param>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>Services</servlet-name>
-    <url-pattern>/services/*</url-pattern>
-  </servlet-mapping>
 </web-app>

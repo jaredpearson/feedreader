@@ -9,6 +9,7 @@ import java.io.StringWriter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 
 import common.persist.EntityManager;
@@ -36,16 +37,17 @@ public class FeedResourceHandlerTest {
 		when(feedReader.getFeed(1)).thenReturn(feedContext);
 		
 		HttpServletRequest request = mock(HttpServletRequest.class);
+		when(request.getProtocol()).thenReturn("HTTP/1.1");
 		when(request.getPathInfo()).thenReturn("/v1/feed/1");
 		
 		StringWriter writer = new StringWriter();
 		HttpServletResponse response = mock(HttpServletResponse.class);
 		when(response.getWriter()).thenReturn(new PrintWriter(writer));
 		
-		FeedResourceHandler handler = new FeedResourceHandler();
+		FeedResourceHandler handler = new FeedResourceHandler(new ObjectMapper());
 		handler.getFeed(request, response, feedReader, "1");
 		
-		String expected = "{\"success\":true,\"data\":{\"id\":1,\"title\":\"Test Feed\",\"created\":null,\"url\":null,\"createdBy\":null,\"items\":[]}}";
+		String expected = "{\"id\":1,\"title\":\"Test Feed\",\"created\":null,\"url\":null,\"items\":[]}";
 		assertEquals(expected, writer.toString());
 	}
 	
@@ -70,7 +72,7 @@ public class FeedResourceHandlerTest {
 		HttpServletResponse response = mock(HttpServletResponse.class);
 		when(response.getWriter()).thenReturn(new PrintWriter(writer));
 		
-		FeedResourceHandler handler = new FeedResourceHandler();
+		FeedResourceHandler handler = new FeedResourceHandler(new ObjectMapper());
 		handler.markFeedItemRead(response, entityManager, feedReader, "1", "1");
 		
 		verify(entityManager).persist(eq(feedItemContext));

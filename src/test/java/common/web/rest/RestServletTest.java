@@ -1,6 +1,9 @@
-package feedreader.web.rest;
+package common.web.rest;
 
 import static org.mockito.Mockito.*;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
@@ -8,9 +11,11 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.junit.Test;
 
-import common.ioc.Container;
-import common.ioc.web.ContainerFilter;
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+
 import common.web.rest.RequestHandler;
+import common.web.rest.ResourceHandler;
 import common.web.rest.RestServlet;
 
 public class RestServletTest {
@@ -18,26 +23,31 @@ public class RestServletTest {
 	@Test
 	public void testHandlerExecution() throws Exception {
 		ServletConfig config = mock(ServletConfig.class);
-		when(config.getInitParameter(eq("classes"))).thenReturn(TestRequestHandler.class.getName());
 		
-		Container container = mock(Container.class);
-		
-		HttpServletRequest request = mock(HttpServletRequest.class);
+		final HttpServletRequest request = mock(HttpServletRequest.class);
 		when(request.getMethod()).thenReturn("GET");
 		when(request.getPathInfo()).thenReturn("/test");
-		when(request.getAttribute(eq(ContainerFilter.REQUEST_ATTRIBUTE))).thenReturn(container);
 		
-		HttpServletResponse response = mock(HttpServletResponse.class);
+		final HttpServletResponse response = mock(HttpServletResponse.class);
 		
-		RestServlet servlet = new RestServlet();
+		Set<ResourceHandler> handlers = new HashSet<ResourceHandler>();
+		handlers.add(new TestRequestHandler());
+		
+		RestServlet servlet = new RestServlet(handlers);
 		servlet.init(config);
+		servlet.injector = Guice.createInjector(new AbstractModule() {
+			@Override
+			protected void configure() {
+				bind(HttpServletResponse.class).toInstance(response);
+			}
+		});
 		servlet.service(request, response);
 		
 		//no error should be thrown
 		verify(response, never()).sendError(anyInt());
 	}
 	
-	public static class TestRequestHandler {
+	public static class TestRequestHandler implements ResourceHandler {
 		@RequestHandler("/test")
 		public void handle(HttpServletResponse response) {
 		}

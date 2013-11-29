@@ -3,6 +3,8 @@ package feedreader.web.rest;
 import java.io.BufferedReader;
 import java.io.IOException;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -13,14 +15,17 @@ import org.codehaus.jackson.map.ObjectMapper;
 
 import common.web.rest.Method;
 import common.web.rest.RequestHandler;
+import common.web.rest.ResourceHandler;
 import feedreader.FeedReader;
 import feedreader.FeedRequest;
 
-public class FeedSubscriptionResourceHandler {
+@Singleton
+public class FeedSubscriptionResourceHandler implements ResourceHandler {
 	private final ObjectMapper jsonObjectMapper;
 	
-	public FeedSubscriptionResourceHandler() {
-		this.jsonObjectMapper = new ObjectMapper();
+	@Inject
+	public FeedSubscriptionResourceHandler(ObjectMapper objectMapper) {
+		this.jsonObjectMapper = objectMapper;
 	}
 	
 	@RequestHandler(value="^/v1/feedSubscription$", method=Method.POST)

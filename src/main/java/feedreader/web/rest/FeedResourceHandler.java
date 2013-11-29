@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.Date;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -14,6 +16,7 @@ import common.persist.EntityManager;
 import common.web.rest.Method;
 import common.web.rest.PathParameter;
 import common.web.rest.RequestHandler;
+import common.web.rest.ResourceHandler;
 import feedreader.Feed;
 import feedreader.FeedReader;
 import feedreader.UserFeedContext;
@@ -23,11 +26,13 @@ import feedreader.UserFeedItemContext;
  * Handler that provides REST-ful services for the {@link Feed}
  * @author jared.pearson
  */
-public class FeedResourceHandler {
+@Singleton
+public class FeedResourceHandler implements ResourceHandler {
 	private final ObjectMapper objectMapper;
 	
-	public FeedResourceHandler() {
-		this.objectMapper = new ObjectMapper();
+	@Inject
+	public FeedResourceHandler(ObjectMapper objectMapper) {
+		this.objectMapper = objectMapper;
 	}
 	
 	/**

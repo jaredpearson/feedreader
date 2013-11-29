@@ -10,6 +10,7 @@ import java.util.Set;
 
 import common.messagequeue.MessageSender;
 import common.persist.EntityManager;
+import common.persist.EntityManagerFactory;
 import feedreader.messagequeue.RetrieveFeedMessage;
 
 /**
@@ -17,12 +18,12 @@ import feedreader.messagequeue.RetrieveFeedMessage;
  * @author jared.pearson
  */
 public class FeedReader {
-	private final EntityManager entityManager;
+	private final EntityManagerFactory entityManagerFactory;
 	private final User user;
 	private final MessageSender messageSender;
 	
-	public FeedReader(EntityManager entityManager, User user, MessageSender messageSender) {
-		this.entityManager = entityManager;
+	public FeedReader(EntityManagerFactory entityManagerFactory, User user, MessageSender messageSender) {
+		this.entityManagerFactory = entityManagerFactory;
 		this.user = user;
 		this.messageSender = messageSender;
 	}
@@ -39,7 +40,7 @@ public class FeedReader {
 		final FeedRequest feedRequest = new FeedRequest();
 		feedRequest.setUrl(url);
 		feedRequest.setCreatedBy(user);
-		entityManager.persist(feedRequest);
+		entityManagerFactory.get().persist(feedRequest);
 		
 		//queue up the url to be processed async
 		messageSender.send("feedRequest", new RetrieveFeedMessage(feedRequest));
@@ -53,7 +54,7 @@ public class FeedReader {
 	public Stream getStream() {
 		final int offset = 0;
 		final int size = 25;
-		List<FeedItem> feedItems = entityManager.executeNamedQuery(FeedItem.class, "getFeedItemsForStream", user.getId(), size, offset);
+		List<FeedItem> feedItems = entityManagerFactory.get().executeNamedQuery(FeedItem.class, "getFeedItemsForStream", user.getId(), size, offset);
 		
 		//get all of the contexts for the user from the feed items
 		List<UserFeedItemContext> contexts = getFeedContexts(feedItems);
@@ -68,6 +69,7 @@ public class FeedReader {
 	 * Gets the feed with the specified ID.
 	 */
 	public UserFeedContext getFeed(int feedId) {
+		final EntityManager entityManager = entityManagerFactory.get();
 		Feed feed = entityManager.get(Feed.class, feedId);
 		if(feed == null) {
 			throw new IllegalArgumentException();
@@ -91,7 +93,7 @@ public class FeedReader {
 			feedItemIds.add(feedItem.getId());
 		}
 		
-		return entityManager.executeNamedQuery(UserFeedItemContext.class, "getUserFeedItemsForFeedItems", user.getId(), feedItemIds); 
+		return entityManagerFactory.get().executeNamedQuery(UserFeedItemContext.class, "getUserFeedItemsForFeedItems", user.getId(), feedItemIds); 
 	}
 	
 	/**

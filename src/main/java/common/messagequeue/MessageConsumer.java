@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Map;
 
+import javax.inject.Inject;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
@@ -22,6 +23,7 @@ public class MessageConsumer implements Runnable {
 	private final Map<String, Provider<MessageHandler>> messageHandlers; 
 	private final Destination destination;
 	
+	@Inject
 	public MessageConsumer(final ConnectionFactory connectionFactory, final Destination destination) {
 		this.connectionFactory = connectionFactory;
 		this.destination = destination;

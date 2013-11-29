@@ -5,43 +5,47 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.servlet.GenericServlet;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import common.ioc.Container;
-import common.ioc.web.ContainerFilter;
+import com.google.inject.Injector;
 
 /**
  * Servlet for handling REST Api requests.
  * @author jared.pearson
  */
-public class RestServlet extends GenericServlet {
+@Singleton
+public class RestServlet extends HttpServlet {
 	private static final long serialVersionUID = 7150818916790895212L;
 	private List<RequestHandlerMapping> requestMappings = null;
+	private Set<ResourceHandler> handlers;
+	
+	@Inject
+	Injector injector;
+	
+	@Inject
+	public RestServlet(Set<ResourceHandler> handlers) {
+		this.handlers = handlers;
+	}
 	
 	@Override
 	public void init(ServletConfig config) throws ServletException {
 		
-		//parse the classes parameter
-		List<Class<?>> requestHandlerClasses;
-		try {
-			requestHandlerClasses = parseClassCsv(config.getInitParameter("classes"));
-		} catch (ClassNotFoundException exc) {
-			throw new ServletException(exc);
-		}
-		
-		//parse the RequestHandler annotations from the specified classes
+		//parse the RequestHandler annotations from the handler classes
 		requestMappings = new ArrayList<RequestHandlerMapping>();
-		for(Class<?> requestHandlerClass : requestHandlerClasses) {
-			Object handler = null;
+		for(ResourceHandler handler : handlers) {
+			Class<?> requestHandlerClass = handler.getClass();
 			
 			for(java.lang.reflect.Method method : requestHandlerClass.getMethods()) {
 				if(!method.isAnnotationPresent(RequestHandler.class)) {
@@ -51,17 +55,6 @@ public class RestServlet extends GenericServlet {
 				
 				String pathRegex = requestHandlerAnnotation.value();
 				Pattern pattern = Pattern.compile(pathRegex);
-				
-				//create the handler or get one that was already created
-				if(handler == null) {
-					try {
-						handler = requestHandlerClass.newInstance();
-					} catch (InstantiationException e) {
-						throw new ServletException(e);
-					} catch (IllegalAccessException e) {
-						throw new ServletException(e);
-					}
-				}
 				
 				requestMappings.add(new RequestHandlerMapping(pattern, handler, method, requestHandlerAnnotation.method()));
 			}
@@ -76,7 +69,7 @@ public class RestServlet extends GenericServlet {
 		
 		try {
 			RequestHandlerMapping mapping = getMapping(httpRequest);
-			mapping.execute(httpRequest);
+			mapping.execute(httpRequest, injector);
 		} catch(Exception exc) {
 			exc.printStackTrace(System.err);
 			httpResponse.sendError(500);
@@ -95,33 +88,6 @@ public class RestServlet extends GenericServlet {
 		}
 		
 		throw new IllegalStateException("No mapping specified for request");
-	}
-	
-	/**
-	 * Parses a list of class names from the given comma-separated string
-	 */
-	private List<Class<?>> parseClassCsv(String classesValue) throws ClassNotFoundException {
-
-		String[] classNames = null;
-		if(classesValue == null || classesValue.trim().length() == 0) {
-			classNames = new String[0];
-		} else {
-			classNames = classesValue.split(",");
-		}
-		
-		//convert the classNames to classes
-		List<Class<?>> requestHandlerClasses = new ArrayList<Class<?>>(classNames.length);
-		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-		for(String className : classNames) {
-			if(className == null || className.trim().isEmpty()) {
-				continue;
-			}
-			
-			Class<?> clazz = classLoader.loadClass(className.trim());
-			requestHandlerClasses.add(clazz);
-		}
-		
-		return requestHandlerClasses;
 	}
 	
 	private static class RequestHandlerMapping {
@@ -151,12 +117,11 @@ public class RestServlet extends GenericServlet {
 		/**
 		 * Executes the handler against the specified request
 		 */
-		public void execute(final HttpServletRequest request)
+		public void execute(final HttpServletRequest request, Injector injector)
 			throws ServletException, IOException {
 			
 			//initialize the value retrievers
 			PathParameterValueRetriever pathParameterValueRetriever = PathParameterValueRetriever.createFromRequest(request, this);
-			ContainerValueRetriever containerValueRetriever = ContainerValueRetriever.createFromRequest(request);
 			
 			//we need to determine the value to be specified in the parameter.
 			Annotation[][] parameterAnnotations = handlerMethod.getParameterAnnotations();
@@ -174,7 +139,7 @@ public class RestServlet extends GenericServlet {
 				
 				//from the parameter types specified on the method, look up the 
 				//objects corresponding to the types from the IOC container
-				values[index] = containerValueRetriever.getValue(index, parameterType, annotations);
+				values[index] = injector.getInstance(parameterType);
 			}
 			
 			//invoke the handler method with parameters requested
@@ -198,33 +163,6 @@ public class RestServlet extends GenericServlet {
 	private static interface ValueRetriever {
 		public boolean handles(int index, Class<?> parameterType, Annotation[] parameterAnnotations);
 		public Object getValue(int index, Class<?> parameterType, Annotation[] parameterAnnotations);
-	}
-	
-	/**
-	 * Retrieves the values from the Container.
-	 * @author jared.pearson
-	 */
-	private static class ContainerValueRetriever implements ValueRetriever {
-		private final Container container;
-		
-		public ContainerValueRetriever(final Container container) {
-			this.container = container;
-		}
-		
-		@Override
-		public boolean handles(int index, Class<?> parameterType, Annotation[] parameterAnnotations) {
-			return true;
-		}
-		
-		@Override
-		public Object getValue(int index, Class<?> parameterType, Annotation[] parameterAnnotations) {
-			return container.getComponent(parameterType);
-		}
-		
-		public static ContainerValueRetriever createFromRequest(final HttpServletRequest request) {
-			Container container = ContainerFilter.getContainerFromRequest(request);
-			return new ContainerValueRetriever(container);
-		}
 	}
 	
 	/**

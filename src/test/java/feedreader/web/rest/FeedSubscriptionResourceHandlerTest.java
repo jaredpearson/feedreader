@@ -13,6 +13,7 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 
 import feedreader.FeedReader;
@@ -41,7 +42,7 @@ public class FeedSubscriptionResourceHandlerTest {
 			}
 		});
 		
-		FeedSubscriptionResourceHandler handler = new FeedSubscriptionResourceHandler();
+		FeedSubscriptionResourceHandler handler = new FeedSubscriptionResourceHandler(new ObjectMapper());
 		handler.createSubscription(request, response, feedReader);
 		
 		String expected = "{\"success\":true,\"feedRequestId\":1}";

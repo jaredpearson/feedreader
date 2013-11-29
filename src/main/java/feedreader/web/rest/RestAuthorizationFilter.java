@@ -1,10 +1,12 @@
 package feedreader.web.rest;
 
+import javax.inject.Singleton;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
 import feedreader.web.AuthorizationFilter;
 
+@Singleton
 public class RestAuthorizationFilter extends AuthorizationFilter {
 	private static final String AUTH_HEADER_STARTS_WITH = "SID ";
 	

@@ -11,6 +11,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 
 import common.web.rest.Method;
 import common.web.rest.RequestHandler;
+import common.web.rest.ResourceHandler;
 import feedreader.FeedReader;
 import feedreader.Stream;
 import feedreader.UserFeedItemContext;
@@ -19,7 +20,7 @@ import feedreader.UserFeedItemContext;
  * Handler that provides REST-ful services for the {@link Stream}
  * @author jared.pearson
  */
-public class StreamResourceHandler {
+public class StreamResourceHandler implements ResourceHandler {
 	private final ObjectMapper objectMapper;
 	
 	public StreamResourceHandler() {

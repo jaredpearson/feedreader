@@ -3,26 +3,31 @@ package feedreader.web;
 import java.io.IOException;
 import java.util.List;
 
+import javax.inject.Inject;
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import common.ioc.Container;
-import common.ioc.web.ContainerFilter;
 import common.persist.EntityManager;
+import common.persist.EntityManagerFactory;
 import feedreader.User;
 import feedreader.UserSession;
 
 public class SignInServlet extends HttpServlet {
 	private static final long serialVersionUID = -6377418793578002487L;
+	private EntityManagerFactory entityManagerFactory;
+	
+	@Inject
+	public void setEntityManagerFactory(EntityManagerFactory entityManagerFactory) {
+		this.entityManagerFactory = entityManagerFactory;
+	}
 	
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-		Container container = ContainerFilter.getContainerFromRequest(request);
-		EntityManager entityManager = container.getComponent(EntityManager.class);
+		EntityManager entityManager = entityManagerFactory.get();
 		
 		//get the user information
 		String email = request.getParameter("email");

@@ -10,6 +10,7 @@ class ResourceHrefBuilder {
 	private final String version; 
 	
 	public ResourceHrefBuilder(HttpServletRequest request, String version) {
+		assert request != null;
 		this.protocol = (request.getProtocol().startsWith("HTTPS/")) ? "https" : "http";
 		this.serverName = request.getServerName();
 		this.serverPort = request.getServerPort();
