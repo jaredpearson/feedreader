@@ -1,6 +1,7 @@
 package common.web.rest;
 
 import java.io.IOException;
+import java.io.Writer;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -18,6 +19,8 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.codehaus.jackson.map.ObjectMapper;
 
 import com.google.inject.Injector;
 
@@ -69,7 +72,7 @@ public class RestServlet extends HttpServlet {
 		
 		try {
 			RequestHandlerMapping mapping = getMapping(httpRequest);
-			mapping.execute(httpRequest, injector);
+			mapping.execute(httpRequest, httpResponse, injector);
 		} catch(Exception exc) {
 			exc.printStackTrace(System.err);
 			httpResponse.sendError(500);
@@ -117,9 +120,47 @@ public class RestServlet extends HttpServlet {
 		/**
 		 * Executes the handler against the specified request
 		 */
-		public void execute(final HttpServletRequest request, Injector injector)
+		public void execute(final HttpServletRequest request, final HttpServletResponse response, final Injector injector)
 			throws ServletException, IOException {
 			
+			//get the arguments for the method
+			Object[] values = getMethodArguments(request, injector);
+			
+			//invoke the handler method with arguments requested
+			Object result = null;
+			try {
+				result = handlerMethod.invoke(handler, values);
+			} catch (IllegalArgumentException e) {
+				throw new ServletException(e);
+			} catch (IllegalAccessException e) {
+				throw new ServletException(e);
+			} catch (InvocationTargetException e) {
+				throw new ServletException(e);
+			}
+			
+			//if we get a return value, then output the value as JSON
+			if(result != null) {
+				response.setContentType("application/json");
+				Writer out = response.getWriter();
+				try {
+					ObjectMapper objectMapper = injector.getInstance(ObjectMapper.class);
+					objectMapper.writeValue(out, result);
+				} finally {
+					out.close();
+				}
+			}
+		}
+		
+		private Matcher getMatcher(HttpServletRequest request) {
+			String pathInfo = request.getPathInfo();
+			if(pathInfo == null) {
+				pathInfo = "";
+			}
+			return pattern.matcher(pathInfo);
+		}
+		
+		private Object[] getMethodArguments(final HttpServletRequest request, final Injector injector) {
+
 			//initialize the value retrievers
 			PathParameterValueRetriever pathParameterValueRetriever = PathParameterValueRetriever.createFromRequest(request, this);
 			
@@ -141,25 +182,7 @@ public class RestServlet extends HttpServlet {
 				//objects corresponding to the types from the IOC container
 				values[index] = injector.getInstance(parameterType);
 			}
-			
-			//invoke the handler method with parameters requested
-			try {
-				handlerMethod.invoke(handler, values);
-			} catch (IllegalArgumentException e) {
-				throw new ServletException(e);
-			} catch (IllegalAccessException e) {
-				throw new ServletException(e);
-			} catch (InvocationTargetException e) {
-				throw new ServletException(e);
-			}
-		}
-		
-		private Matcher getMatcher(HttpServletRequest request) {
-			String pathInfo = request.getPathInfo();
-			if(pathInfo == null) {
-				pathInfo = "";
-			}
-			return pattern.matcher(pathInfo);
+			return values;
 		}
 	}
 	

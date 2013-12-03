@@ -7,7 +7,6 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
@@ -29,7 +28,7 @@ public class FeedSubscriptionResourceHandler implements ResourceHandler {
 	}
 	
 	@RequestHandler(value="^/v1/feedSubscription$", method=Method.POST)
-	public void createSubscription(HttpServletRequest request, HttpServletResponse response, FeedReader feedReader) 
+	public CreateFeedSubscriptionResponse createSubscription(HttpServletRequest request, FeedReader feedReader) 
 			throws IOException, ServletException {
 		
 		//TODO: we assume that only content of application/json is specified
@@ -50,11 +49,10 @@ public class FeedSubscriptionResourceHandler implements ResourceHandler {
 		FeedRequest feedRequest = feedReader.addFeedFromUrl(input.url);
 		
 		//output the success
-		response.setContentType("application/json");
 		CreateFeedSubscriptionResponse responseModel = new CreateFeedSubscriptionResponse();
 		responseModel.success = true;
 		responseModel.feedRequestId = feedRequest.getId();
-		jsonObjectMapper.writeValue(response.getOutputStream(), responseModel);
+		return responseModel;
 	}
 	
 	public static class CreateFeedSubscriptionRequestData {

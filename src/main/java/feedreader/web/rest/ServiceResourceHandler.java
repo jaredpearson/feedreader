@@ -1,12 +1,7 @@
 package feedreader.web.rest;
 
-import java.io.Writer;
-
-import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.codehaus.jackson.map.ObjectMapper;
 
 import common.web.rest.PathParameter;
 import common.web.rest.RequestHandler;
@@ -18,15 +13,9 @@ public class ServiceResourceHandler implements ResourceHandler {
 			new VersionAction("stream", "/stream")
 		})
 	};
-	private final ObjectMapper objectMapper;
-	
-	@Inject
-	public ServiceResourceHandler(final ObjectMapper objectMapper) {
-		this.objectMapper = objectMapper;
-	}
 	
 	@RequestHandler("^/?$")
-	public void showVersions(HttpServletRequest httpRequest, HttpServletResponse httpResponse) throws Exception {
+	public VersionsResourceLink showVersions(HttpServletRequest httpRequest) throws Exception {
 		String[] versionApiNames = new String[]{"v1"};
 		
 		VersionsResourceLink versions = new VersionsResourceLink();
@@ -40,17 +29,11 @@ public class ServiceResourceHandler implements ResourceHandler {
 			versions.versions[index] = versionLink;
 		}
 		
-		httpResponse.setContentType("application/json");
-		Writer out = httpResponse.getWriter();
-		try {
-			objectMapper.writeValue(out, versions);
-		} finally {
-			out.close();
-		}
+		return versions;
 	}
 	
 	@RequestHandler("^/(v[0-9]+)")
-	public void showVersionRoot(HttpServletRequest httpRequest, HttpServletResponse httpResponse, @PathParameter(1) String versionName) throws Exception {
+	public VersionResource showVersionRoot(HttpServletRequest httpRequest, HttpServletResponse httpResponse, @PathParameter(1) String versionName) throws Exception {
 		
 		//find the version resource corresponding to the name specified
 		Version version = null;
@@ -62,7 +45,7 @@ public class ServiceResourceHandler implements ResourceHandler {
 		}
 		if(version == null) {
 			httpResponse.sendError(404);
-			return;
+			return null;
 		}
 		
 		ResourceHrefBuilder hrefBuilder = new ResourceHrefBuilder(httpRequest, version.getName());
@@ -79,14 +62,7 @@ public class ServiceResourceHandler implements ResourceHandler {
 			versionResource.actions[index] = versionActionLink;
 		}
 		
-		//output as JSON
-		httpResponse.setContentType("application/json");
-		Writer out = httpResponse.getWriter();
-		try {
-			objectMapper.writeValue(out, versionResource);
-		} finally {
-			out.close();
-		}
+		return versionResource;
 	}
 	
 	static class VersionsResourceLink {
