@@ -7,6 +7,3 @@
 /.project
 /.settings
 
-#application files
-/src/main/resources/feedreader/config-user.properties
-
