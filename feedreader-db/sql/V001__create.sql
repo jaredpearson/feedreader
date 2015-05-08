@@ -4,9 +4,6 @@
  * See the README for installation instructions.
  */
 
-CREATE DATABASE feedreader;
-\connect feedreader;
-
 CREATE SEQUENCE users_id_seq;
 CREATE TABLE Users (
   id integer NOT NULL DEFAULT nextval('users_id_seq') PRIMARY KEY,
@@ -14,6 +11,7 @@ CREATE TABLE Users (
   created timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 ALTER SEQUENCE users_id_seq OWNED BY Users.id;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE Users TO feedreader_app;
 
 
 CREATE SEQUENCE usersessions_id_seq;
@@ -23,6 +21,7 @@ CREATE TABLE UserSessions (
   created timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 ALTER SEQUENCE usersessions_id_seq OWNED BY UserSessions.id;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE UserSessions TO feedreader_app;
 
 CREATE SEQUENCE feeds_id_seq;
 CREATE TABLE Feeds (
@@ -34,6 +33,7 @@ CREATE TABLE Feeds (
   createdBy integer NOT NULL REFERENCES Users(id)
 );
 ALTER SEQUENCE feeds_id_seq OWNED BY Feeds.id;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE Feeds TO feedreader_app;
 
 CREATE SEQUENCE feeditems_id_seq;
 CREATE TABLE FeedItems (
@@ -47,6 +47,7 @@ CREATE TABLE FeedItems (
   created timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 ALTER SEQUENCE feeditems_id_seq OWNED BY FeedItems.id;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE FeedItems TO feedreader_app;
 
 CREATE SEQUENCE feedrequests_id_seq;
 CREATE TABLE FeedRequests (
@@ -58,6 +59,7 @@ CREATE TABLE FeedRequests (
   createdBy integer NOT NULL REFERENCES Users(id)
 );
 ALTER SEQUENCE feedrequests_id_seq OWNED BY FeedRequests.id;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE FeedRequests TO feedreader_app;
 
 CREATE SEQUENCE userfeeditemcontexts_id_seq;
 CREATE TABLE UserFeedItemContexts (
@@ -68,6 +70,7 @@ CREATE TABLE UserFeedItemContexts (
   created timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 ALTER SEQUENCE userfeeditemcontexts_id_seq OWNED BY UserFeedItemContexts.id;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE UserFeedItemContexts TO feedreader_app;
 
 CREATE SEQUENCE feedsubscriptions_id_seq;
 CREATE TABLE FeedSubscriptions (
@@ -77,3 +80,4 @@ CREATE TABLE FeedSubscriptions (
   created timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 ALTER SEQUENCE feedsubscriptions_id_seq OWNED BY FeedSubscriptions.id;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE FeedSubscriptions TO feedreader_app;

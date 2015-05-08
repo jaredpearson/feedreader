@@ -4,18 +4,28 @@ Application for reading RSS feeds.
 ## Requirements 
 In order to run the application you will need PostgreSQL installed.
 
-## Database Setup
-The application is designed to use PostgreSQL so that will need to be installed. The scripts were tested against version 9.2 so your mileage may vary if you use a different version.
+## Provisioning
 
-1. In Terminal, navigate to the root of the project and run the following 
+You must have the following tools installed
+
+* [Vagrant](https://www.vagrantup.com/)
+* [Librarian](https://github.com/applicationsonline/librarian-chef)
+
+1. `cd provisioning/chef'
+2. `librarian-chef install`
+3. `cd ../..`
+4. `vagrant up`
+
+There should now be a VM image containing the database at port `192.168.52.13`.
+
+## Database Setup
+The application is designed to use PostgreSQL which is installed during provisioning.
+
+1. In Terminal, navigate to the feedreader-db project and run the following 
     
-    plsql -h localhost
-    
-2. Execute the create script
-     
-    \i src/main/sql/create.sql
-     
-You should now have a database named "feedreader" installed in PostgreSQL. 
+    sh migrate.sh
+         
+The migrations use Flyway so it will download and install if it's not already installed. After the migrations run you should now have a database named "feedreader" installed in PostgreSQL. 
 
 ## Message Queue Setup
 The application uses Apache Qpid for processing asynchronous messages.
