@@ -33,6 +33,6 @@ public class CreateUserServlet extends HttpServlet {
 		user.setEmail(email);
 		entityManagerFactory.get().persist(user);
 		
-		response.sendRedirect("/index.html");
+		response.sendRedirect("/reader");
 	}
 }
