@@ -68,7 +68,7 @@ public class FeedRequestEntityHandler implements EntityHandler {
 			try {
 				stmt = cnn.prepareStatement(
 						"select id, url, feedId, status, created, createdBy "
-						+ "from FeedRequests "
+						+ "from feedreader.FeedRequests "
 						+ "where id = ? "
 						+ "limit 1");
 				stmt.setInt(1, (Integer)id);
@@ -123,7 +123,7 @@ public class FeedRequestEntityHandler implements EntityHandler {
 			
 			PreparedStatement stmt = null;
 			try {
-				stmt = cnn.prepareStatement("insert into FeedRequests (url, feedId, status, createdBy) values (?, ?, ?, ?) returning id, created");
+				stmt = cnn.prepareStatement("insert into feedreader.FeedRequests (url, feedId, status, createdBy) values (?, ?, ?, ?) returning id, created");
 				stmt.setString(1, feedRequest.getUrl());
 				DbUtils.setInt(stmt, 2, (feedRequest.getFeed() == null) ? null : feedRequest.getFeed().getId());
 				stmt.setString(3, feedRequest.getStatus().getDbValue());
@@ -159,7 +159,7 @@ public class FeedRequestEntityHandler implements EntityHandler {
 			
 			PreparedStatement stmt = null;
 			try {
-				stmt = cnn.prepareStatement("update FeedRequests set url = ?, feedId = ?, status = ?, createdBy = ? where id = ?");
+				stmt = cnn.prepareStatement("update feedreader.FeedRequests set url = ?, feedId = ?, status = ?, createdBy = ? where id = ?");
 				stmt.setString(1, feedRequest.getUrl());
 				DbUtils.setInt(stmt, 2, (feedRequest.getFeed() == null) ? null : feedRequest.getFeed().getId());
 				stmt.setString(3, feedRequest.getStatus().getDbValue());

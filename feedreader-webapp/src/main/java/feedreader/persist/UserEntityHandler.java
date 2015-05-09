@@ -23,7 +23,7 @@ public class UserEntityHandler implements EntityManager.EntityHandler {
 			
 			PreparedStatement stmt = null;
 			try {
-				stmt = cnn.prepareStatement("insert into Users (email) values (?) returning id");
+				stmt = cnn.prepareStatement("insert into feedreader.Users (email) values (?) returning id");
 				stmt.setString(1, user.getEmail());
 				
 				boolean hasResult = stmt.execute();
@@ -69,7 +69,7 @@ public class UserEntityHandler implements EntityManager.EntityHandler {
 			
 			PreparedStatement stmt = null;
 			try {
-				stmt = cnn.prepareStatement("select id, email from Users where id = ? limit 1");
+				stmt = cnn.prepareStatement("select id, email from feedreader.Users where id = ? limit 1");
 				stmt.setInt(1, id);
 				
 				ResultSet rst = null;
@@ -102,7 +102,7 @@ public class UserEntityHandler implements EntityManager.EntityHandler {
 			
 			PreparedStatement stmt = null;
 			try {
-				stmt = cnn.prepareStatement("select id, email from Users where email = ? limit 1");
+				stmt = cnn.prepareStatement("select id, email from feedreader.Users where email = ? limit 1");
 				stmt.setString(1, email);
 				
 				ResultSet rst = null;

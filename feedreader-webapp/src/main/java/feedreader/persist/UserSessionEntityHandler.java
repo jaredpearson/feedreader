@@ -30,7 +30,7 @@ public class UserSessionEntityHandler implements EntityHandler {
 			
 			PreparedStatement stmt = null;
 			try {
-				stmt = cnn.prepareStatement("select s.id sessionId, s.created, u.id userId, u.email from UserSessions s inner join Users u on s.userId = u.id where s.id = ? limit 1");
+				stmt = cnn.prepareStatement("select s.id sessionId, s.created, u.id userId, u.email from feedreader.UserSessions s inner join feedreader.Users u on s.userId = u.id where s.id = ? limit 1");
 				stmt.setInt(1, sessionId);
 				
 				ResultSet rst = null;
@@ -70,7 +70,7 @@ public class UserSessionEntityHandler implements EntityHandler {
 			
 			PreparedStatement stmt = null;
 			try {
-				stmt = cnn.prepareStatement("insert into UserSessions (userId) values (?) returning id, created");
+				stmt = cnn.prepareStatement("insert into feedreader.UserSessions (userId) values (?) returning id, created");
 				stmt.setInt(1, userSession.getUser().getId());
 				
 				if(stmt.execute()) {

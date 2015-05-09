@@ -30,7 +30,7 @@ public class FeedSubscriptionEntityHandler implements EntityHandler {
 			
 			PreparedStatement stmt = null;
 			try {
-				stmt = cnn.prepareStatement("select id, subscriber, feedId, created from FeedSubscriptions fs "
+				stmt = cnn.prepareStatement("select id, subscriber, feedId, created from feedreader.FeedSubscriptions fs "
 						+ "where fs.id = ? "
 						+ "limit 1");
 				stmt.setInt(1, (Integer)id);
@@ -86,7 +86,7 @@ public class FeedSubscriptionEntityHandler implements EntityHandler {
 			
 			PreparedStatement stmt = null;
 			try {
-				stmt = cnn.prepareStatement("insert into FeedSubscriptions (subscriber, feedId) values (?, ?) returning id, created");
+				stmt = cnn.prepareStatement("insert into feedreader.FeedSubscriptions (subscriber, feedId) values (?, ?) returning id, created");
 				
 				if(feedSubscription.getSubscriber() == null || feedSubscription.getSubscriber().getId() == null) {
 					stmt.setNull(1, Types.INTEGER);

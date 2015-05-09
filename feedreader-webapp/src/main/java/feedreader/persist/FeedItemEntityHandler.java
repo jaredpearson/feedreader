@@ -39,9 +39,9 @@ public class FeedItemEntityHandler implements EntityHandler {
 			+ "ifu.id feed_createdBy_id, "
 			+ "ifu.email feed_createdBy_email "
 			
-			+ "from FeedItems i "
-			+ "inner join Feeds if on i.feedId = if.id "
-			+ "inner join Users ifu on if.createdBy = ifu.id ";
+			+ "from feedreader.FeedItems i "
+			+ "inner join feedreader.Feeds if on i.feedId = if.id "
+			+ "inner join feedreader.Users ifu on if.createdBy = ifu.id ";
 		ROW_MAPPER = new FeedItemRowMapper(new FeedRowMapper("feed_", new UserRowMapper("feed_createdBy_")));
 	}
 
@@ -54,7 +54,7 @@ public class FeedItemEntityHandler implements EntityHandler {
 			
 			PreparedStatement stmt = null;
 			try {
-				stmt = cnn.prepareStatement("insert into FeedItems (feedId, title, description, link, pubDate, guid) values (?, ?, ?, ?, ?, ?) returning id, created");
+				stmt = cnn.prepareStatement("insert into feedreader.FeedItems (feedId, title, description, link, pubDate, guid) values (?, ?, ?, ?, ?, ?) returning id, created");
 				stmt.setInt(1, feedItem.getFeed().getId());
 				stmt.setString(2, feedItem.getTitle());
 				stmt.setString(3, feedItem.getDescription());
@@ -181,7 +181,7 @@ public class FeedItemEntityHandler implements EntityHandler {
 		PreparedStatement stmt = null;
 		try {
 			stmt = cnn.prepareStatement("select fi.id feedItemId "
-					+ "from FeedSubscriptions fs inner join FeedItems fi on fs.feedId = fi.feedId "
+					+ "from feedreader.FeedSubscriptions fs inner join feedreader.FeedItems fi on fs.feedId = fi.feedId "
 					+ "where fs.subscriber = ? "
 					+ "order by fi.created desc limit " + size + " offset " + offset);
 			stmt.setInt(1, userId);
@@ -214,7 +214,7 @@ public class FeedItemEntityHandler implements EntityHandler {
 			
 			//TODO: create a procedure to do all of the looping in Postgresql instead of doing in JDBC
 			for(Integer feedItemId : feedItemIds) {
-				stmt.setInt(1, (Integer)feedItemId);
+				stmt.setInt(1, feedItemId);
 				
 				ResultSet rst = null;
 				try {

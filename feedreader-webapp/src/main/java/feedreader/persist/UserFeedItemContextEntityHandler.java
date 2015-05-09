@@ -47,11 +47,11 @@ public class UserFeedItemContextEntityHandler implements EntityHandler {
 				+ "cifu.id feed_createdBy_id, "
 				+ "cifu.email feed_createdBy_email "
 				
-				+ "from UserFeedItemContexts c "
-				+ "inner join Users cu on c.owner = cu.id "
-				+ "inner join FeedItems ci on c.feedItemId = ci.id "
-				+ "inner join Feeds cif on ci.feedId = cif.id "
-				+ "inner join Users cifu on cif.createdBy = cifu.id ";
+				+ "from feedreader.UserFeedItemContexts c "
+				+ "inner join feedreader.Users cu on c.owner = cu.id "
+				+ "inner join feedreader.FeedItems ci on c.feedItemId = ci.id "
+				+ "inner join feedreader.Feeds cif on ci.feedId = cif.id "
+				+ "inner join feedreader.Users cifu on cif.createdBy = cifu.id ";
 		
 		ROW_MAPPER = new UserFeedItemContextRowMapper("context_", new FeedItemRowMapper("feedItem_", new FeedRowMapper("feed_", new UserRowMapper("feed_createdBy_"))));
 	}
@@ -200,7 +200,7 @@ public class UserFeedItemContextEntityHandler implements EntityHandler {
 			
 			PreparedStatement stmt = null;
 			try {
-				stmt = cnn.prepareStatement("insert into UserFeedItemContexts (feedItemId, owner, read) values (?, ?, ?) returning id, read, created");
+				stmt = cnn.prepareStatement("insert into feedreader.UserFeedItemContexts (feedItemId, owner, read) values (?, ?, ?) returning id, read, created");
 				stmt.setInt(1, feedItemContext.getFeedItem().getId());
 				stmt.setInt(2, feedItemContext.getOwner().getId());
 				stmt.setBoolean(3, feedItemContext.isRead());
@@ -240,7 +240,7 @@ public class UserFeedItemContextEntityHandler implements EntityHandler {
 			
 			PreparedStatement stmt = null;
 			try {
-				stmt = cnn.prepareStatement("update UserFeedItemContexts set read = ? where id = ?");
+				stmt = cnn.prepareStatement("update feedreader.UserFeedItemContexts set read = ? where id = ?");
 				stmt.setBoolean(1, feedItemContext.isRead());
 				stmt.setInt(2, feedItemContext.getId());
 				

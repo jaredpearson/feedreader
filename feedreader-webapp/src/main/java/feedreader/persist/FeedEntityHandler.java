@@ -31,7 +31,7 @@ public class FeedEntityHandler implements EntityHandler {
 				+ "f.createdBy feed_createdBy_id, "
 				+ "u.email feed_createdBy_email "
 				
-				+ "from Feeds f "
+				+ "from feedreader.Feeds f "
 				+ "inner join Users u on f.createdBy = u.id ";
 		
 		ROW_MAPPER = new FeedRowMapper(new UserRowMapper("feed_createdBy_"));
@@ -85,7 +85,7 @@ public class FeedEntityHandler implements EntityHandler {
 			
 			PreparedStatement stmt = null;
 			try {
-				stmt = cnn.prepareStatement("insert into Feeds (url, lastUpdated, title, createdBy) values (?, ?, ?, ?) returning id, created");
+				stmt = cnn.prepareStatement("insert into feedreader.Feeds (url, lastUpdated, title, createdBy) values (?, ?, ?, ?) returning id, created");
 				stmt.setString(1, feed.getUrl());
 				stmt.setDate(2, toSqlDate(feed.getLastUpdated()));
 				stmt.setString(3, feed.getTitle());
