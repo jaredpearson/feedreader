@@ -1,4 +1,4 @@
-package common.messagequeue;
+package common.messagequeue.jms;
 
 import java.io.IOException;
 import java.util.Hashtable;
@@ -12,19 +12,21 @@ import javax.jms.JMSException;
 import javax.jms.Session;
 
 import common.Provider;
+import common.messagequeue.api.Message;
+import common.messagequeue.api.MessageHandler;
 
 /**
  * Service that consumes messages from an address. This service blocks
  * until a message is recieved and then routes to the configured handler.
  * @author jared.pearson
  */
-public class MessageConsumer implements Runnable {
+public class JmsMessageConsumer implements Runnable {
 	private final ConnectionFactory connectionFactory;
 	private final Map<String, Provider<MessageHandler>> messageHandlers; 
 	private final Destination destination;
 	
 	@Inject
-	public MessageConsumer(final ConnectionFactory connectionFactory, final Destination destination) {
+	public JmsMessageConsumer(final ConnectionFactory connectionFactory, final Destination destination) {
 		this.connectionFactory = connectionFactory;
 		this.destination = destination;
 		this.messageHandlers = new Hashtable<String, Provider<MessageHandler>>();
@@ -49,7 +51,7 @@ public class MessageConsumer implements Runnable {
 				while((jmsMessage = messageConsumer.receive()) != null) {
 					
 					//convert the JMS session into our own wrapper
-					Message message = Message.fromJmsMessage(jmsMessage);
+					Message message = JmsMessage.fromJmsMessage(jmsMessage);
 					
 					//delegate the message to the handler
 					MessageHandler handler = getMessageHandler(message);

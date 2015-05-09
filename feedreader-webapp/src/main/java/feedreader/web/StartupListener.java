@@ -6,7 +6,7 @@ import javax.servlet.ServletContextListener;
 
 import com.google.inject.Injector;
 
-import common.messagequeue.MessageConsumer;
+import common.messagequeue.jms.JmsMessageConsumer;
 
 /**
  * Listener invoked when the application is first started.
@@ -24,7 +24,7 @@ public class StartupListener implements ServletContextListener {
 		}
 		
 		//start the message consumer
-		final MessageConsumer messageConsumer = injector.getInstance(MessageConsumer.class);
+		final JmsMessageConsumer messageConsumer = injector.getInstance(JmsMessageConsumer.class);
 		new Thread(messageConsumer).start();
 	}
 	

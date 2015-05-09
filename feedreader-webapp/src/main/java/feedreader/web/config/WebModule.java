@@ -1,10 +1,15 @@
-package feedreader.web;
+package feedreader.web.config;
 
 import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.servlet.ServletModule;
 
 import common.web.rest.ResourceHandler;
+import feedreader.web.AuthorizationFilter;
+import feedreader.web.CreateUserServlet;
+import feedreader.web.HomeServlet;
+import feedreader.web.ReaderServlet;
+import feedreader.web.SignInServlet;
 import feedreader.web.rest.FeedResourceHandler;
 import feedreader.web.rest.FeedSubscriptionResourceHandler;
 import feedreader.web.rest.RestAuthorizationFilter;

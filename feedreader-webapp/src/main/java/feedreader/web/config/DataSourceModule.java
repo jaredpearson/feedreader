@@ -1,4 +1,4 @@
-package feedreader.web;
+package feedreader.web.config;
 
 import java.util.Hashtable;
 import java.util.Map;

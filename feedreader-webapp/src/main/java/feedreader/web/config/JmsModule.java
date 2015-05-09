@@ -1,4 +1,4 @@
-package feedreader.web;
+package feedreader.web.config;
 
 import java.util.Properties;
 
@@ -14,13 +14,14 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 
 import common.Provider;
-import common.messagequeue.MessageConsumer;
-import common.messagequeue.MessageHandler;
-import common.messagequeue.MessageSender;
+import common.messagequeue.api.MessageHandler;
+import common.messagequeue.api.MessageSender;
+import common.messagequeue.jms.JmsMessageConsumer;
+import common.messagequeue.jms.JmsMessageSender;
 import common.persist.EntityManager;
 import common.persist.EntityManagerFactory;
 import feedreader.fetch.FeedLoader;
-import feedreader.messagequeue.RetrieveFeedMessage;
+import feedreader.messagequeue.RetrieveFeedMessageBuilder;
 import feedreader.messagequeue.RetrieveFeedMessageHandler;
 
 /**
@@ -64,17 +65,17 @@ public class JmsModule extends AbstractModule {
 	@Provides
 	@Singleton
 	MessageSender createMessageSender(ConnectionFactory connectionFactory, @Named("jms") final Context context) {
-		return new MessageSender(context, connectionFactory);
+		return new JmsMessageSender(context, connectionFactory);
 	}
 	
 	@Provides
 	@Singleton
-	MessageConsumer createMessageConsumer(final ConnectionFactory connectionFactory, 
+	JmsMessageConsumer createMessageConsumer(final ConnectionFactory connectionFactory, 
 			@Named("jms") final Context context, 
 			final EntityManagerFactory entityManagerFactory) {
-		MessageConsumer messageConsumer = new MessageConsumer(connectionFactory, lookupDestination(context));
+		JmsMessageConsumer messageConsumer = new JmsMessageConsumer(connectionFactory, lookupDestination(context));
 		
-		messageConsumer.registerHandler(RetrieveFeedMessage.class.getName(), new Provider<MessageHandler>() {
+		messageConsumer.registerHandler(RetrieveFeedMessageBuilder.class.getName(), new Provider<MessageHandler>() {
 			@Override
 			public MessageHandler get() {
 				// have the handler process the received message

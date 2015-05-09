@@ -6,8 +6,8 @@ import java.util.List;
 import javax.xml.stream.XMLStreamException;
 
 import common.Provider;
-import common.messagequeue.Message;
-import common.messagequeue.MessageHandler;
+import common.messagequeue.api.Message;
+import common.messagequeue.api.MessageHandler;
 import common.persist.EntityManager;
 import feedreader.Feed;
 import feedreader.FeedItem;
@@ -18,7 +18,7 @@ import feedreader.User;
 import feedreader.fetch.FeedLoader;
 
 /**
- * Handler for {@link RetrieveFeedMessage}
+ * Handler for {@link RetrieveFeedMessageBuilder}
  * @author jared.pearson
  */
 public class RetrieveFeedMessageHandler implements MessageHandler {
@@ -34,7 +34,7 @@ public class RetrieveFeedMessageHandler implements MessageHandler {
 	 * Handles the message being dequeued
 	 */
 	public void dequeue(final Message message) throws IOException {
-		final RetrieveFeedMessage feedMessage = new RetrieveFeedMessage(message);
+		final RetrieveFeedMessageBuilder feedMessage = new RetrieveFeedMessageBuilder(message);
 		final FeedRequest feedRequest = entityManager.get(FeedRequest.class, feedMessage.getFeedRequestId());
 		
 		//check that the request can be found; this could occur if the request was deleted before the message was processed

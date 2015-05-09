@@ -1,4 +1,4 @@
-package feedreader.web;
+package feedreader.web.config;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;

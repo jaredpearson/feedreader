@@ -8,10 +8,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import common.messagequeue.MessageSender;
+import common.messagequeue.api.MessageSender;
 import common.persist.EntityManager;
 import common.persist.EntityManagerFactory;
-import feedreader.messagequeue.RetrieveFeedMessage;
+import feedreader.messagequeue.RetrieveFeedMessageBuilder;
 
 /**
  * Main service class for a user to interact with the FeedReader application
@@ -43,7 +43,7 @@ public class FeedReader {
 		entityManagerFactory.get().persist(feedRequest);
 		
 		//queue up the url to be processed async
-		messageSender.send("feedRequest", new RetrieveFeedMessage(feedRequest));
+		messageSender.send("feedRequest", new RetrieveFeedMessageBuilder(feedRequest));
 		
 		return feedRequest;
 	}

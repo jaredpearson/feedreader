@@ -16,7 +16,7 @@
   </context-param>
   
   <listener>
-  	<listener-class>feedreader.web.GuiceConfigListener</listener-class>
+  	<listener-class>feedreader.web.config.GuiceConfigListener</listener-class>
   </listener>
   <listener>
     <listener-class>feedreader.web.StartupListener</listener-class>

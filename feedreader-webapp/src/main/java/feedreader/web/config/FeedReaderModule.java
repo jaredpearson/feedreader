@@ -1,4 +1,4 @@
-package feedreader.web;
+package feedreader.web.config;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,11 +16,12 @@ import com.google.inject.Provider;
 import com.google.inject.Provides;
 import com.google.inject.servlet.ServletScopes;
 
-import common.messagequeue.MessageSender;
+import common.messagequeue.api.MessageSender;
 import common.persist.EntityManagerFactory;
 import feedreader.FeedReader;
 import feedreader.User;
 import feedreader.UserSession;
+import feedreader.web.StartupListener;
 
 /**
  * Guice module for all entities and services in the FeedReader

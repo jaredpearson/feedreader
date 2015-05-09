@@ -1,4 +1,4 @@
-package feedreader.web;
+package feedreader.web.config;
 
 import org.codehaus.jackson.map.ObjectMapper;
 

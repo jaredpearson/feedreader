@@ -1,17 +1,19 @@
-package common.messagequeue;
+package common.messagequeue.jms;
 
 import javax.jms.JMSException;
 import javax.jms.MapMessage;
 
+import common.messagequeue.api.Message;
+
 /**
- * The message to be sent
+ * JMS implementation of the message to be sent
  * @author jared.pearson
  */
-public class Message {
+public class JmsMessage implements Message {
 	private static final String PROP_TYPE = "__type";
 	private final MapMessage mapMessage;
 	
-	private Message(final MapMessage mapMessage) {
+	private JmsMessage(final MapMessage mapMessage) {
 		this.mapMessage = mapMessage;
 	}
 	
@@ -27,10 +29,7 @@ public class Message {
 		}
 	}
 
-	/**
-	 * Gets the type of the message, which is used by the message consumer to 
-	 * know who handles the message.
-	 */
+	@Override
 	public String getType() {
 		try {
 			return mapMessage.getStringProperty(PROP_TYPE);
@@ -39,7 +38,8 @@ public class Message {
 		}
 	}
 	
-	public void setInt(String name, int value) {
+	@Override
+	public void setInt(String name, Integer value) {
 		try {
 			mapMessage.setInt(name, value);
 		} catch (JMSException exc) {
@@ -47,7 +47,8 @@ public class Message {
 		}
 	}
 	
-	public int getInt(String name) {
+	@Override
+	public Integer getInt(String name) {
 		try {
 			return mapMessage.getInt(name);
 		} catch (JMSException exc) {
@@ -65,9 +66,9 @@ public class Message {
 	/**
 	 * Creates a new message for the given session
 	 */
-	/*package*/ static Message create(final javax.jms.Session session) throws JMSException {
+	/*package*/ static JmsMessage create(final javax.jms.Session session) throws JMSException {
 		javax.jms.MapMessage mapMessage = session.createMapMessage();
-		return new Message(mapMessage);
+		return new JmsMessage(mapMessage);
 	}
 	
 	/**
@@ -76,7 +77,7 @@ public class Message {
 	 */
 	/*package*/ static Message fromJmsMessage(final javax.jms.Message jmsMessage) throws JMSException {
 		assert jmsMessage != null;
-		return new Message((MapMessage)jmsMessage);
+		return new JmsMessage((MapMessage)jmsMessage);
 	}
 
 }
