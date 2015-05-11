@@ -9,6 +9,7 @@ import javax.jms.Destination;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import javax.sql.DataSource;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -23,6 +24,7 @@ import common.persist.EntityManagerFactory;
 import feedreader.fetch.FeedLoader;
 import feedreader.messagequeue.RetrieveFeedMessageBuilder;
 import feedreader.messagequeue.RetrieveFeedMessageHandler;
+import feedreader.persist.FeedRequestEntityHandler;
 
 /**
  * Guice module for configuring JMS
@@ -72,7 +74,9 @@ public class JmsModule extends AbstractModule {
 	@Singleton
 	JmsMessageConsumer createMessageConsumer(final ConnectionFactory connectionFactory, 
 			@Named("jms") final Context context, 
-			final EntityManagerFactory entityManagerFactory) {
+			final EntityManagerFactory entityManagerFactory,
+			final DataSource dataSource,
+			final FeedRequestEntityHandler feedRequestEntityHandler) {
 		JmsMessageConsumer messageConsumer = new JmsMessageConsumer(connectionFactory, lookupDestination(context));
 		
 		messageConsumer.registerHandler(RetrieveFeedMessageBuilder.class.getName(), new Provider<MessageHandler>() {
@@ -86,7 +90,7 @@ public class JmsModule extends AbstractModule {
 						return new FeedLoader();
 					}
 				};
-				return new RetrieveFeedMessageHandler(entityManager, feedLoaderProvider);
+				return new RetrieveFeedMessageHandler(entityManager, feedLoaderProvider, dataSource, feedRequestEntityHandler);
 			}
 		});
 		

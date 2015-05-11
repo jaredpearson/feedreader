@@ -7,6 +7,8 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 
+import com.google.common.base.Preconditions;
+
 import common.persist.DbUtils;
 import common.persist.EntityManager.EntityHandler;
 import common.persist.EntityManager.QueryContext;
@@ -114,6 +116,55 @@ public class FeedRequestEntityHandler implements EntityHandler {
 	public List<?> executeNamedQuery(QueryContext context, String query, Object... parameters) throws SQLException {
 		// TODO Auto-generated method stub
 		return null;
+	}
+	
+	/**
+	 * Updates the status of the request corresponding to the request ID.
+	 * @return true when the update was successful
+	 */
+	public boolean updateRequestStatus(Connection cnn, int requestId, FeedRequestStatus status) throws SQLException {
+		Preconditions.checkArgument(cnn != null, "cnn should not be null");
+		Preconditions.checkArgument(status != null, "status should not be null");
+		
+		final PreparedStatement stmt = cnn.prepareStatement("update feedreader.FeedRequests set status = ? where id = ?");
+		try {
+			stmt.setString(1, status.getDbValue());
+			stmt.setInt(2, requestId);
+			
+			return stmt.executeUpdate() > 0;
+		} finally {
+			DbUtils.close(stmt);
+		}
+	}
+	
+	/**
+	 * Inserts a new feed request with the given URL and createdBy user. The default status is NOT_STARTED.
+	 * @return the ID of the new request
+	 */
+	public int insert(Connection cnn, String url, int createdByUserId) throws SQLException {
+		final PreparedStatement stmt = cnn.prepareStatement("insert into feedreader.FeedRequests (url, createdBy, status) values (?, ?, ?) returning id");
+		try {
+			stmt.setString(1, url);
+			stmt.setInt(2, createdByUserId);
+			stmt.setString(3, FeedRequestStatus.NOT_STARTED.getDbValue());
+			
+			if (stmt.execute()) {
+				final ResultSet rst = stmt.getResultSet();
+				try {
+					if (rst.next()) {
+						return rst.getInt("id");
+					} else {
+						throw new IllegalStateException("Unable to insert FeedRequest");
+					}
+				} finally {
+					DbUtils.close(rst);
+				}
+			} else {
+				throw new IllegalStateException("Unable to insert FeedRequest");
+			}
+		} finally {
+			DbUtils.close(stmt);
+		}
 	}
 	
 	private void insert(QueryContext queryContext, FeedRequest feedRequest) throws SQLException {

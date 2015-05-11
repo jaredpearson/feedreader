@@ -1,8 +1,13 @@
 package feedreader.messagequeue;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import javax.sql.DataSource;
 import javax.xml.stream.XMLStreamException;
 
 import common.Provider;
@@ -16,26 +21,34 @@ import feedreader.FeedRequestStatus;
 import feedreader.FeedSubscription;
 import feedreader.User;
 import feedreader.fetch.FeedLoader;
+import feedreader.persist.FeedRequestEntityHandler;
 
 /**
  * Handler for {@link RetrieveFeedMessageBuilder}
  * @author jared.pearson
  */
 public class RetrieveFeedMessageHandler implements MessageHandler {
+	private static final Logger logger = Logger.getLogger(RetrieveFeedMessageHandler.class.getName()); 
 	private final EntityManager entityManager;
 	private final Provider<FeedLoader> feedLoaderProvider;
+	private final DataSource dataSource;
+	private final FeedRequestEntityHandler feedRequestEntityHandler;
 	
-	public RetrieveFeedMessageHandler(final EntityManager entityManager, final Provider<FeedLoader> feedLoaderProvider) {
+	public RetrieveFeedMessageHandler(final EntityManager entityManager, final Provider<FeedLoader> feedLoaderProvider, final DataSource dataSource, final FeedRequestEntityHandler feedRequestEntityHandler) {
 		this.entityManager = entityManager;
 		this.feedLoaderProvider = feedLoaderProvider;
+		this.dataSource = dataSource;
+		this.feedRequestEntityHandler = feedRequestEntityHandler;
 	}
 	
 	/**
 	 * Handles the message being dequeued
 	 */
+	@Override
 	public void dequeue(final Message message) throws IOException {
 		final RetrieveFeedMessageBuilder feedMessage = new RetrieveFeedMessageBuilder(message);
-		final FeedRequest feedRequest = entityManager.get(FeedRequest.class, feedMessage.getFeedRequestId());
+		final int feedRequestId = feedMessage.getFeedRequestId();
+		final FeedRequest feedRequest = entityManager.get(FeedRequest.class, feedRequestId);
 		
 		//check that the request can be found; this could occur if the request was deleted before the message was processed
 		if(feedRequest == null) {
@@ -61,10 +74,17 @@ public class RetrieveFeedMessageHandler implements MessageHandler {
 			}
 		
 		} catch(RuntimeException exc) {
-			
-			feedRequest.setStatus(FeedRequestStatus.ERROR);
-			entityManager.persist(feedRequest);
-			
+			try {
+				final Connection cnn = dataSource.getConnection();
+				try {
+					feedRequestEntityHandler.updateRequestStatus(cnn, feedRequestId, FeedRequestStatus.ERROR);
+				} finally {
+					cnn.close();
+				}
+			} catch(SQLException exc2) {
+				// log but continue if we can't set the status
+				logger.log(Level.WARNING, "Status of request could not be set. Continuing as if this error didn't occur.", exc2);
+			}
 			throw exc;
 		}
 	}
