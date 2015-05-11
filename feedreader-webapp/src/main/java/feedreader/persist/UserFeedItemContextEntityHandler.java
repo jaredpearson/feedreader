@@ -108,37 +108,37 @@ public class UserFeedItemContextEntityHandler implements EntityHandler {
 		}
 	}
 	
-	public List<UserFeedItemContext> getFeedItemsForUserFeed(EntityManager.QueryContext queryContext, int userId, int feedId) throws SQLException {
-		List<UserFeedItemContext> feedItemContexts = new ArrayList<UserFeedItemContext>();
-		Connection cnn = null;
+	public List<UserFeedItemContext> getFeedItemsForUserFeed(Connection cnn, int userId, int feedId) throws SQLException {
+		final List<UserFeedItemContext> feedItemContexts = new ArrayList<UserFeedItemContext>();
+		
+		final PreparedStatement stmt = cnn.prepareStatement(SELECT_SQL_FRAGMENT + "where c.owner = ? and cif.id = ? ");
 		try {
-			cnn = queryContext.getConnection();
+			stmt.setInt(1, userId);
+			stmt.setInt(2, feedId);
 			
-			PreparedStatement stmt = null;
+			final ResultSet rst = stmt.executeQuery();
 			try {
-				stmt = cnn.prepareStatement(SELECT_SQL_FRAGMENT + "where c.owner = ? and cif.id = ? ");
-				stmt.setInt(1, userId);
-				stmt.setInt(2, feedId);
-				
-				ResultSet rst = null;
-				try {
-					rst = stmt.executeQuery();
-					while(rst.next()) {
-						feedItemContexts.add(mapRow(rst));
-					}
-					
-				} finally {
-					DbUtils.close(rst);
+				while(rst.next()) {
+					feedItemContexts.add(mapRow(rst));
 				}
+				
 			} finally {
-				DbUtils.close(stmt);
+				DbUtils.close(rst);
 			}
-			
 		} finally {
-			queryContext.releaseConnection(cnn);
+			DbUtils.close(stmt);
 		}
 		
 		return feedItemContexts;
+	}
+	
+	public List<UserFeedItemContext> getFeedItemsForUserFeed(EntityManager.QueryContext queryContext, int userId, int feedId) throws SQLException {
+		final Connection cnn = queryContext.getConnection();
+		try {
+			return getFeedItemsForUserFeed(cnn, userId, feedId);
+		} finally {
+			queryContext.releaseConnection(cnn);
+		}
 	}
 	
 	public List<UserFeedItemContext> getUserFeedItemsForFeedItems(EntityManager.QueryContext queryContext, int userId, Set<Integer> feedItemIds) throws SQLException {

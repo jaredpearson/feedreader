@@ -104,14 +104,23 @@ public class FeedReader {
 			throw new IllegalArgumentException();
 		}
 		
-		//load the context for the feed items
-		final List<UserFeedItemContext> itemContexts = entityManager.executeNamedQuery(UserFeedItemContext.class, "getFeedItemsForUserFeed", userId, feedId);
-		
-		//fanout all of the items so the user has a full set of feed items
-		final List<UserFeedItemContext> userFeedItems = fanoutFeedItems(feed.getItems(), itemContexts);
-		
-		//get the user context for the feed
-		return new UserFeedContext(feed, userFeedItems);
+		try {
+			final Connection cnn = dataSource.getConnection();
+			try {
+				//load the context for the feed items
+				final List<UserFeedItemContext> itemContexts = userFeedItemContextEntityHandler.getFeedItemsForUserFeed(cnn, userId, feedId);
+				
+				//fanout all of the items so the user has a full set of feed items
+				final List<UserFeedItemContext> userFeedItems = fanoutFeedItems(feed.getItems(), itemContexts);
+				
+				//get the user context for the feed
+				return new UserFeedContext(feed, userFeedItems);
+			} finally {
+				cnn.close();
+			}
+		} catch(SQLException exc) {
+			throw Throwables.propagate(exc);
+		}
 	}
 	
 	/**

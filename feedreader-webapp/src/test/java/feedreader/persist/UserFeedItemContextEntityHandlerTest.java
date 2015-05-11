@@ -6,6 +6,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 import org.junit.Test;
 
@@ -71,7 +72,7 @@ public class UserFeedItemContextEntityHandlerTest extends DatabaseTest {
 	
 	@Test
 	public void testLoadReadStatus() throws Exception {
-		Connection cnn = getConnection();
+		final Connection cnn = getConnection();
 		try {
 			
 			final int ownerId = ensureTestUser(cnn);
@@ -84,6 +85,47 @@ public class UserFeedItemContextEntityHandlerTest extends DatabaseTest {
 			final Boolean actualReadValue = handler.loadReadStatus(cnn, feedItemId, ownerId);
 			
 			assertEquals(readValue, actualReadValue);
+		} finally {
+			DbUtils.close(cnn);
+		}
+	}
+	
+	@Test
+	public void testGetFeedItemsForUserFeedWithNoContexts() throws Exception {
+		final Connection cnn = getConnection();
+		try {
+			
+			final int userId = ensureTestUser(cnn);
+			final int feedId = ensureTestFeed(cnn);
+			
+			//update the entity
+			final UserFeedItemContextEntityHandler handler = new UserFeedItemContextEntityHandler();
+			final List<UserFeedItemContext> feedItemContextList = handler.getFeedItemsForUserFeed(cnn, userId, feedId);
+			
+			assertNotNull("getFeedItemsForUserFeed should never return null", feedItemContextList);
+			assertTrue("Expected getFeedItemsForUserFeed to be empty", feedItemContextList.isEmpty());
+		} finally {
+			DbUtils.close(cnn);
+		}
+	}
+
+	
+	@Test
+	public void testGetFeedItemsForUserFeedWithContext() throws Exception {
+		final Connection cnn = getConnection();
+		try {
+			
+			final int userId = ensureTestUser(cnn);
+			final int feedId = ensureTestFeed(cnn);
+			final int feedItemContextId = ensureTestUserFeedItemContext(cnn);
+			
+			//update the entity
+			final UserFeedItemContextEntityHandler handler = new UserFeedItemContextEntityHandler();
+			final List<UserFeedItemContext> feedItemContextList = handler.getFeedItemsForUserFeed(cnn, userId, feedId);
+			
+			assertNotNull("getFeedItemsForUserFeed should never return null", feedItemContextList);
+			assertEquals("Expected getFeedItemsForUserFeed to be empty", 1, feedItemContextList.size());
+			assertEquals("Expected the user feed item context to be loaded", new Integer(feedItemContextId), feedItemContextList.get(0).getId());
 		} finally {
 			DbUtils.close(cnn);
 		}
