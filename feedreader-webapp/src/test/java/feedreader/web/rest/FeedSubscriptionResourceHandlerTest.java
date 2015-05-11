@@ -24,7 +24,7 @@ public class FeedSubscriptionResourceHandlerTest {
 		feedRequest.setId(1);
 		
 		FeedReader feedReader = mock(FeedReader.class);
-		when(feedReader.addFeedFromUrl("http://test.com")).thenReturn(feedRequest);
+		when(feedReader.addFeedFromUrl("http://test.com")).thenReturn(1);
 		
 		HttpServletRequest request = mock(HttpServletRequest.class);
 		when(request.getPathInfo()).thenReturn("/v1/feedSubscription");

@@ -16,7 +16,6 @@ import common.web.rest.Method;
 import common.web.rest.RequestHandler;
 import common.web.rest.ResourceHandler;
 import feedreader.FeedReader;
-import feedreader.FeedRequest;
 
 @Singleton
 public class FeedSubscriptionResourceHandler implements ResourceHandler {
@@ -46,12 +45,12 @@ public class FeedSubscriptionResourceHandler implements ResourceHandler {
 			bufferedReader.close();
 		}
 		
-		FeedRequest feedRequest = feedReader.addFeedFromUrl(input.url);
+		int feedRequestId = feedReader.addFeedFromUrl(input.url);
 		
 		//output the success
 		CreateFeedSubscriptionResponse responseModel = new CreateFeedSubscriptionResponse();
 		responseModel.success = true;
-		responseModel.feedRequestId = feedRequest.getId();
+		responseModel.feedRequestId = feedRequestId;
 		return responseModel;
 	}
 	

@@ -17,6 +17,10 @@ public class RetrieveFeedMessageBuilder implements MessageBuilder {
 	private static final String FIELD_FEED_REQUEST_ID = "feedRequestId";
 	private int feedRequestId;
 	
+	public RetrieveFeedMessageBuilder(final int feedRequestId) {
+		this.feedRequestId = feedRequestId;
+	}
+	
 	public RetrieveFeedMessageBuilder(@Nonnull final FeedRequest feedRequest) {
 		Preconditions.checkArgument(feedRequest != null, "feedRequest should not be null");
 		this.feedRequestId = feedRequest.getId();

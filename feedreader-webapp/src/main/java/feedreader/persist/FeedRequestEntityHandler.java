@@ -186,7 +186,7 @@ public class FeedRequestEntityHandler implements EntityHandler {
 			DbUtils.close(stmt);
 		}
 	}
-	
+
 	private void insert(QueryContext queryContext, FeedRequest feedRequest) throws SQLException {
 		Connection cnn = null;
 		try {

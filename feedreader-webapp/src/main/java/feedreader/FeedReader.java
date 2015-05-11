@@ -9,6 +9,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
 
@@ -18,6 +19,7 @@ import common.messagequeue.api.MessageSender;
 import common.persist.EntityManager;
 import common.persist.EntityManagerFactory;
 import feedreader.messagequeue.RetrieveFeedMessageBuilder;
+import feedreader.persist.FeedRequestEntityHandler;
 import feedreader.persist.UserFeedItemContextEntityHandler;
 
 /**
@@ -30,33 +32,47 @@ public class FeedReader {
 	private final User user;
 	private final MessageSender messageSender;
 	private final UserFeedItemContextEntityHandler userFeedItemContextEntityHandler;
+	private final FeedRequestEntityHandler feedRequestEntityHandler;
 	
-	public FeedReader(DataSource dataSource, EntityManagerFactory entityManagerFactory, User user, MessageSender messageSender, UserFeedItemContextEntityHandler userFeedItemContextEntityHandler) {
+	public FeedReader(
+			DataSource dataSource, 
+			EntityManagerFactory entityManagerFactory, 
+			User user, MessageSender messageSender, 
+			UserFeedItemContextEntityHandler userFeedItemContextEntityHandler,
+			FeedRequestEntityHandler feedRequestEntityHandler) {
 		this.dataSource = dataSource;
 		this.entityManagerFactory = entityManagerFactory;
 		this.user = user;
 		this.messageSender = messageSender;
 		this.userFeedItemContextEntityHandler = userFeedItemContextEntityHandler;
+		this.feedRequestEntityHandler = feedRequestEntityHandler;
 	}
 	
 	/**
 	 * Adds a feed from the specified URL.
 	 */
-	public FeedRequest addFeedFromUrl(final String url) throws IOException {
+	public int addFeedFromUrl(final String url) throws IOException {
 		if(url == null) {
 			throw new IllegalArgumentException();
 		}
 		
-		//create the request to retrieve the feed
-		final FeedRequest feedRequest = new FeedRequest();
-		feedRequest.setUrl(url);
-		feedRequest.setCreatedBy(user);
-		entityManagerFactory.get().persist(feedRequest);
-		
-		//queue up the url to be processed async
-		messageSender.send("feedRequest", new RetrieveFeedMessageBuilder(feedRequest));
-		
-		return feedRequest;
+		try {
+			Connection cnn = dataSource.getConnection();
+			try {
+
+				//create the request to retrieve the feed
+				final int requestId = feedRequestEntityHandler.insert(cnn, url, user.getId());
+				
+				//queue up the url to be processed async
+				messageSender.send("feedRequest", new RetrieveFeedMessageBuilder(requestId));
+				
+				return requestId;
+			} finally {
+				cnn.close();
+			}
+		} catch(SQLException exc) {
+			throw Throwables.propagate(exc);
+		}
 	}
 	
 	/**
