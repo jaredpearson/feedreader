@@ -10,8 +10,8 @@ import common.DateUtils;
  */
 public class FeedSubscription {
 	private Integer id; 
-	private User subscriber;
-	private Feed feed;
+	private Integer subscriberId;
+	private Integer feedId;
 	private long created = -1;
 	
 	public Integer getId() {
@@ -22,20 +22,20 @@ public class FeedSubscription {
 		this.id = id;
 	}
 	
-	public Feed getFeed() {
-		return feed;
+	public Integer getFeedId() {
+		return feedId;
 	}
 	
-	public void setFeed(Feed feed) {
-		this.feed = feed;
+	public void setFeedId(Integer feedId) {
+		this.feedId = feedId;
 	}
 	
-	public User getSubscriber() {
-		return subscriber;
+	public Integer getSubscriberId() {
+		return subscriberId;
 	}
 	
-	public void setSubscriber(User subscriber) {
-		this.subscriber = subscriber;
+	public void setSubscriberId(Integer subscriberId) {
+		this.subscriberId = subscriberId;
 	}
 	
 	public Date getCreated() {

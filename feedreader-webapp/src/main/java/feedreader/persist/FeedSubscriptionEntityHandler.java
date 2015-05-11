@@ -10,9 +10,7 @@ import java.util.List;
 import common.persist.DbUtils;
 import common.persist.EntityManager.EntityHandler;
 import common.persist.EntityManager.QueryContext;
-import feedreader.Feed;
 import feedreader.FeedSubscription;
-import feedreader.User;
 
 /**
  * Entity handler for persisting instances of {@link FeedSubscription}
@@ -52,28 +50,22 @@ public class FeedSubscriptionEntityHandler implements EntityHandler {
 				DbUtils.close(stmt);
 			}
 			
+			FeedSubscription feedSubscription = null;
+			
+			//get the related objects
+			if(feedSubscriptionData != null) {
+				feedSubscription = new FeedSubscription();
+				feedSubscription.setId(feedSubscriptionData.id);
+				feedSubscription.setCreated(feedSubscriptionData.created);
+				feedSubscription.setSubscriberId(feedSubscriptionData.subscriberId);
+				feedSubscription.setFeedId(feedSubscriptionData.feedId);
+			}
+			
+			return feedSubscription;
+
 		} finally {
 			queryContext.releaseConnection(cnn);
 		}
-		
-		FeedSubscription feedSubscription = null;
-		
-		//get the related objects
-		if(feedSubscriptionData != null) {
-			feedSubscription = new FeedSubscription();
-			feedSubscription.setId(feedSubscriptionData.id);
-			feedSubscription.setCreated(feedSubscriptionData.created);
-			
-			//get the subscriber
-			User subscriber = queryContext.getEntityManager().get(User.class, feedSubscriptionData.subscriberId);
-			feedSubscription.setSubscriber(subscriber);
-			
-			//get the feed
-			Feed feed = queryContext.getEntityManager().get(Feed.class, feedSubscriptionData.feedId);
-			feedSubscription.setFeed(feed);
-		}
-		
-		return feedSubscription;
 	}
 	
 	/**

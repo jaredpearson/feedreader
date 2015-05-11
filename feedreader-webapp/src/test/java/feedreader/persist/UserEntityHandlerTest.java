@@ -73,6 +73,20 @@ public class UserEntityHandlerTest extends DatabaseTest {
 			DbUtils.close(cnn);
 		}
 	}
+
+	@Test
+	public void testLoadByIdWithInvalidId() throws Exception {
+		final Connection cnn = getConnection();
+		try {
+			//attempt to load the user using the handler
+			final UserEntityHandler handler = new UserEntityHandler();
+			final User user = handler.loadUserById(cnn, -1);
+			
+			assertNull("Expected get to return null since the ID could not be found", user);
+		} finally {
+			DbUtils.close(cnn);
+		}
+	}
 	
 	private int countUsers(Connection cnn) throws SQLException {
 		return DbUtils.executeAggregate(cnn, "select count(id) from feedreader.Users");
