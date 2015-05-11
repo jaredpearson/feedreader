@@ -27,7 +27,7 @@ public class FeedRequestEntityHandlerTest extends DatabaseTest {
 			
 			FeedRequest feedRequest = new FeedRequest();
 			feedRequest.setUrl("http://cyber.law.harvard.edu/rss/examples/rss2sample.xml");
-			feedRequest.setCreatedBy(user);
+			feedRequest.setCreatedById(user.getId());
 			
 			FeedRequestEntityHandler handler = new FeedRequestEntityHandler();
 			handler.persist(createQueryContext(cnn), feedRequest);

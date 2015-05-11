@@ -86,7 +86,7 @@ public class RetrieveFeedMessageHandler implements MessageHandler {
 				List<Feed> matchingFeeds = entityManager.executeNamedQuery(Feed.class, "findFeedByUrl", feedRequest.getUrl());
 				if(!matchingFeeds.isEmpty()) {
 					final Feed feed = matchingFeeds.get(0);
-					subscribe(cnn, feed.getId(), feedRequest.getCreatedBy().getId());
+					subscribe(cnn, feed.getId(), feedRequest.getCreatedById());
 					finalizeRequest(cnn, feedRequest.getId(), feed.getId());
 				} else {
 					retrieveFeedFromUrl(feedRequest);
@@ -117,13 +117,12 @@ public class RetrieveFeedMessageHandler implements MessageHandler {
 		Feed feed = null;
 		try {
 			feed = feedLoader.loadFromUrl(feedRequest.getUrl());
-			feed.setCreatedBy(feedRequest.getCreatedBy());
 		} catch (XMLStreamException exc) {
 			//TODO: update the request with the error
 			throw new RuntimeException(exc);
 		}
 
-		final Integer userId = feedRequest.getCreatedBy().getId();
+		final Integer userId = feedRequest.getCreatedById();
 		final Connection cnn = dataSource.getConnection();
 		try {
 			cnn.setAutoCommit(false);

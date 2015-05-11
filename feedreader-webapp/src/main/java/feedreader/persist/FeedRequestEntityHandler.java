@@ -16,7 +16,6 @@ import common.persist.RowMapper;
 import feedreader.Feed;
 import feedreader.FeedRequest;
 import feedreader.FeedRequestStatus;
-import feedreader.User;
 
 /**
  * Persistence handler for the {@link FeedRequest} entity.
@@ -97,9 +96,7 @@ public class FeedRequestEntityHandler implements EntityHandler {
 				feedRequest.setStatus(FeedRequestStatus.fromDbValue(feedRequestData.statusValue));
 				feedRequest.setCreated(feedRequestData.created);
 				feedRequest.setUrl(feedRequestData.url);
-				
-				User createdBy = queryContext.getEntityManager().get(User.class, feedRequestData.createdById);
-				feedRequest.setCreatedBy(createdBy);
+				feedRequest.setCreatedById(feedRequestData.createdById);
 				
 				if(feedRequestData.feedId != null) {
 					Feed feed = queryContext.getEntityManager().get(Feed.class, feedRequestData.feedId);
@@ -198,7 +195,7 @@ public class FeedRequestEntityHandler implements EntityHandler {
 				stmt.setString(1, feedRequest.getUrl());
 				DbUtils.setInt(stmt, 2, (feedRequest.getFeed() == null) ? null : feedRequest.getFeed().getId());
 				stmt.setString(3, feedRequest.getStatus().getDbValue());
-				DbUtils.setInt(stmt, 4, (feedRequest.getCreatedBy() == null) ? null : feedRequest.getCreatedBy().getId());
+				DbUtils.setInt(stmt, 4, feedRequest.getCreatedById());
 				
 				if(stmt.execute()) {
 					ResultSet rst = null;
@@ -234,7 +231,7 @@ public class FeedRequestEntityHandler implements EntityHandler {
 				stmt.setString(1, feedRequest.getUrl());
 				DbUtils.setInt(stmt, 2, (feedRequest.getFeed() == null) ? null : feedRequest.getFeed().getId());
 				stmt.setString(3, feedRequest.getStatus().getDbValue());
-				DbUtils.setInt(stmt, 4, (feedRequest.getCreatedBy() == null) ? null : feedRequest.getCreatedBy().getId());
+				DbUtils.setInt(stmt, 4, feedRequest.getCreatedById());
 				stmt.setInt(5, feedRequest.getId());
 				
 				stmt.execute();

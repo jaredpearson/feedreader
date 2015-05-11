@@ -10,7 +10,7 @@ public class FeedRequest {
 	private Feed feed;
 	private FeedRequestStatus status = FeedRequestStatus.NOT_STARTED;
 	private long created = -1;
-	private User createdBy;
+	private Integer createdById;
 	
 	public void setId(Integer id) {
 		this.id = id;
@@ -52,11 +52,11 @@ public class FeedRequest {
 		this.created = DateUtils.toMillis(created);
 	}
 	
-	public User getCreatedBy() {
-		return createdBy;
+	public Integer getCreatedById() {
+		return createdById;
 	}
 	
-	public void setCreatedBy(User createdBy) {
-		this.createdBy = createdBy;
+	public void setCreatedById(Integer createdById) {
+		this.createdById = createdById;
 	}
 }
