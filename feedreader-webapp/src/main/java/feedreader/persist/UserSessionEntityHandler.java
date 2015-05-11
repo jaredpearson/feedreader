@@ -6,6 +6,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
+import com.google.common.base.Preconditions;
+
 import common.persist.DbUtils;
 import common.persist.EntityManager;
 import common.persist.EntityManager.EntityHandler;
@@ -91,6 +93,37 @@ public class UserSessionEntityHandler implements EntityHandler {
 			}
 		} finally {
 			queryContext.releaseConnection(cnn);
+		}
+	}
+	
+	/**
+	 * Inserts a new user session into the database for the given user.
+	 * @return the ID of the new session
+	 */
+	public int insert(Connection cnn, int userId) throws SQLException {
+		Preconditions.checkArgument(cnn != null, "cnn should not be null");
+		PreparedStatement stmt = cnn.prepareStatement("insert into feedreader.UserSessions (userId) values (?) returning id");
+		try {
+			stmt.setInt(1, userId);
+			
+			if(stmt.execute()) {
+				ResultSet rst = null;
+				try {
+					rst = stmt.getResultSet();
+					
+					if(rst.next()) {
+						return rst.getInt("id");
+					} else {
+						throw new IllegalStateException("Error while inserting user");
+					}
+				} finally {
+					DbUtils.close(rst);
+				}
+			} else {
+				throw new IllegalStateException("Error while inserting User");
+			}
+		} finally {
+			DbUtils.close(stmt);
 		}
 	}
 
