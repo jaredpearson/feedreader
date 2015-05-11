@@ -46,16 +46,6 @@ public class FeedRequestEntityHandler implements EntityHandler {
 	}
 	
 	@Override
-	public void persist(QueryContext context, Object entity) throws SQLException {
-		FeedRequest feedRequest = (FeedRequest) entity;
-		if(feedRequest.getId() == null) {
-			insert(context, feedRequest);
-		} else {
-			update(context, feedRequest);
-		}
-	}
-	
-	@Override
 	public Object get(QueryContext queryContext, Object id) throws SQLException {
 		FeedRequest feedRequest = null;
 		Connection cnn = null;
@@ -176,66 +166,6 @@ public class FeedRequestEntityHandler implements EntityHandler {
 			}
 		} finally {
 			DbUtils.close(stmt);
-		}
-	}
-
-	private void insert(QueryContext queryContext, FeedRequest feedRequest) throws SQLException {
-		Connection cnn = null;
-		try {
-			cnn = queryContext.getConnection();
-			
-			PreparedStatement stmt = null;
-			try {
-				stmt = cnn.prepareStatement("insert into feedreader.FeedRequests (url, feedId, status, createdBy) values (?, ?, ?, ?) returning id, created");
-				stmt.setString(1, feedRequest.getUrl());
-				DbUtils.setInt(stmt, 2, feedRequest.getFeedId());
-				stmt.setString(3, feedRequest.getStatus().getDbValue());
-				DbUtils.setInt(stmt, 4, feedRequest.getCreatedById());
-				
-				if(stmt.execute()) {
-					ResultSet rst = null;
-					try {
-						rst = stmt.getResultSet();
-						if(rst.next()) {
-							feedRequest.setId(rst.getInt(1));
-							feedRequest.setCreated(rst.getDate(2));
-						}
-						
-					} finally {
-						DbUtils.close(rst);
-					}
-				}
-				
-			} finally {
-				DbUtils.close(stmt);
-			}
-			
-		} finally {
-			queryContext.releaseConnection(cnn);
-		}
-	}
-	
-	private void update(QueryContext queryContext, FeedRequest feedRequest) throws SQLException {
-		Connection cnn = null;
-		try {
-			cnn = queryContext.getConnection();
-			
-			PreparedStatement stmt = null;
-			try {
-				stmt = cnn.prepareStatement("update feedreader.FeedRequests set url = ?, feedId = ?, status = ?, createdBy = ? where id = ?");
-				stmt.setString(1, feedRequest.getUrl());
-				DbUtils.setInt(stmt, 2, feedRequest.getFeedId());
-				stmt.setString(3, feedRequest.getStatus().getDbValue());
-				DbUtils.setInt(stmt, 4, feedRequest.getCreatedById());
-				stmt.setInt(5, feedRequest.getId());
-				
-				stmt.execute();
-			} finally {
-				DbUtils.close(stmt);
-			}
-			
-		} finally {
-			queryContext.releaseConnection(cnn);
 		}
 	}
 	

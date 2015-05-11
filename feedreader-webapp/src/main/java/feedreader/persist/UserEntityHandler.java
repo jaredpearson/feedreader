@@ -20,39 +20,6 @@ import feedreader.User;
 public class UserEntityHandler implements EntityManager.EntityHandler {
 	
 	@Override
-	public void persist(EntityManager.QueryContext queryContext, Object entity) throws SQLException {
-		User user = (User) entity;
-		Connection cnn = null;
-		try {
-			cnn = queryContext.getConnection();
-			
-			PreparedStatement stmt = null;
-			try {
-				stmt = cnn.prepareStatement("insert into feedreader.Users (email) values (?) returning id");
-				stmt.setString(1, user.getEmail());
-				
-				boolean hasResult = stmt.execute();
-				if(hasResult) {
-					ResultSet rst = null;
-					try {
-						rst = stmt.getResultSet();
-						if(rst.next()) {
-							user.setId(rst.getInt(1));
-						}
-					} finally {
-						DbUtils.close(rst);
-					}
-				}
-			} finally {
-				DbUtils.close(stmt);
-			}
-			
-		} finally {
-			queryContext.releaseConnection(cnn);
-		}
-	}
-	
-	@Override
 	public Object get(EntityManager.QueryContext queryContext, Object id) throws SQLException {
 		final Connection cnn = queryContext.getConnection();
 		try {

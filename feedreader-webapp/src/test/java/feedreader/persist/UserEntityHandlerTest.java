@@ -15,32 +15,6 @@ import feedreader.User;
 public class UserEntityHandlerTest extends DatabaseTest {
 	
 	@Test
-	public void testPersist() throws Exception {
-		Connection cnn = null;
-		try {
-			cnn = getConnection();
-			int recordCountBefore = countUsers(cnn);
-			
-			EntityManager.QueryContext context = createQueryContext(cnn);
-			
-			//create the user to be persisted
-			User user = new User();
-			user.setEmail("test@test.com");
-			
-			//persist the user
-			UserEntityHandler handler = new UserEntityHandler();
-			handler.persist(context, user);
-			
-			assertTrue("Expected the user to have an ID after a persist", user.getId() != null);
-			
-			int recordCountAfter = countUsers(cnn);
-			assertEquals("Expected there to be only one record in the database after the persist", recordCountBefore + 1, recordCountAfter);
-		} finally {
-			DbUtils.close(cnn);
-		}
-	}
-
-	@Test
 	public void testInsert() throws Exception {
 		final Connection cnn = getConnection();
 		try {

@@ -10,8 +10,6 @@ import java.sql.SQLException;
 import org.junit.Test;
 
 import common.persist.DbUtils;
-import feedreader.FeedItem;
-import feedreader.User;
 import feedreader.UserFeedItemContext;
 
 public class UserFeedItemContextEntityHandlerTest extends DatabaseTest {
@@ -35,33 +33,6 @@ public class UserFeedItemContextEntityHandlerTest extends DatabaseTest {
 	}
 	
 	@Test
-	public void testInsertWithPersist() throws SQLException {
-		Connection cnn = getConnection();
-		try {
-			int ownerId = ensureTestUser(cnn);
-			User owner = new User();
-			owner.setId(ownerId);
-		
-			int feedItemId = ensureTestFeedItem(cnn);
-			FeedItem feedItem = new FeedItem();
-			feedItem.setId(feedItemId);
-			
-			UserFeedItemContext context = new UserFeedItemContext();
-			context.setFeedItem(feedItem);
-			context.setOwner(owner);
-			context.setRead(false);
-			
-			//persist the entity
-			UserFeedItemContextEntityHandler handler = new UserFeedItemContextEntityHandler();
-			handler.persist(createQueryContext(cnn), context);
-			
-			assertTrue("Expected the ID to be set when the entity is persisted", context.getId() != null);
-		} finally {
-			DbUtils.close(cnn);
-		}
-	}
-
-	@Test
 	public void testInsert() throws SQLException {
 		Connection cnn = getConnection();
 		try {
@@ -73,40 +44,6 @@ public class UserFeedItemContextEntityHandlerTest extends DatabaseTest {
 			final int userContextId = handler.insert(cnn, feedItemId, ownerId, false);
 			
 			assertTrue("Expected the insert to return a valid ID", userContextId > 0);
-		} finally {
-			DbUtils.close(cnn);
-		}
-	}
-
-
-	@Test
-	public void testUpdateWithPersist() throws SQLException {
-		Connection cnn = getConnection();
-		try {
-			
-			int ownerId = ensureTestUser(cnn);
-			User owner = new User();
-			owner.setId(ownerId);
-		
-			int feedItemId = ensureTestFeedItem(cnn);
-			FeedItem feedItem = new FeedItem();
-			feedItem.setId(feedItemId);
-			
-			int contextId = ensureTestUserFeedItemContext(cnn);
-			boolean readValueBeforeUpdate = getReadValue(cnn, contextId);
-			
-			UserFeedItemContext context = new UserFeedItemContext();
-			context.setId(contextId);
-			context.setFeedItem(feedItem);
-			context.setOwner(owner);
-			context.setRead(!readValueBeforeUpdate);
-			
-			//persist the entity
-			UserFeedItemContextEntityHandler handler = new UserFeedItemContextEntityHandler();
-			handler.persist(createQueryContext(cnn), context);
-			
-			assertTrue("Expected the ID to be set when the entity is persisted", context.getId() != null);
-			assertEquals(!readValueBeforeUpdate, getReadValue(cnn, contextId));
 		} finally {
 			DbUtils.close(cnn);
 		}

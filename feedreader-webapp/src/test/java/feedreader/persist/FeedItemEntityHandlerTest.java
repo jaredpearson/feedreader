@@ -14,7 +14,6 @@ import org.junit.Test;
 
 import common.persist.DbUtils;
 import common.persist.EntityManager;
-import feedreader.Feed;
 import feedreader.FeedItem;
 
 public class FeedItemEntityHandlerTest extends DatabaseTest {
@@ -35,28 +34,6 @@ public class FeedItemEntityHandlerTest extends DatabaseTest {
 			
 			assertTrue(feedItem != null);
 			assertEquals(Integer.valueOf(feedItemId), feedItem.getId());
-		} finally {
-			DbUtils.close(cnn);
-		}
-	}
-	
-	@Test
-	public void testInsertWithPersist() throws SQLException {
-		Connection cnn = null;
-		try {
-			cnn = getConnection();
-			
-			int feedId = ensureTestFeed(cnn);
-			Feed feed = new Feed();
-			feed.setId(feedId);
-			
-			FeedItem feedItem = new FeedItem();
-			feedItem.setFeed(feed);
-			
-			FeedItemEntityHandler handler = new FeedItemEntityHandler();
-			handler.persist(createQueryContext(cnn), feedItem);
-			
-			assertTrue(feedItem.getId() != null);
 		} finally {
 			DbUtils.close(cnn);
 		}

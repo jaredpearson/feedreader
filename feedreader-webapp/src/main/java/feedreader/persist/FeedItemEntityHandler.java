@@ -44,46 +44,6 @@ public class FeedItemEntityHandler implements EntityHandler {
 	}
 
 	@Override
-	public void persist(EntityManager.QueryContext queryContext, Object entity) throws SQLException {
-		FeedItem feedItem = (FeedItem)entity;
-		Connection cnn = null;
-		try {
-			cnn = queryContext.getConnection();
-			
-			PreparedStatement stmt = null;
-			try {
-				stmt = cnn.prepareStatement("insert into feedreader.FeedItems (feedId, title, description, link, pubDate, guid) values (?, ?, ?, ?, ?, ?) returning id, created");
-				stmt.setInt(1, feedItem.getFeed().getId());
-				stmt.setString(2, feedItem.getTitle());
-				stmt.setString(3, feedItem.getDescription());
-				stmt.setString(4, feedItem.getLink());
-				DbUtils.setDate(stmt, 5, feedItem.getPubDate());
-				stmt.setString(6, feedItem.getGuid());
-				
-				if(stmt.execute()) {
-					ResultSet rst = null;
-					try {
-						rst = stmt.getResultSet();
-						if(rst.next()) {
-							feedItem.setId(rst.getInt(1));
-							feedItem.setCreated(rst.getDate(2));
-						}
-						
-					} finally {
-						DbUtils.close(rst);
-					}
-				}
-				
-			} finally {
-				DbUtils.close(stmt);
-			}
-			
-		} finally {
-			queryContext.releaseConnection(cnn);
-		}
-	}
-
-	@Override
 	public Object get(EntityManager.QueryContext queryContext, Object id) throws SQLException {
 		FeedItem feedItem = null;
 		Connection cnn = null;

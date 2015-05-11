@@ -59,16 +59,6 @@ public class UserFeedItemContextEntityHandler implements EntityHandler {
 	}
 	
 	@Override
-	public void persist(EntityManager.QueryContext queryContext, Object entity) throws SQLException {
-		UserFeedItemContext feedItemContext = (UserFeedItemContext)entity;
-		if(feedItemContext.getId() == null) {
-			insert(queryContext, feedItemContext);
-		} else {
-			update(queryContext, feedItemContext);
-		}
-	}
-
-	@Override
 	public Object get(EntityManager.QueryContext queryContext, Object id) throws SQLException {
 		UserFeedItemContext feedItemContext = null;
 		int contextId = (Integer)id;
@@ -191,50 +181,6 @@ public class UserFeedItemContextEntityHandler implements EntityHandler {
 		return feedItemContexts;
 	}
 	
-	private void insert(EntityManager.QueryContext queryContext, Object entity) throws SQLException {
-		UserFeedItemContext feedItemContext = (UserFeedItemContext)entity;
-		
-		validate(feedItemContext, true);
-		
-		final Integer feedItemId = feedItemContext.getFeedItem().getId();
-		final Integer ownerId = feedItemContext.getOwner().getId();
-		final boolean readStatus = feedItemContext.isRead();
-		
-		Connection cnn = null;
-		try {
-			cnn = queryContext.getConnection();
-			
-			PreparedStatement stmt = null;
-			try {
-				stmt = cnn.prepareStatement("insert into feedreader.UserFeedItemContexts (feedItemId, owner, read) values (?, ?, ?) returning id, read, created");
-				stmt.setInt(1, feedItemId);
-				stmt.setInt(2, ownerId);
-				stmt.setBoolean(3, readStatus);
-				
-				if(stmt.execute()) {
-					ResultSet rst = null;
-					try {
-						rst = stmt.getResultSet();
-						if(rst.next()) {
-							feedItemContext.setId(rst.getInt("id"));
-							feedItemContext.setRead(rst.getBoolean("read"));
-							feedItemContext.setCreated(rst.getDate("created"));
-						}
-						
-					} finally {
-						DbUtils.close(rst);
-					}
-				}
-				
-			} finally {
-				DbUtils.close(stmt);
-			}
-			
-		} finally {
-			queryContext.releaseConnection(cnn);
-		}
-	}
-	
 	/**
 	 * Loads the read status from the database for the feed item context with the given feed item ID and owner ID. If the record does not exist, a null
 	 * value is returned otherwise the value of the field is returned.
@@ -300,49 +246,6 @@ public class UserFeedItemContextEntityHandler implements EntityHandler {
 			return rowsUpdated > 0;
 		} finally {
 			stmt.close();
-		}
-	}
-	
-	private void update(EntityManager.QueryContext queryContext, Object entity) throws SQLException {
-		UserFeedItemContext feedItemContext = (UserFeedItemContext)entity;
-		
-		validate(feedItemContext, false);
-		
-		Connection cnn = null;
-		try {
-			cnn = queryContext.getConnection();
-			
-			PreparedStatement stmt = null;
-			try {
-				stmt = cnn.prepareStatement("update feedreader.UserFeedItemContexts set read = ? where id = ?");
-				stmt.setBoolean(1, feedItemContext.isRead());
-				stmt.setInt(2, feedItemContext.getId());
-				
-				if(stmt.executeUpdate() != 1) {
-					//TODO: log a message that nothing was updated
-				}
-				
-			} finally {
-				DbUtils.close(stmt);
-			}
-			
-		} finally {
-			queryContext.releaseConnection(cnn);
-		}
-	}
-	
-	/**
-	 * FIXME: Validation should be able to throw more than 1 exception
-	 */
-	private void validate(UserFeedItemContext context, boolean insert) {
-		if(context.getFeedItemId() == null) {
-			//FIXME: throw a more specific exception during validation
-			throw new IllegalStateException("FeedItem is required");
-		}
-		
-		if(context.getOwner() == null) {
-			//FIXME: throw a more specific exception during validation
-			throw new IllegalStateException("Owner is required");
 		}
 	}
 	

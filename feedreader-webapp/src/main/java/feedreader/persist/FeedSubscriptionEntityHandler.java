@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.Date;
 import java.util.List;
 
@@ -75,52 +74,6 @@ public class FeedSubscriptionEntityHandler implements EntityHandler {
 		}
 		
 		return feedSubscription;
-	}
-	
-	@Override
-	public void persist(QueryContext queryContext, Object entity) throws SQLException {
-		FeedSubscription feedSubscription = (FeedSubscription)entity;
-		Connection cnn = null;
-		try {
-			cnn = queryContext.getConnection();
-			
-			PreparedStatement stmt = null;
-			try {
-				stmt = cnn.prepareStatement("insert into feedreader.FeedSubscriptions (subscriber, feedId) values (?, ?) returning id, created");
-				
-				if(feedSubscription.getSubscriber() == null || feedSubscription.getSubscriber().getId() == null) {
-					stmt.setNull(1, Types.INTEGER);
-				} else {
-					stmt.setInt(1, feedSubscription.getSubscriber().getId());
-				}
-				
-				if(feedSubscription.getFeed() == null || feedSubscription.getFeed().getId() == null) {
-					stmt.setNull(2, Types.INTEGER);
-				} else {
-					stmt.setInt(2, feedSubscription.getFeed().getId());
-				}
-				
-				if(stmt.execute()) {
-					ResultSet rst = null;
-					try {
-						rst = stmt.getResultSet();
-						if(rst.next()) {
-							feedSubscription.setId(rst.getInt(1));
-							feedSubscription.setCreated(rst.getDate(2));
-						}
-						
-					} finally {
-						DbUtils.close(rst);
-					}
-				}
-				
-			} finally {
-				DbUtils.close(stmt);
-			}
-			
-		} finally {
-			queryContext.releaseConnection(cnn);
-		}
 	}
 	
 	/**

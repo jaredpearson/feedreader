@@ -63,39 +63,6 @@ public class UserSessionEntityHandler implements EntityHandler {
 		return session;
 	}
 	
-	@Override
-	public void persist(EntityManager.QueryContext queryContext, Object entity) throws SQLException {
-		UserSession userSession = (UserSession)entity;
-		Connection cnn = null;
-		try {
-			cnn = queryContext.getConnection();
-			
-			PreparedStatement stmt = null;
-			try {
-				stmt = cnn.prepareStatement("insert into feedreader.UserSessions (userId) values (?) returning id, created");
-				stmt.setInt(1, userSession.getUser().getId());
-				
-				if(stmt.execute()) {
-					ResultSet rst = null;
-					try {
-						rst = stmt.getResultSet();
-						
-						if(rst.next()) {
-							userSession.setId(rst.getInt(1));
-							userSession.setCreated(rst.getDate(2));
-						}
-					} finally {
-						DbUtils.close(rst);
-					}
-				}
-			} finally {
-				DbUtils.close(stmt);
-			}
-		} finally {
-			queryContext.releaseConnection(cnn);
-		}
-	}
-	
 	/**
 	 * Inserts a new user session into the database for the given user.
 	 * @return the ID of the new session

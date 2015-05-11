@@ -45,28 +45,6 @@ public class FeedEntityHandlerTest extends DatabaseTest {
 	}
 	
 	@Test
-	public void testInsertWithPersist() throws SQLException {
-		Connection cnn = null;
-		try {
-			cnn = getConnection();
-			
-			int testUserId = ensureTestUser(cnn);
-			
-			Feed feed = new Feed();
-			feed.setTitle("Test Feed");
-			feed.setUrl("http://test.com/test.xml");
-			feed.setCreatedById(testUserId);
-			
-			FeedEntityHandler handler = new FeedEntityHandler();
-			handler.persist(createQueryContext(cnn), feed);
-			
-			assertTrue(feed.getId() != null);
-		} finally {
-			DbUtils.close(cnn);
-		}
-	}
-
-	@Test
 	public void testInsert() throws SQLException {
 		Connection cnn = getConnection();
 		try {
