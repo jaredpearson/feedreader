@@ -10,6 +10,8 @@ import java.util.logging.Logger;
 import javax.sql.DataSource;
 import javax.xml.stream.XMLStreamException;
 
+import com.google.common.base.Throwables;
+
 import common.Provider;
 import common.messagequeue.api.Message;
 import common.messagequeue.api.MessageHandler;
@@ -73,7 +75,7 @@ public class RetrieveFeedMessageHandler implements MessageHandler {
 				retrieveFeedFromUrl(feedRequest);
 			}
 		
-		} catch(RuntimeException exc) {
+		} catch(Exception exc) {
 			try {
 				final Connection cnn = dataSource.getConnection();
 				try {
@@ -85,11 +87,11 @@ public class RetrieveFeedMessageHandler implements MessageHandler {
 				// log but continue if we can't set the status
 				logger.log(Level.WARNING, "Status of request could not be set. Continuing as if this error didn't occur.", exc2);
 			}
-			throw exc;
+			throw Throwables.propagate(exc);
 		}
 	}
 	
-	private void retrieveFeedFromUrl(final FeedRequest feedRequest) throws IOException {
+	private void retrieveFeedFromUrl(final FeedRequest feedRequest) throws IOException, SQLException {
 		//retrieve the feed from the URL given in the request
 		final FeedLoader feedLoader = feedLoaderProvider.get();
 		Feed feed = null;
@@ -114,10 +116,13 @@ public class RetrieveFeedMessageHandler implements MessageHandler {
 		subscribe(feed, feedRequest.getCreatedBy());
 	}
 	
-	private void finalizeRequest(final FeedRequest feedRequest, final Feed feed) {
-		feedRequest.setFeed(feed);
-		feedRequest.setStatus(FeedRequestStatus.FINISHED);
-		entityManager.persist(feedRequest);
+	private void finalizeRequest(final FeedRequest feedRequest, final Feed feed) throws SQLException {
+		final Connection cnn = dataSource.getConnection();
+		try {
+			feedRequestEntityHandler.updateRequestFeedAndStatus(cnn, feedRequest.getId(), feed.getId(), FeedRequestStatus.FINISHED);
+		} catch(SQLException exc) {
+			cnn.close();
+		}
 	}
 	
 	private FeedSubscription subscribe(final Feed feed, final User subscriber) {

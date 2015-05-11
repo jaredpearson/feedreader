@@ -136,6 +136,26 @@ public class FeedRequestEntityHandler implements EntityHandler {
 			DbUtils.close(stmt);
 		}
 	}
+
+	/**
+	 * Updates the feed ID and status of the request corresponding to the request ID.
+	 * @return true when the update was successful
+	 */
+	public boolean updateRequestFeedAndStatus(Connection cnn, int requestId, int feedId, FeedRequestStatus status) throws SQLException {
+		Preconditions.checkArgument(cnn != null, "cnn should not be null");
+		Preconditions.checkArgument(status != null, "status should not be null");
+		
+		final PreparedStatement stmt = cnn.prepareStatement("update feedreader.FeedRequests set feedId = ?, status = ? where id = ?");
+		try {
+			stmt.setInt(1, feedId);
+			stmt.setString(2, status.getDbValue());
+			stmt.setInt(3, requestId);
+			
+			return stmt.executeUpdate() > 0;
+		} finally {
+			DbUtils.close(stmt);
+		}
+	}
 	
 	/**
 	 * Inserts a new feed request with the given URL and createdBy user. The default status is NOT_STARTED.
