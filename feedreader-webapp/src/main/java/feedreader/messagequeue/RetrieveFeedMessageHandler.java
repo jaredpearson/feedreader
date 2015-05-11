@@ -3,6 +3,7 @@ package feedreader.messagequeue;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Savepoint;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -122,27 +123,44 @@ public class RetrieveFeedMessageHandler implements MessageHandler {
 			throw new RuntimeException(exc);
 		}
 
+		final Integer userId = feedRequest.getCreatedBy().getId();
 		final Connection cnn = dataSource.getConnection();
 		try {
-			
-			//save the feed to the database
-			final int feedId = feedEntityHandler.insert(cnn, feed.getUrl(), feed.getLastUpdated(), feed.getTitle(), feedRequest.getCreatedBy().getId());
-			for(FeedItem feedItem : feed.getItems()) {
-				feedItemEntityHandler.insert(cnn, feedId, feedItem.getTitle(), feedItem.getDescription(), feedItem.getLink(), feedItem.getPubDate(), feedItem.getGuid());
+			cnn.setAutoCommit(false);
+			final Savepoint savepoint = cnn.setSavepoint();
+			try {
+				
+				//save the feed to the database
+				final int feedId = feedEntityHandler.insert(cnn, feed.getUrl(), feed.getLastUpdated(), feed.getTitle(), userId);
+				for(FeedItem feedItem : feed.getItems()) {
+					feedItemEntityHandler.insert(cnn, feedId, feedItem.getTitle(), feedItem.getDescription(), feedItem.getLink(), feedItem.getPubDate(), feedItem.getGuid());
+				}
+				
+				//update the feed request
+				finalizeRequest(cnn, feedRequest.getId(), feedId);
+				
+				//create a subscription for the user to the feed
+				subscribe(cnn, feedId, userId);
+				
+				cnn.commit();
+			} catch (Throwable t) {
+				cnn.rollback(savepoint);
+				
+				if (t instanceof SQLException) {
+					throw (SQLException) t;
+				} else if (t instanceof IOException) {
+					throw (IOException) t;
+				} else {
+					throw Throwables.propagate(t);
+				}
 			}
-		
-			//update the feed request
-			finalizeRequest(cnn, feedRequest, feed);
-			
-			//create a subscription for the user to the feed
-			subscribe(cnn, feed.getId(), feedRequest.getCreatedBy().getId());
 		} finally {
 			cnn.close();
 		}
 	}
 	
-	private void finalizeRequest(final Connection cnn, final FeedRequest feedRequest, final Feed feed) throws SQLException {
-		feedRequestEntityHandler.updateRequestFeedAndStatus(cnn, feedRequest.getId(), feed.getId(), FeedRequestStatus.FINISHED);
+	private void finalizeRequest(final Connection cnn, final int feedRequestId, final int feedId) throws SQLException {
+		feedRequestEntityHandler.updateRequestFeedAndStatus(cnn, feedRequestId, feedId, FeedRequestStatus.FINISHED);
 	}
 	
 	private int subscribe(final Connection cnn, final int feedId, final int subscriberId) throws SQLException {
