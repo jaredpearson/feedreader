@@ -22,6 +22,7 @@ import feedreader.FeedRequest;
 import feedreader.FeedRequestStatus;
 import feedreader.fetch.FeedLoader;
 import feedreader.persist.FeedEntityHandler;
+import feedreader.persist.FeedItemEntityHandler;
 import feedreader.persist.FeedRequestEntityHandler;
 import feedreader.persist.FeedSubscriptionEntityHandler;
 
@@ -35,6 +36,7 @@ public class RetrieveFeedMessageHandler implements MessageHandler {
 	private final Provider<FeedLoader> feedLoaderProvider;
 	private final DataSource dataSource;
 	private final FeedEntityHandler feedEntityHandler;
+	private final FeedItemEntityHandler feedItemEntityHandler;
 	private final FeedRequestEntityHandler feedRequestEntityHandler;
 	private final FeedSubscriptionEntityHandler subscriptionEntityHandler;
 	
@@ -43,12 +45,14 @@ public class RetrieveFeedMessageHandler implements MessageHandler {
 			final Provider<FeedLoader> feedLoaderProvider, 
 			final DataSource dataSource, 
 			final FeedEntityHandler feedEntityHandler,
+			final FeedItemEntityHandler feedItemEntityHandler,
 			final FeedRequestEntityHandler feedRequestEntityHandler,
 			final FeedSubscriptionEntityHandler feedSubscriptionEntityHandler) {
 		this.entityManager = entityManager;
 		this.feedLoaderProvider = feedLoaderProvider;
 		this.dataSource = dataSource;
 		this.feedEntityHandler = feedEntityHandler;
+		this.feedItemEntityHandler = feedItemEntityHandler;
 		this.feedRequestEntityHandler = feedRequestEntityHandler;
 		this.subscriptionEntityHandler = feedSubscriptionEntityHandler;
 	}
@@ -122,9 +126,9 @@ public class RetrieveFeedMessageHandler implements MessageHandler {
 		try {
 			
 			//save the feed to the database
-			feedEntityHandler.insert(cnn, feed.getUrl(), feed.getLastUpdated(), feed.getTitle(), feedRequest.getCreatedBy().getId());
+			final int feedId = feedEntityHandler.insert(cnn, feed.getUrl(), feed.getLastUpdated(), feed.getTitle(), feedRequest.getCreatedBy().getId());
 			for(FeedItem feedItem : feed.getItems()) {
-				entityManager.persist(feedItem);
+				feedItemEntityHandler.insert(cnn, feedId, feedItem.getTitle(), feedItem.getDescription(), feedItem.getLink(), feedItem.getPubDate(), feedItem.getGuid());
 			}
 		
 			//update the feed request

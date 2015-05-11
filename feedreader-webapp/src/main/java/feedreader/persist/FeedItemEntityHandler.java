@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import common.persist.DbUtils;
@@ -114,6 +115,41 @@ public class FeedItemEntityHandler implements EntityHandler {
 			return getFeedItemsForStream(queryContext, (Integer)parameters[0], (Integer)parameters[1], (Integer)parameters[2]);
 		} else {
 			throw new UnsupportedOperationException("No method registered with name: " + query);
+		}
+	}
+	
+	/**
+	 * Inserts a new feed item into the database
+	 * @return the ID of the new feed item.
+	 */
+	public int insert(Connection cnn, int feedId, String title, String description, String link, Date pubDate, String guid) throws SQLException {
+		final PreparedStatement stmt = cnn.prepareStatement("insert into feedreader.FeedItems (feedId, title, description, link, pubDate, guid) values (?, ?, ?, ?, ?, ?) returning id");
+		try {
+			stmt.setInt(1, feedId);
+			stmt.setString(2, title);
+			stmt.setString(3, description);
+			stmt.setString(4, link);
+			DbUtils.setDate(stmt, 5, pubDate);
+			stmt.setString(6, guid);
+			
+			if (stmt.execute()) {
+				ResultSet rst = null;
+				try {
+					rst = stmt.getResultSet();
+					if (rst.next()) {
+						return rst.getInt("id");
+					} else {
+						throw new IllegalStateException("Unable to create FeedItem");
+					}
+				} finally {
+					DbUtils.close(rst);
+				}
+			} else {
+				throw new IllegalStateException("Unable to create FeedItem");
+			}
+			
+		} finally {
+			DbUtils.close(stmt);
 		}
 	}
 	

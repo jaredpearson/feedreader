@@ -5,6 +5,8 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
@@ -39,7 +41,7 @@ public class FeedItemEntityHandlerTest extends DatabaseTest {
 	}
 	
 	@Test
-	public void testInsert() throws SQLException {
+	public void testInsertWithPersist() throws SQLException {
 		Connection cnn = null;
 		try {
 			cnn = getConnection();
@@ -57,6 +59,47 @@ public class FeedItemEntityHandlerTest extends DatabaseTest {
 			assertTrue(feedItem.getId() != null);
 		} finally {
 			DbUtils.close(cnn);
+		}
+	}
+	
+	@Test
+	public void testInsert() throws SQLException {
+		final Connection cnn = getConnection();
+		try {
+			final int feedId = ensureTestFeed(cnn);
+			
+			final FeedItemEntityHandler handler = new FeedItemEntityHandler();
+			final int feedItemId = handler.insert(cnn, feedId, null, null, null, null, null);
+			
+			assertTrue("Expected feedItemId to be a valid ID", feedItemId > 0);
+			assertFeedItem(cnn, feedItemId, feedId);
+		} finally {
+			DbUtils.close(cnn);
+		}
+	}
+	
+	private void assertFeedItem(Connection cnn, int feedItemId, int feedId) throws SQLException {
+		final PreparedStatement stmt = cnn.prepareStatement("select feedId from feedreader.FeedItems where id = ?");
+		try {
+			stmt.setInt(1, feedItemId);
+			
+			final ResultSet rst = stmt.executeQuery();
+			try {
+				
+				if (rst.next()) {
+					
+					assertEquals("feedId in DB is not the same", feedId, rst.getInt("feedId"));
+					
+				} else {
+					throw new IllegalStateException();
+				}
+				
+			} finally {
+				rst.close();
+			}
+			
+		} finally {
+			stmt.close();
 		}
 	}
 }
