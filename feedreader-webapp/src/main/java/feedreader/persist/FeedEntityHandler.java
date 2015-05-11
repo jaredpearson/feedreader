@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -28,13 +27,12 @@ public class FeedEntityHandler implements EntityHandler {
 				+ "f.title feed_title, "
 				+ "f.created feed_created, "
 				
-				+ "f.createdBy feed_createdBy_id, "
-				+ "u.email feed_createdBy_email "
+				+ "f.createdBy feed_createdBy "
 				
 				+ "from feedreader.Feeds f "
 				+ "inner join feedreader.Users u on f.createdBy = u.id ";
 		
-		ROW_MAPPER = new FeedRowMapper(new UserRowMapper("feed_createdBy_"));
+		ROW_MAPPER = new FeedRowMapper();
 	}
 	
 	@Override
@@ -89,12 +87,7 @@ public class FeedEntityHandler implements EntityHandler {
 				stmt.setString(1, feed.getUrl());
 				stmt.setDate(2, toSqlDate(feed.getLastUpdated()));
 				stmt.setString(3, feed.getTitle());
-				
-				if(feed.getCreatedBy() == null || feed.getCreatedBy().getId() == null) {
-					stmt.setNull(4, Types.INTEGER);
-				} else {
-					stmt.setInt(4, feed.getCreatedBy().getId());
-				}
+				DbUtils.setInt(stmt, 4, feed.getCreatedById());
 				
 				if(stmt.execute()) {
 					ResultSet rst = null;

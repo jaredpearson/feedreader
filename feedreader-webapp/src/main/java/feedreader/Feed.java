@@ -18,7 +18,7 @@ public class Feed {
 	private String url;
 	private long lastUpdated = -1;
 	private String title;
-	private User createdBy;
+	private Integer createdById;
 	private List<FeedItem> items = Collections.emptyList();
 	
 	public Feed() {
@@ -69,12 +69,12 @@ public class Feed {
 		return DateUtils.toDate(lastUpdated);
 	}
 	
-	public void setCreatedBy(User createdBy) {
-		this.createdBy = createdBy;
+	public void setCreatedById(Integer createdById) {
+		this.createdById = createdById;
 	}
 	
-	public User getCreatedBy() {
-		return createdBy;
+	public Integer getCreatedById() {
+		return createdById;
 	}
 	
 	public void setCreated(Date created) {
@@ -84,4 +84,5 @@ public class Feed {
 	public Date getCreated() {
 		return DateUtils.toDate(created);
 	}
+
 }

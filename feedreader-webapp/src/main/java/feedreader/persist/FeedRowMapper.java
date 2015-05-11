@@ -5,7 +5,6 @@ import java.sql.SQLException;
 
 import common.persist.RowMapper;
 import feedreader.Feed;
-import feedreader.User;
 
 /**
  * Maps a row in a {@link ResultSet} to a {@link Feed}
@@ -13,15 +12,13 @@ import feedreader.User;
  */
 public class FeedRowMapper implements RowMapper<Feed> {
 	private String prefix;
-	private UserRowMapper userRowMapper;
 	
-	public FeedRowMapper(UserRowMapper userRowMapper) {
-		this("feed_", userRowMapper);
+	public FeedRowMapper() {
+		this("feed_");
 	}
 	
-	public FeedRowMapper(String prefix, UserRowMapper userRowMapper) {
+	public FeedRowMapper(String prefix) {
 		this.prefix = prefix;
-		this.userRowMapper = userRowMapper;
 	}
 	
 	@Override
@@ -32,11 +29,7 @@ public class FeedRowMapper implements RowMapper<Feed> {
 		feed.setLastUpdated(rst.getDate(prefix + "lastUpdated"));
 		feed.setTitle(rst.getString(prefix + "title"));
 		feed.setCreated(rst.getDate(prefix + "created"));
-		
-		//FIXME: we could potential load the user's information more than once
-		User createdByUser = userRowMapper.mapRow(rst);
-		feed.setCreatedBy(createdByUser);
-		
+		feed.setCreatedById(rst.getInt(prefix + "createdBy"));
 		return feed;
 	}
 	

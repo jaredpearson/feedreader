@@ -29,8 +29,8 @@ public class UserFeedContext extends Stream {
 		return feed.getCreated();
 	}
 	
-	public User getCreatedBy() {
-		return feed.getCreatedBy();
+	public Integer getCreatedById() {
+		return feed.getCreatedById();
 	}
 	
 	public String getUrl() {

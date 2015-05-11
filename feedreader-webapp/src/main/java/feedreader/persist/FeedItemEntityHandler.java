@@ -35,15 +35,12 @@ public class FeedItemEntityHandler implements EntityHandler {
 			+ "if.lastUpdated feed_lastUpdated, "
 			+ "if.title feed_title, "
 			+ "if.created feed_created, "
-			
-			//feed.createdBy
-			+ "ifu.id feed_createdBy_id, "
-			+ "ifu.email feed_createdBy_email "
+			+ "if.createdBy feed_createdBy "
 			
 			+ "from feedreader.FeedItems i "
 			+ "inner join feedreader.Feeds if on i.feedId = if.id "
 			+ "inner join feedreader.Users ifu on if.createdBy = ifu.id ";
-		ROW_MAPPER = new FeedItemRowMapper(new FeedRowMapper("feed_", new UserRowMapper("feed_createdBy_")));
+		ROW_MAPPER = new FeedItemRowMapper(new FeedRowMapper("feed_"));
 	}
 
 	@Override

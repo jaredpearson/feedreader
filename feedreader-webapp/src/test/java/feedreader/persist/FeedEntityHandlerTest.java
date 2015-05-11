@@ -20,7 +20,6 @@ import common.persist.DbUtils;
 import common.persist.EntityManager;
 import feedreader.Feed;
 import feedreader.FeedItem;
-import feedreader.User;
 
 public class FeedEntityHandlerTest extends DatabaseTest {
 	
@@ -52,13 +51,11 @@ public class FeedEntityHandlerTest extends DatabaseTest {
 			cnn = getConnection();
 			
 			int testUserId = ensureTestUser(cnn);
-			User testUser = new User();
-			testUser.setId(testUserId);
 			
 			Feed feed = new Feed();
 			feed.setTitle("Test Feed");
 			feed.setUrl("http://test.com/test.xml");
-			feed.setCreatedBy(testUser);
+			feed.setCreatedById(testUserId);
 			
 			FeedEntityHandler handler = new FeedEntityHandler();
 			handler.persist(createQueryContext(cnn), feed);
