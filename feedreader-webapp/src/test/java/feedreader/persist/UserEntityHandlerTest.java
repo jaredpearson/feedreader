@@ -82,6 +82,24 @@ public class UserEntityHandlerTest extends DatabaseTest {
 		}
 	}
 	
+	@Test
+	public void testLoadById() throws Exception {
+		final Connection cnn = getConnection();
+		try {
+			//insert a test user into the database
+			int testUserId = insertTestUser(cnn);
+			
+			//attempt to load the user using the handler
+			final UserEntityHandler handler = new UserEntityHandler();
+			final User user = handler.loadUserById(cnn, testUserId);
+			
+			assertTrue("Expected get to return a valid user account", user != null);
+			assertEquals("Expected email to be the one specified in the database", "test@test.com", user.getEmail());
+		} finally {
+			DbUtils.close(cnn);
+		}
+	}
+	
 	private int countUsers(Connection cnn) throws SQLException {
 		return DbUtils.executeAggregate(cnn, "select count(id) from feedreader.Users");
 	}

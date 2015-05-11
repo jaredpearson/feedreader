@@ -8,6 +8,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import com.google.common.base.Preconditions;
 
 import common.persist.DbUtils;
@@ -51,7 +54,12 @@ public class UserEntityHandler implements EntityManager.EntityHandler {
 	
 	@Override
 	public Object get(EntityManager.QueryContext queryContext, Object id) throws SQLException {
-		return getUserById(queryContext, (Integer)id);
+		final Connection cnn = queryContext.getConnection();
+		try {
+			return loadUserById(cnn, (Integer)id);
+		} finally {
+			queryContext.releaseConnection(cnn);
+		}
 	}
 	
 	@Override
@@ -68,6 +76,7 @@ public class UserEntityHandler implements EntityManager.EntityHandler {
 	 * @return the ID of the new user
 	 */
 	public int insert(Connection cnn, String email) throws SQLException {
+		Preconditions.checkArgument(cnn != null, "cnn should not be empty");
 		Preconditions.checkArgument(email != null && !email.isEmpty(), "email should not be empty");
 		PreparedStatement stmt = cnn.prepareStatement("insert into feedreader.Users (email) values (?) returning id");
 		try {
@@ -94,37 +103,32 @@ public class UserEntityHandler implements EntityManager.EntityHandler {
 		}
 	}
 	
-	private User getUserById(EntityManager.QueryContext queryContext, int id) throws SQLException {
-		User user = null;
-		Connection cnn = null;
+	/**
+	 * Loads a user corresponding to the given user ID. If no user is found, then a null reference is returned.
+	 * @return the user with the specified ID or null if not found
+	 * @throws SQLException
+	 */
+	public @Nullable User loadUserById(@Nonnull Connection cnn, int userId) throws SQLException {
+		Preconditions.checkArgument(cnn != null, "cnn should not be empty");
+		final PreparedStatement stmt = cnn.prepareStatement("select id, email from feedreader.Users where id = ? limit 1");
 		try {
-			cnn = queryContext.getConnection();
+			stmt.setInt(1, userId);
 			
-			PreparedStatement stmt = null;
+			final ResultSet rst = stmt.executeQuery();
 			try {
-				stmt = cnn.prepareStatement("select id, email from feedreader.Users where id = ? limit 1");
-				stmt.setInt(1, id);
 				
-				ResultSet rst = null;
-				try {
-					rst = stmt.executeQuery();
-					
-					if(rst.next()) {
-						user = createUser(rst);
-					}
-					
-				} finally {
-					DbUtils.close(rst);
+				if(rst.next()) {
+					return createUser(rst);
+				} else {
+					return null;
 				}
+				
 			} finally {
-				DbUtils.close(stmt);
+				DbUtils.close(rst);
 			}
-			
 		} finally {
-			queryContext.releaseConnection(cnn);
+			DbUtils.close(stmt);
 		}
-		
-		return user;
 	}
 	
 	private User getUserByEmail(EntityManager.QueryContext queryContext, String email) throws SQLException {
