@@ -65,25 +65,25 @@ public class RetrieveFeedMessageHandler implements MessageHandler {
 	public void dequeue(final Message message) throws IOException {
 		final RetrieveFeedMessageBuilder feedMessage = new RetrieveFeedMessageBuilder(message);
 		final int feedRequestId = feedMessage.getFeedRequestId();
-		final FeedRequest feedRequest = entityManager.get(FeedRequest.class, feedRequestId);
-		
-		//check that the request can be found; this could occur if the request was deleted before the message was processed
-		if(feedRequest == null) {
-			return;
-		}
-		
-		//if the feed request has already finished, then no need to process it again
-		if(feedRequest.getStatus() == FeedRequestStatus.FINISHED) {
-			return;
-		}
-		
+
 		try {
-			Connection cnn = dataSource.getConnection();
+			final Connection cnn = dataSource.getConnection();
 			try {
+				final FeedRequest feedRequest = feedRequestEntityHandler.findFeedRequestById(cnn, feedRequestId);
+				
+				//check that the request can be found; this could occur if the request was deleted before the message was processed
+				if(feedRequest == null) {
+					return;
+				}
+				
+				//if the feed request has already finished, then no need to process it again
+				if(feedRequest.getStatus() == FeedRequestStatus.FINISHED) {
+					return;
+				}
 				
 				//check to see if the URL has already been retrieved. if so, create a subscription for the user
 				//otherwise, let's go out and request the feed
-				List<Feed> matchingFeeds = entityManager.executeNamedQuery(Feed.class, "findFeedByUrl", feedRequest.getUrl());
+				final List<Feed> matchingFeeds = entityManager.executeNamedQuery(Feed.class, "findFeedByUrl", feedRequest.getUrl());
 				if(!matchingFeeds.isEmpty()) {
 					final Feed feed = matchingFeeds.get(0);
 					subscribe(cnn, feed.getId(), feedRequest.getCreatedById());
