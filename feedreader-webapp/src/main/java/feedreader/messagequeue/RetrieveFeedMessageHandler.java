@@ -20,10 +20,9 @@ import feedreader.Feed;
 import feedreader.FeedItem;
 import feedreader.FeedRequest;
 import feedreader.FeedRequestStatus;
-import feedreader.FeedSubscription;
-import feedreader.User;
 import feedreader.fetch.FeedLoader;
 import feedreader.persist.FeedRequestEntityHandler;
+import feedreader.persist.FeedSubscriptionEntityHandler;
 
 /**
  * Handler for {@link RetrieveFeedMessageBuilder}
@@ -35,12 +34,19 @@ public class RetrieveFeedMessageHandler implements MessageHandler {
 	private final Provider<FeedLoader> feedLoaderProvider;
 	private final DataSource dataSource;
 	private final FeedRequestEntityHandler feedRequestEntityHandler;
+	private final FeedSubscriptionEntityHandler subscriptionEntityHandler;
 	
-	public RetrieveFeedMessageHandler(final EntityManager entityManager, final Provider<FeedLoader> feedLoaderProvider, final DataSource dataSource, final FeedRequestEntityHandler feedRequestEntityHandler) {
+	public RetrieveFeedMessageHandler(
+			final EntityManager entityManager, 
+			final Provider<FeedLoader> feedLoaderProvider, 
+			final DataSource dataSource, 
+			final FeedRequestEntityHandler feedRequestEntityHandler,
+			final FeedSubscriptionEntityHandler feedSubscriptionEntityHandler) {
 		this.entityManager = entityManager;
 		this.feedLoaderProvider = feedLoaderProvider;
 		this.dataSource = dataSource;
 		this.feedRequestEntityHandler = feedRequestEntityHandler;
+		this.subscriptionEntityHandler = feedSubscriptionEntityHandler;
 	}
 	
 	/**
@@ -63,18 +69,23 @@ public class RetrieveFeedMessageHandler implements MessageHandler {
 		}
 		
 		try {
-			
-			//check to see if the URL has already been retrieved. if so, create a subscription for the user
-			//otherwise, let's go out and request the feed
-			List<Feed> matchingFeeds = entityManager.executeNamedQuery(Feed.class, "findFeedByUrl", feedRequest.getUrl());
-			if(!matchingFeeds.isEmpty()) {
-				final Feed feed = matchingFeeds.get(0);
-				subscribe(feed, feedRequest.getCreatedBy());
-				finalizeRequest(feedRequest, feed);
-			} else {
-				retrieveFeedFromUrl(feedRequest);
-			}
+			Connection cnn = dataSource.getConnection();
+			try {
+				
+				//check to see if the URL has already been retrieved. if so, create a subscription for the user
+				//otherwise, let's go out and request the feed
+				List<Feed> matchingFeeds = entityManager.executeNamedQuery(Feed.class, "findFeedByUrl", feedRequest.getUrl());
+				if(!matchingFeeds.isEmpty()) {
+					final Feed feed = matchingFeeds.get(0);
+					subscribe(cnn, feed.getId(), feedRequest.getCreatedBy().getId());
+					finalizeRequest(cnn, feedRequest, feed);
+				} else {
+					retrieveFeedFromUrl(feedRequest);
+				}
 		
+			} finally {
+				cnn.close();
+			}
 		} catch(Exception exc) {
 			try {
 				final Connection cnn = dataSource.getConnection();
@@ -109,27 +120,23 @@ public class RetrieveFeedMessageHandler implements MessageHandler {
 			entityManager.persist(feedItem);
 		}
 		
-		//update the feed request
-		finalizeRequest(feedRequest, feed);
-		
-		//create a subscription for the user to the feed
-		subscribe(feed, feedRequest.getCreatedBy());
-	}
-	
-	private void finalizeRequest(final FeedRequest feedRequest, final Feed feed) throws SQLException {
 		final Connection cnn = dataSource.getConnection();
 		try {
-			feedRequestEntityHandler.updateRequestFeedAndStatus(cnn, feedRequest.getId(), feed.getId(), FeedRequestStatus.FINISHED);
-		} catch(SQLException exc) {
+			//update the feed request
+			finalizeRequest(cnn, feedRequest, feed);
+			
+			//create a subscription for the user to the feed
+			subscribe(cnn, feed.getId(), feedRequest.getCreatedBy().getId());
+		} finally {
 			cnn.close();
 		}
 	}
 	
-	private FeedSubscription subscribe(final Feed feed, final User subscriber) {
-		FeedSubscription subscription = new FeedSubscription();
-		subscription.setFeed(feed);
-		subscription.setSubscriber(subscriber);
-		entityManager.persist(subscription);
-		return subscription;
+	private void finalizeRequest(final Connection cnn, final FeedRequest feedRequest, final Feed feed) throws SQLException {
+		feedRequestEntityHandler.updateRequestFeedAndStatus(cnn, feedRequest.getId(), feed.getId(), FeedRequestStatus.FINISHED);
+	}
+	
+	private int subscribe(final Connection cnn, final int feedId, final int subscriberId) throws SQLException {
+		return subscriptionEntityHandler.insert(cnn, subscriberId, feedId);
 	}
 }

@@ -25,6 +25,7 @@ import feedreader.fetch.FeedLoader;
 import feedreader.messagequeue.RetrieveFeedMessageBuilder;
 import feedreader.messagequeue.RetrieveFeedMessageHandler;
 import feedreader.persist.FeedRequestEntityHandler;
+import feedreader.persist.FeedSubscriptionEntityHandler;
 
 /**
  * Guice module for configuring JMS
@@ -76,7 +77,8 @@ public class JmsModule extends AbstractModule {
 			@Named("jms") final Context context, 
 			final EntityManagerFactory entityManagerFactory,
 			final DataSource dataSource,
-			final FeedRequestEntityHandler feedRequestEntityHandler) {
+			final FeedRequestEntityHandler feedRequestEntityHandler,
+			final FeedSubscriptionEntityHandler subscriptionEntityHandler) {
 		JmsMessageConsumer messageConsumer = new JmsMessageConsumer(connectionFactory, lookupDestination(context));
 		
 		messageConsumer.registerHandler(RetrieveFeedMessageBuilder.class.getName(), new Provider<MessageHandler>() {
@@ -90,7 +92,7 @@ public class JmsModule extends AbstractModule {
 						return new FeedLoader();
 					}
 				};
-				return new RetrieveFeedMessageHandler(entityManager, feedLoaderProvider, dataSource, feedRequestEntityHandler);
+				return new RetrieveFeedMessageHandler(entityManager, feedLoaderProvider, dataSource, feedRequestEntityHandler, subscriptionEntityHandler);
 			}
 		});
 		
