@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Random;
 
 import org.junit.Test;
 
@@ -31,6 +32,25 @@ public class UserEntityHandlerTest extends DatabaseTest {
 			handler.persist(context, user);
 			
 			assertTrue("Expected the user to have an ID after a persist", user.getId() != null);
+			
+			int recordCountAfter = countUsers(cnn);
+			assertEquals("Expected there to be only one record in the database after the persist", recordCountBefore + 1, recordCountAfter);
+		} finally {
+			DbUtils.close(cnn);
+		}
+	}
+
+	@Test
+	public void testInsert() throws Exception {
+		final Connection cnn = getConnection();
+		try {
+			int recordCountBefore = countUsers(cnn);
+			
+			//persist the user
+			final UserEntityHandler handler = new UserEntityHandler();
+			final int userId = handler.insert(cnn, "test@test" + (new Random().nextInt()) + ".com");
+			
+			assertTrue("Expected the user to have an ID after a persist", userId > 0);
 			
 			int recordCountAfter = countUsers(cnn);
 			assertEquals("Expected there to be only one record in the database after the persist", recordCountBefore + 1, recordCountAfter);

@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.google.common.base.Preconditions;
+
 import common.persist.DbUtils;
 import common.persist.EntityManager;
 import feedreader.User;
@@ -59,6 +61,37 @@ public class UserEntityHandler implements EntityManager.EntityHandler {
 		}
 		
 		throw new IllegalArgumentException("Unknown query specified: " + query);
+	}
+	
+	/**
+	 * Inserts a new user with the specified email.
+	 * @return the ID of the new user
+	 */
+	public int insert(Connection cnn, String email) throws SQLException {
+		Preconditions.checkArgument(email != null && !email.isEmpty(), "email should not be empty");
+		PreparedStatement stmt = cnn.prepareStatement("insert into feedreader.Users (email) values (?) returning id");
+		try {
+			stmt.setString(1, email);
+			
+			boolean hasResult = stmt.execute();
+			if(hasResult) {
+				ResultSet rst = null;
+				try {
+					rst = stmt.getResultSet();
+					if(rst.next()) {
+						return rst.getInt("id");
+					} else {
+						throw new IllegalStateException("Error while inserting user");
+					}
+				} finally {
+					DbUtils.close(rst);
+				}
+			} else {
+				throw new IllegalStateException("Error while inserting user");
+			}
+		} finally {
+			DbUtils.close(stmt);
+		}
 	}
 	
 	private User getUserById(EntityManager.QueryContext queryContext, int id) throws SQLException {
