@@ -10,19 +10,20 @@ import java.util.Set;
 
 import common.persist.DbUtils;
 import common.persist.EntityManager;
-import common.persist.RowMapper;
 import common.persist.EntityManager.EntityHandler;
+import feedreader.FeedItem;
 import feedreader.UserFeedItemContext;
 
 public class UserFeedItemContextEntityHandler implements EntityHandler {
 	private static final String SELECT_SQL_FRAGMENT;
-	private static final RowMapper<UserFeedItemContext> ROW_MAPPER;
+	private static final FeedItemRowMapper ROW_MAPPER_FEED_ITEM;
 	
 	static {
 		SELECT_SQL_FRAGMENT = "select "
 				+ "c.id context_id, "
 				+ "c.read context_read, "
 				+ "c.created context_created, "
+				+ "c.feedItemId context_feedItemId, "
 				
 				//owner
 				+ "c.owner context_owner, "
@@ -53,7 +54,7 @@ public class UserFeedItemContextEntityHandler implements EntityHandler {
 				+ "inner join feedreader.Feeds cif on ci.feedId = cif.id "
 				+ "inner join feedreader.Users cifu on cif.createdBy = cifu.id ";
 		
-		ROW_MAPPER = new UserFeedItemContextRowMapper("context_", new FeedItemRowMapper("feedItem_", new FeedRowMapper("feed_", new UserRowMapper("feed_createdBy_"))));
+		ROW_MAPPER_FEED_ITEM = new FeedItemRowMapper("feedItem_", new FeedRowMapper("feed_", new UserRowMapper("feed_createdBy_")));
 	}
 	
 	@Override
@@ -85,7 +86,7 @@ public class UserFeedItemContextEntityHandler implements EntityHandler {
 				try {
 					rst = stmt.executeQuery();
 					if(rst.next()) {
-						feedItemContext = ROW_MAPPER.mapRow(rst);
+						feedItemContext = mapRow(rst);
 					}
 					
 				} finally {
@@ -131,7 +132,7 @@ public class UserFeedItemContextEntityHandler implements EntityHandler {
 				try {
 					rst = stmt.executeQuery();
 					while(rst.next()) {
-						feedItemContexts.add(ROW_MAPPER.mapRow(rst));
+						feedItemContexts.add(mapRow(rst));
 					}
 					
 				} finally {
@@ -170,7 +171,7 @@ public class UserFeedItemContextEntityHandler implements EntityHandler {
 					try {
 						rst = stmt.executeQuery();
 						while(rst.next()) {
-							feedItemContexts.add(ROW_MAPPER.mapRow(rst));
+							feedItemContexts.add(mapRow(rst));
 						}
 						
 					} finally {
@@ -194,6 +195,10 @@ public class UserFeedItemContextEntityHandler implements EntityHandler {
 		
 		validate(feedItemContext, true);
 		
+		final Integer feedItemId = feedItemContext.getFeedItem().getId();
+		final Integer ownerId = feedItemContext.getOwner().getId();
+		final boolean readStatus = feedItemContext.isRead();
+		
 		Connection cnn = null;
 		try {
 			cnn = queryContext.getConnection();
@@ -201,9 +206,9 @@ public class UserFeedItemContextEntityHandler implements EntityHandler {
 			PreparedStatement stmt = null;
 			try {
 				stmt = cnn.prepareStatement("insert into feedreader.UserFeedItemContexts (feedItemId, owner, read) values (?, ?, ?) returning id, read, created");
-				stmt.setInt(1, feedItemContext.getFeedItem().getId());
-				stmt.setInt(2, feedItemContext.getOwner().getId());
-				stmt.setBoolean(3, feedItemContext.isRead());
+				stmt.setInt(1, feedItemId);
+				stmt.setInt(2, ownerId);
+				stmt.setBoolean(3, readStatus);
 				
 				if(stmt.execute()) {
 					ResultSet rst = null;
@@ -226,6 +231,74 @@ public class UserFeedItemContextEntityHandler implements EntityHandler {
 			
 		} finally {
 			queryContext.releaseConnection(cnn);
+		}
+	}
+	
+	/**
+	 * Loads the read status from the database for the feed item context with the given feed item ID and owner ID. If the record does not exist, a null
+	 * value is returned otherwise the value of the field is returned.
+	 * @return the value of the read status field or null if the read status field has not been set yet.
+	 */
+	public Boolean loadReadStatus(Connection cnn, int feedItemId, int ownerId) throws SQLException {
+		final PreparedStatement selectStmt = cnn.prepareStatement("select read from feedreader.UserFeedItemContexts where owner = ? and feedItemId = ?");
+		try {
+			selectStmt.setInt(1, ownerId);
+			selectStmt.setInt(2, feedItemId);
+			
+			final ResultSet selectRst = selectStmt.executeQuery();
+			try {
+				if (selectRst.next()) {
+					return selectRst.getBoolean("read");
+				} else {
+					return null;
+				}
+			} finally {
+				selectRst.close();
+			}
+		} finally {
+			selectStmt.close();
+		}
+	}
+	
+	public int insert(Connection cnn, int feedItemId, int ownerId, boolean readStatus) throws SQLException {
+		PreparedStatement stmt = cnn.prepareStatement("insert into feedreader.UserFeedItemContexts (feedItemId, owner, read) values (?, ?, ?) returning id, read, created");
+		try {
+			stmt.setInt(1, feedItemId);
+			stmt.setInt(2, ownerId);
+			stmt.setBoolean(3, readStatus);
+			
+			if(stmt.execute()) {
+				final ResultSet rst = stmt.getResultSet();
+				try {
+					if(rst.next()) {
+						return rst.getInt("id");
+					} else {
+						throw new IllegalStateException("Unable to insert UserFeedItemContext entity");
+					}
+					
+				} finally {
+					DbUtils.close(rst);
+				}
+			} else {
+				throw new IllegalStateException("Unable to insert UserFeedItemContext entity");
+			}
+			
+		} finally {
+			DbUtils.close(stmt);
+		}
+	}
+	
+	public boolean updateReadStatus(Connection cnn, int feedItemId, int ownerId, boolean readStatus) throws SQLException {
+		final PreparedStatement stmt = cnn.prepareStatement("update feedreader.UserFeedItemContexts set read = ? where owner = ? and feedItemId = ?");
+		try {
+			stmt.setBoolean(1, readStatus);
+			stmt.setInt(2, ownerId);
+			stmt.setInt(3, feedItemId);
+			
+			final int rowsUpdated = stmt.executeUpdate();
+			return rowsUpdated > 0;
+		} finally {
+			stmt.close();
 		}
 	}
 	
@@ -261,7 +334,7 @@ public class UserFeedItemContextEntityHandler implements EntityHandler {
 	 * FIXME: Validation should be able to throw more than 1 exception
 	 */
 	private void validate(UserFeedItemContext context, boolean insert) {
-		if(context.getFeedItem() == null) {
+		if(context.getFeedItemId() == null) {
 			//FIXME: throw a more specific exception during validation
 			throw new IllegalStateException("FeedItem is required");
 		}
@@ -270,5 +343,25 @@ public class UserFeedItemContextEntityHandler implements EntityHandler {
 			//FIXME: throw a more specific exception during validation
 			throw new IllegalStateException("Owner is required");
 		}
+	}
+	
+	private UserFeedItemContext mapRow(ResultSet rst) throws SQLException {
+		final int feedItemContextId = rst.getInt("context_id");
+		final int feedItemId = rst.getInt("context_feedItemId");
+		
+		final UserFeedItemContext feedItemContext = new UserFeedItemContext();
+		feedItemContext.setId(feedItemContextId);
+		feedItemContext.setRead(rst.getBoolean("context_read"));
+		feedItemContext.setCreated(rst.getDate("context_created"));
+		
+		//get the associated feed item
+		final FeedItem feedItem = ROW_MAPPER_FEED_ITEM.mapRow(rst);
+		if (feedItem == null) {
+			throw new IllegalStateException(String.format("Feed item context %d references an invalid feed item ID: %d", feedItemContextId, feedItemId));
+		}
+		feedItemContext.setFeedItem(feedItem);
+		feedItemContext.setFeedItemId(feedItemId);
+		
+		return feedItemContext;
 	}
 }

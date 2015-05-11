@@ -10,6 +10,7 @@ import common.DateUtils;
  */
 public class UserFeedItemContext {
 	private Integer id;
+	private Integer feedItemId;
 	private FeedItem feedItem;
 	private User owner;
 	private boolean read = false;
@@ -36,6 +37,15 @@ public class UserFeedItemContext {
 	
 	public void setFeedItem(FeedItem feedItem) {
 		this.feedItem = feedItem;
+		this.setFeedItemId(feedItem == null ? null : feedItem.getId());
+	}
+	
+	public Integer getFeedItemId() {
+		return feedItemId;
+	}
+	
+	public void setFeedItemId(Integer feedItemId) {
+		this.feedItemId = feedItemId;
 	}
 	
 	public boolean isRead() {

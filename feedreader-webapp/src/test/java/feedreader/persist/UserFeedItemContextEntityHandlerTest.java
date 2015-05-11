@@ -35,7 +35,7 @@ public class UserFeedItemContextEntityHandlerTest extends DatabaseTest {
 	}
 	
 	@Test
-	public void testInsert() throws SQLException {
+	public void testInsertWithPersist() throws SQLException {
 		Connection cnn = getConnection();
 		try {
 			int ownerId = ensureTestUser(cnn);
@@ -62,7 +62,25 @@ public class UserFeedItemContextEntityHandlerTest extends DatabaseTest {
 	}
 
 	@Test
-	public void testUpdate() throws SQLException {
+	public void testInsert() throws SQLException {
+		Connection cnn = getConnection();
+		try {
+			int ownerId = ensureTestUser(cnn);
+			int feedItemId = ensureTestFeedItem(cnn);
+			
+			//insert the entity
+			final UserFeedItemContextEntityHandler handler = new UserFeedItemContextEntityHandler();
+			final int userContextId = handler.insert(cnn, feedItemId, ownerId, false);
+			
+			assertTrue("Expected the insert to return a valid ID", userContextId > 0);
+		} finally {
+			DbUtils.close(cnn);
+		}
+	}
+
+
+	@Test
+	public void testUpdateWithPersist() throws SQLException {
 		Connection cnn = getConnection();
 		try {
 			
@@ -89,6 +107,46 @@ public class UserFeedItemContextEntityHandlerTest extends DatabaseTest {
 			
 			assertTrue("Expected the ID to be set when the entity is persisted", context.getId() != null);
 			assertEquals(!readValueBeforeUpdate, getReadValue(cnn, contextId));
+		} finally {
+			DbUtils.close(cnn);
+		}
+	}
+
+	@Test
+	public void testUpdate() throws SQLException {
+		Connection cnn = getConnection();
+		try {
+			
+			final int ownerId = ensureTestUser(cnn);
+			final int feedItemId = ensureTestFeedItem(cnn);
+			final int contextId = ensureTestUserFeedItemContext(cnn);
+			final boolean readValueBeforeUpdate = getReadValue(cnn, contextId);
+			
+			//update the entity
+			final UserFeedItemContextEntityHandler handler = new UserFeedItemContextEntityHandler();
+			handler.updateReadStatus(cnn, feedItemId, ownerId, !readValueBeforeUpdate);
+			
+			assertEquals(!readValueBeforeUpdate, getReadValue(cnn, contextId));
+		} finally {
+			DbUtils.close(cnn);
+		}
+	}
+	
+	@Test
+	public void testLoadReadStatus() throws Exception {
+		Connection cnn = getConnection();
+		try {
+			
+			final int ownerId = ensureTestUser(cnn);
+			final int feedItemId = ensureTestFeedItem(cnn);
+			final int contextId = ensureTestUserFeedItemContext(cnn);
+			final boolean readValue = getReadValue(cnn, contextId);
+			
+			//update the entity
+			final UserFeedItemContextEntityHandler handler = new UserFeedItemContextEntityHandler();
+			final Boolean actualReadValue = handler.loadReadStatus(cnn, feedItemId, ownerId);
+			
+			assertEquals(readValue, actualReadValue);
 		} finally {
 			DbUtils.close(cnn);
 		}

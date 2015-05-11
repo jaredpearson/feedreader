@@ -2,7 +2,6 @@ package feedreader;
 
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -10,8 +9,6 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
-
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
 
@@ -21,23 +18,25 @@ import common.messagequeue.api.MessageSender;
 import common.persist.EntityManager;
 import common.persist.EntityManagerFactory;
 import feedreader.messagequeue.RetrieveFeedMessageBuilder;
+import feedreader.persist.UserFeedItemContextEntityHandler;
 
 /**
  * Main service class for a user to interact with the FeedReader application
  * @author jared.pearson
  */
 public class FeedReader {
-	private static final Logger logger = Logger.getLogger(FeedReader.class.getName()); 
 	private final DataSource dataSource;
 	private final EntityManagerFactory entityManagerFactory;
 	private final User user;
 	private final MessageSender messageSender;
+	private final UserFeedItemContextEntityHandler userFeedItemContextEntityHandler;
 	
-	public FeedReader(DataSource dataSource, EntityManagerFactory entityManagerFactory, User user, MessageSender messageSender) {
+	public FeedReader(DataSource dataSource, EntityManagerFactory entityManagerFactory, User user, MessageSender messageSender, UserFeedItemContextEntityHandler userFeedItemContextEntityHandler) {
 		this.dataSource = dataSource;
 		this.entityManagerFactory = entityManagerFactory;
 		this.user = user;
 		this.messageSender = messageSender;
+		this.userFeedItemContextEntityHandler = userFeedItemContextEntityHandler;
 	}
 	
 	/**
@@ -108,16 +107,13 @@ public class FeedReader {
 			final Connection cnn = dataSource.getConnection();
 			try {
 				
-				final PreparedStatement stmt = cnn.prepareStatement("update feedreader.UserFeedItemContexts set read = ? where owner = ? and feedItemdId = ?");
-				try {
-					stmt.setBoolean(1, readStatus);
-					stmt.setInt(2, userId);
-					stmt.setInt(3, feedItemId);
-					
-					final int rowsUpdated = stmt.executeUpdate();
-					logger.fine(String.format("Set the read status on %d records", rowsUpdated));
-				} finally {
-					stmt.close();
+				// check the current value to see if it needs to be created or updated
+				final Boolean currentReadStatus = userFeedItemContextEntityHandler.loadReadStatus(cnn, feedItemId, userId);
+				
+				if (currentReadStatus == null) {
+					userFeedItemContextEntityHandler.insert(cnn, feedItemId, userId, readStatus);
+				} else if(currentReadStatus != readStatus) {
+					userFeedItemContextEntityHandler.updateReadStatus(cnn, feedItemId, userId, readStatus);
 				}
 				
 			} finally {
