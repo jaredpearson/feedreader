@@ -41,11 +41,11 @@ public class DatabaseTest {
 	protected DataSource getDataSource() {
 		if(dataSource == null) {
 			PGSimpleDataSource pgDataSource = new PGSimpleDataSource();
-			pgDataSource.setServerName("127.0.0.1");
+			pgDataSource.setServerName("192.168.52.13");
 			pgDataSource.setPortNumber(5432);
 			pgDataSource.setDatabaseName("feedreader");
-			pgDataSource.setUser("jared.pearson");
-			pgDataSource.setPassword("");
+			pgDataSource.setUser("feedreader_app");
+			pgDataSource.setPassword("zUSAC7HbtXcVMkk");
 			this.dataSource = pgDataSource;
 		}
 		return dataSource;
@@ -89,7 +89,7 @@ public class DatabaseTest {
 		int testUserId = -1;
 		PreparedStatement stmt = null;
 		try {
-			stmt = cnn.prepareStatement("insert into Users (email) values (?) returning id");
+			stmt = cnn.prepareStatement("insert into feedreader.Users (email) values (?) returning id");
 			stmt.setString(1, "test@test.com");
 			
 			if(stmt.execute()) {
@@ -124,7 +124,7 @@ public class DatabaseTest {
 		int testFeedId = -1;
 		PreparedStatement stmt = null;
 		try {
-			stmt = cnn.prepareStatement("insert into Feeds (url, title, lastUpdated, createdBy) values (?, ?, ?, ?) returning id");
+			stmt = cnn.prepareStatement("insert into feedreader.Feeds (url, title, lastUpdated, createdBy) values (?, ?, ?, ?) returning id");
 			stmt.setString(1, "http://test.com/test.xml");
 			stmt.setString(2, "Test Feed");
 			setDate(stmt, 3, 2013, 6, 10);
@@ -161,7 +161,7 @@ public class DatabaseTest {
 		int testFeedItemId = -1;
 		PreparedStatement stmt = null;
 		try {
-			stmt = cnn.prepareStatement("insert into FeedItems (feedId, title, description, link) values (?, ?, ?, ?) returning id");
+			stmt = cnn.prepareStatement("insert into feedreader.FeedItems (feedId, title, description, link) values (?, ?, ?, ?) returning id");
 			stmt.setInt(1, testFeedId);
 			stmt.setString(2, "Article 1");
 			stmt.setString(3, "Article 1 body");
@@ -198,7 +198,7 @@ public class DatabaseTest {
 		int testContextId = -1;
 		PreparedStatement stmt = null;
 		try {
-			stmt = cnn.prepareStatement("insert into UserFeedItemContexts (feedItemId, owner, read) values (?, ?, ?) returning id");
+			stmt = cnn.prepareStatement("insert into feedreader.UserFeedItemContexts (feedItemId, owner, read) values (?, ?, ?) returning id");
 			stmt.setInt(1, testFeedItemId);
 			stmt.setInt(2, testUserId);
 			stmt.setBoolean(3, false);

@@ -63,6 +63,6 @@ public class UserEntityHandlerTest extends DatabaseTest {
 	}
 	
 	private int countUsers(Connection cnn) throws SQLException {
-		return DbUtils.executeAggregate(cnn, "select count(id) from Users");
+		return DbUtils.executeAggregate(cnn, "select count(id) from feedreader.Users");
 	}
 }

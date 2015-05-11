@@ -32,7 +32,7 @@ public class FeedEntityHandler implements EntityHandler {
 				+ "u.email feed_createdBy_email "
 				
 				+ "from feedreader.Feeds f "
-				+ "inner join Users u on f.createdBy = u.id ";
+				+ "inner join feedreader.Users u on f.createdBy = u.id ";
 		
 		ROW_MAPPER = new FeedRowMapper(new UserRowMapper("feed_createdBy_"));
 	}

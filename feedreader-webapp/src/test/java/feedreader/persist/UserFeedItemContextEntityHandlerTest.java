@@ -97,7 +97,7 @@ public class UserFeedItemContextEntityHandlerTest extends DatabaseTest {
 	private boolean getReadValue(Connection cnn, int contextId) throws SQLException {
 		PreparedStatement stmt = null;
 		try {
-			stmt = cnn.prepareStatement("select read from UserFeedItemContexts where id = ? limit 1");
+			stmt = cnn.prepareStatement("select read from feedreader.UserFeedItemContexts where id = ? limit 1");
 			stmt.setInt(1, contextId);
 			
 			ResultSet rst = null;
