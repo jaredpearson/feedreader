@@ -10,6 +10,8 @@ import java.util.List;
 
 import org.junit.Test;
 
+import com.google.common.collect.Sets;
+
 import common.persist.DbUtils;
 import feedreader.UserFeedItemContext;
 
@@ -124,7 +126,47 @@ public class UserFeedItemContextEntityHandlerTest extends DatabaseTest {
 			final List<UserFeedItemContext> feedItemContextList = handler.getFeedItemsForUserFeed(cnn, userId, feedId);
 			
 			assertNotNull("getFeedItemsForUserFeed should never return null", feedItemContextList);
-			assertEquals("Expected getFeedItemsForUserFeed to be empty", 1, feedItemContextList.size());
+			assertEquals("Expected getFeedItemsForUserFeed to have a context since one is in the DB", 1, feedItemContextList.size());
+			assertEquals("Expected the user feed item context to be loaded", new Integer(feedItemContextId), feedItemContextList.get(0).getId());
+		} finally {
+			DbUtils.close(cnn);
+		}
+	}
+	
+	@Test
+	public void testGetUserFeedItemsForFeedItemsWithNoContext() throws Exception {
+		final Connection cnn = getConnection();
+		try {
+			
+			final int userId = ensureTestUser(cnn);
+			final int feedItemId = ensureTestFeedItem(cnn);
+			
+			//update the entity
+			final UserFeedItemContextEntityHandler handler = new UserFeedItemContextEntityHandler();
+			final List<UserFeedItemContext> feedItemContextList = handler.getUserFeedItemsForFeedItems(cnn, userId, Sets.<Integer>newHashSet(feedItemId));
+			
+			assertNotNull("getUserFeedItemsForFeedItems should never return null", feedItemContextList);
+			assertTrue("Expected getUserFeedItemsForFeedItems to be empty", feedItemContextList.isEmpty());
+		} finally {
+			DbUtils.close(cnn);
+		}
+	}
+
+	@Test
+	public void testGetUserFeedItemsForFeedItemsWithContext() throws Exception {
+		final Connection cnn = getConnection();
+		try {
+			
+			final int userId = ensureTestUser(cnn);
+			final int feedItemId = ensureTestFeedItem(cnn);
+			final int feedItemContextId = insertTestUserFeedItemContext(cnn, feedItemId);
+			
+			//update the entity
+			final UserFeedItemContextEntityHandler handler = new UserFeedItemContextEntityHandler();
+			final List<UserFeedItemContext> feedItemContextList = handler.getUserFeedItemsForFeedItems(cnn, userId, Sets.<Integer>newHashSet(feedItemId));
+			
+			assertNotNull("getUserFeedItemsForFeedItems should never return null", feedItemContextList);
+			assertEquals("Expected getUserFeedItemsForFeedItems to have a context since one is in the DB", 1, feedItemContextList.size());
 			assertEquals("Expected the user feed item context to be loaded", new Integer(feedItemContextId), feedItemContextList.get(0).getId());
 		} finally {
 			DbUtils.close(cnn);

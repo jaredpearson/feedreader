@@ -85,13 +85,23 @@ public class FeedReader {
 		final int size = 25;
 		List<FeedItem> feedItems = entityManagerFactory.get().executeNamedQuery(FeedItem.class, "getFeedItemsForStream", userId, size, offset);
 		
-		//get all of the contexts for the user from the feed items
-		List<UserFeedItemContext> contexts = getFeedContexts(feedItems);
-		
-		//build the final list of feed items from the feed contexts retrieved
-		List<UserFeedItemContext> userFeedItems = fanoutFeedItems(feedItems, contexts);
-		
-		return new Stream(userFeedItems);
+
+		try {
+			final Connection cnn = dataSource.getConnection();
+			try {
+				//get all of the contexts for the user from the feed items
+				List<UserFeedItemContext> contexts = getFeedContexts(cnn, feedItems);
+				
+				//build the final list of feed items from the feed contexts retrieved
+				List<UserFeedItemContext> userFeedItems = fanoutFeedItems(feedItems, contexts);
+				
+				return new Stream(userFeedItems);
+			} finally {
+				cnn.close();
+			}
+		} catch(SQLException exc) {
+			throw Throwables.propagate(exc);
+		}
 	}
 	
 	/**
@@ -151,13 +161,13 @@ public class FeedReader {
 	/**
 	 * Gets all of the FeedContext object that correspond to the given feed items.
 	 */
-	private @Nonnull List<UserFeedItemContext> getFeedContexts(@Nonnull List<FeedItem> feedItems) {
+	private @Nonnull List<UserFeedItemContext> getFeedContexts(@Nonnull Connection cnn, @Nonnull List<FeedItem> feedItems) throws SQLException {
 		final Set<Integer> feedItemIds = Sets.newHashSetWithExpectedSize(feedItems.size());
 		for(final FeedItem feedItem : feedItems) {
 			feedItemIds.add(feedItem.getId());
 		}
 		
-		return entityManagerFactory.get().executeNamedQuery(UserFeedItemContext.class, "getUserFeedItemsForFeedItems", userId, feedItemIds); 
+		return userFeedItemContextEntityHandler.getUserFeedItemsForFeedItems(cnn, userId, feedItemIds); 
 	}
 	
 	/**

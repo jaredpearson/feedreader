@@ -193,7 +193,11 @@ public class DatabaseTest {
 	}
 	
 	protected int insertTestUserFeedItemContext(Connection cnn) throws SQLException {
-		int testFeedItemId = ensureTestFeedItem(cnn);
+		return insertTestUserFeedItemContext(cnn, null);
+	}
+
+	protected int insertTestUserFeedItemContext(Connection cnn, Integer feedItemId) throws SQLException {
+		int testFeedItemId = feedItemId == null ? ensureTestFeedItem(cnn) : feedItemId;
 		int testUserId = ensureTestUser(cnn);
 		int testContextId = -1;
 		PreparedStatement stmt = null;

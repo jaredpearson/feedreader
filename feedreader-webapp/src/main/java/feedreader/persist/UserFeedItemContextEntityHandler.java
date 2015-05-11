@@ -5,8 +5,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 import common.persist.DbUtils;
 import common.persist.EntityManager;
@@ -140,46 +144,59 @@ public class UserFeedItemContextEntityHandler implements EntityHandler {
 			queryContext.releaseConnection(cnn);
 		}
 	}
-	
-	public List<UserFeedItemContext> getUserFeedItemsForFeedItems(EntityManager.QueryContext queryContext, int userId, Set<Integer> feedItemIds) throws SQLException {
-		List<UserFeedItemContext> feedItemContexts = new ArrayList<UserFeedItemContext>();
-		Connection cnn = null;
-		try {
-			cnn = queryContext.getConnection();
-			
-			PreparedStatement stmt = null;
-			try {
-				stmt = cnn.prepareStatement(SELECT_SQL_FRAGMENT + "where c.owner = ? and ci.id = ? ");
-				for(Integer feedItemId : feedItemIds) {
-					stmt.clearWarnings();
-					stmt.clearParameters();
 
-					//set the parameters
-					stmt.setInt(1, userId);
-					stmt.setInt(2, feedItemId);
-					
-					//execute the query
-					ResultSet rst = null;
-					try {
-						rst = stmt.executeQuery();
-						while(rst.next()) {
-							feedItemContexts.add(mapRow(rst));
-						}
-						
-					} finally {
-						DbUtils.close(rst);
-					}
-				}
+	/**
+	 * Gets all of the context items for the given feed item IDs. If there is no context for the given IDs, then it is not represented
+	 * in the list.
+	 */
+	public List<UserFeedItemContext> getUserFeedItemsForFeedItems(Connection cnn, int userId, Set<Integer> feedItemIds) throws SQLException {
+		Preconditions.checkArgument(cnn != null, "cnn should not be null");
+		
+		if (feedItemIds == null || feedItemIds.isEmpty()) {
+			return Collections.emptyList();
+		}
+		
+		final List<UserFeedItemContext> feedItemContexts = Lists.newArrayListWithExpectedSize(feedItemIds.size());
+		
+		final PreparedStatement stmt = cnn.prepareStatement(SELECT_SQL_FRAGMENT + "where c.owner = ? and ci.id = ? ");
+		try {
+			for(Integer feedItemId : feedItemIds) {
+				stmt.clearWarnings();
+				stmt.clearParameters();
+
+				//set the parameters
+				stmt.setInt(1, userId);
+				stmt.setInt(2, feedItemId);
 				
-			} finally {
-				DbUtils.close(stmt);
+				//execute the query
+				ResultSet rst = stmt.executeQuery();
+				try {
+					
+					while(rst.next()) {
+						feedItemContexts.add(mapRow(rst));
+					}
+					
+				} finally {
+					DbUtils.close(rst);
+				}
 			}
 			
+		} finally {
+			DbUtils.close(stmt);
+		}
+		
+		return feedItemContexts;
+	}
+	
+	public List<UserFeedItemContext> getUserFeedItemsForFeedItems(EntityManager.QueryContext queryContext, int userId, Set<Integer> feedItemIds) throws SQLException {
+		
+		final Connection cnn = queryContext.getConnection();
+		try {
+			return getUserFeedItemsForFeedItems(cnn, userId, feedItemIds);
 		} finally {
 			queryContext.releaseConnection(cnn);
 		}
 		
-		return feedItemContexts;
 	}
 	
 	/**
