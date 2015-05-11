@@ -87,7 +87,7 @@ public class RetrieveFeedMessageHandler implements MessageHandler {
 				if(!matchingFeeds.isEmpty()) {
 					final Feed feed = matchingFeeds.get(0);
 					subscribe(cnn, feed.getId(), feedRequest.getCreatedBy().getId());
-					finalizeRequest(cnn, feedRequest, feed);
+					finalizeRequest(cnn, feedRequest.getId(), feed.getId());
 				} else {
 					retrieveFeedFromUrl(feedRequest);
 				}
