@@ -22,6 +22,7 @@ import common.persist.EntityManagerFactory;
 import feedreader.FeedReader;
 import feedreader.User;
 import feedreader.UserSession;
+import feedreader.persist.FeedEntityHandler;
 import feedreader.persist.FeedRequestEntityHandler;
 import feedreader.persist.UserFeedItemContextEntityHandler;
 import feedreader.web.StartupListener;
@@ -112,6 +113,9 @@ class FeedReaderModule extends AbstractModule {
 		DataSource dataSource;
 		
 		@Inject
+		FeedEntityHandler feedEntityHandler;
+		
+		@Inject
 		UserFeedItemContextEntityHandler userFeedItemContextEntityHandler;
 		
 		@Inject
@@ -120,7 +124,7 @@ class FeedReaderModule extends AbstractModule {
 		@Override
 		public FeedReader get() {
 			final User user = userSession.getUser();
-			return new FeedReader(dataSource, entityManagerFactory, user, messageSender, userFeedItemContextEntityHandler, feedRequestEntityHandler);
+			return new FeedReader(dataSource, entityManagerFactory, user, messageSender, feedEntityHandler, userFeedItemContextEntityHandler, feedRequestEntityHandler);
 		}
 	}
 }

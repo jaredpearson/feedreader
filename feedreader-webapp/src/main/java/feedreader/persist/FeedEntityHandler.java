@@ -9,6 +9,8 @@ import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import common.persist.DbUtils;
 import common.persist.EntityManager;
@@ -17,6 +19,7 @@ import common.persist.EntityManager.EntityHandler;
 import feedreader.Feed;
 import feedreader.FeedItem;
 
+@Singleton
 public class FeedEntityHandler implements EntityHandler {
 	private static final String SELECT_SQL_FRAGMENT;
 	private static final RowMapper<Feed> ROW_MAPPER;
@@ -39,6 +42,7 @@ public class FeedEntityHandler implements EntityHandler {
 	
 	private final FeedItemEntityHandler feedItemEntityHandler;
 	
+	@Inject
 	public FeedEntityHandler(FeedItemEntityHandler feedItemEntityHandler) {
 		this.feedItemEntityHandler = feedItemEntityHandler;
 	}

@@ -17,9 +17,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import common.messagequeue.api.MessageSender;
-import common.persist.EntityManager;
 import common.persist.EntityManagerFactory;
 import feedreader.messagequeue.RetrieveFeedMessageBuilder;
+import feedreader.persist.FeedEntityHandler;
 import feedreader.persist.FeedRequestEntityHandler;
 import feedreader.persist.UserFeedItemContextEntityHandler;
 
@@ -32,6 +32,7 @@ public class FeedReader {
 	private final EntityManagerFactory entityManagerFactory;
 	private final int userId;
 	private final MessageSender messageSender;
+	private final FeedEntityHandler feedEntityHandler;
 	private final UserFeedItemContextEntityHandler userFeedItemContextEntityHandler;
 	private final FeedRequestEntityHandler feedRequestEntityHandler;
 	
@@ -39,13 +40,15 @@ public class FeedReader {
 			DataSource dataSource, 
 			EntityManagerFactory entityManagerFactory, 
 			User user, 
-			MessageSender messageSender, 
+			MessageSender messageSender,
+			FeedEntityHandler feedEntityHandler,
 			UserFeedItemContextEntityHandler userFeedItemContextEntityHandler,
 			FeedRequestEntityHandler feedRequestEntityHandler) {
 		this.dataSource = dataSource;
 		this.entityManagerFactory = entityManagerFactory;
 		this.userId = user.getId();
 		this.messageSender = messageSender;
+		this.feedEntityHandler = feedEntityHandler;
 		this.userFeedItemContextEntityHandler = userFeedItemContextEntityHandler;
 		this.feedRequestEntityHandler = feedRequestEntityHandler;
 	}
@@ -108,15 +111,14 @@ public class FeedReader {
 	 * Gets the feed with the specified ID for the current user.
 	 */
 	public UserFeedContext getFeed(int feedId) {
-		final EntityManager entityManager = entityManagerFactory.get();
-		final Feed feed = entityManager.get(Feed.class, feedId);
-		if(feed == null) {
-			throw new IllegalArgumentException();
-		}
-		
 		try {
 			final Connection cnn = dataSource.getConnection();
 			try {
+				final Feed feed = feedEntityHandler.findFeedAndFeedItemsByFeedId(cnn, feedId);
+				if(feed == null) {
+					throw new IllegalArgumentException();
+				}
+		
 				//load the context for the feed items
 				final List<UserFeedItemContext> itemContexts = userFeedItemContextEntityHandler.getFeedItemsForUserFeed(cnn, userId, feedId);
 				
