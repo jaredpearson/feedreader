@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import com.google.common.base.Preconditions;
+
 import common.persist.DbUtils;
 import common.persist.EntityManager;
 import common.persist.RowMapper;
@@ -112,38 +114,43 @@ public class FeedItemEntityHandler implements EntityHandler {
 	}
 	
 	/**
-	 * Gets all of the feed items for the specified feed
+	 * Gets the feed items for the specified feed ID.
+	 * @return the feed items for the specified feed ID.
 	 */
-	public List<FeedItem> getFeedItemsForFeed(QueryContext queryContext, int feedId) throws SQLException {
-		List<FeedItem> feedItems = new ArrayList<FeedItem>();
-		Connection cnn = null;
+	public List<FeedItem> getFeedItemsForFeed(Connection cnn, int feedId) throws SQLException {
+		Preconditions.checkArgument(cnn != null, "cnn should not be null");
+		final List<FeedItem> feedItems = new ArrayList<FeedItem>();
+		final PreparedStatement stmt = cnn.prepareStatement(SELECT_SQL_FRAGMENT + "where if.id = ? ");
 		try {
-			cnn = queryContext.getConnection();
+			stmt.setInt(1, feedId);
 			
-			PreparedStatement stmt = null;
+			final ResultSet rst = stmt.executeQuery();
 			try {
-				stmt = cnn.prepareStatement(SELECT_SQL_FRAGMENT + "where if.id = ? ");
-				stmt.setInt(1, feedId);
 				
-				ResultSet rst = null;
-				try {
-					rst = stmt.executeQuery();
-					while(rst.next()) {
-						feedItems.add(ROW_MAPPER.mapRow(rst));
-					}
-					
-				} finally {
-					DbUtils.close(rst);
+				while(rst.next()) {
+					feedItems.add(ROW_MAPPER.mapRow(rst));
 				}
 				
 			} finally {
-				DbUtils.close(stmt);
+				DbUtils.close(rst);
 			}
 			
 		} finally {
-			DbUtils.close(cnn);
+			DbUtils.close(stmt);
 		}
 		return feedItems;
+	}
+	
+	/**
+	 * Gets all of the feed items for the specified feed
+	 */
+	public List<FeedItem> getFeedItemsForFeed(QueryContext queryContext, int feedId) throws SQLException {
+		final Connection cnn = queryContext.getConnection();
+		try {
+			return getFeedItemsForFeed(cnn, feedId);
+		} finally {
+			DbUtils.close(cnn);
+		}
 	}
 
 	/**

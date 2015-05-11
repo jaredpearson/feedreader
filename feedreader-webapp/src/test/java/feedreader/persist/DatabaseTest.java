@@ -155,9 +155,13 @@ public class DatabaseTest {
 		}
 		return testFeedItemId;
  	}
-	
+
 	protected int insertTestFeedItem(Connection cnn) throws SQLException {
-		int testFeedId = ensureTestFeed(cnn);
+		return insertTestFeedItem(cnn, null);
+	}
+	
+	protected int insertTestFeedItem(Connection cnn, Integer feedId) throws SQLException {
+		int testFeedId = feedId == null ? ensureTestFeed(cnn) : feedId;
 		int testFeedItemId = -1;
 		PreparedStatement stmt = null;
 		try {

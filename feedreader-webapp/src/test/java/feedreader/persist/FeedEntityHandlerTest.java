@@ -34,11 +34,29 @@ public class FeedEntityHandlerTest extends DatabaseTest {
 			EntityManager entityManager = mock(EntityManager.class);
 			when(entityManager.executeNamedQuery(eq(FeedItem.class), eq("getFeedItemsForFeed"), any())).thenReturn(new ArrayList<FeedItem>());
 			
-			FeedEntityHandler handler = new FeedEntityHandler();
+			FeedEntityHandler handler = new FeedEntityHandler(new FeedItemEntityHandler());
 			Feed feed = (Feed)handler.get(createQueryContext(cnn, entityManager), feedId);
 			
 			assertTrue(feed != null);
 			assertEquals(Integer.valueOf(feedId), feed.getId());
+		} finally {
+			DbUtils.close(cnn);
+		}
+	}
+
+	@Test
+	public void testFindFeedAndFeedItemsByFeedId() throws SQLException {
+		final Connection cnn = getConnection();
+		try {
+			final int feedId = ensureTestFeed(cnn);
+			insertTestFeedItem(cnn, feedId);
+			
+			final FeedEntityHandler handler = new FeedEntityHandler(new FeedItemEntityHandler());
+			final Feed feed = handler.findFeedAndFeedItemsByFeedId(cnn, feedId);
+			
+			assertNotNull("Expected the feed to be loaded since it exists in the database", feed);
+			assertEquals("Expected the feed to coorespond to the ID specified", Integer.valueOf(feedId), feed.getId());
+			assertEquals("Expected 1 feed item to be loaded", 1, feed.getItems().size());
 		} finally {
 			DbUtils.close(cnn);
 		}
@@ -53,7 +71,7 @@ public class FeedEntityHandlerTest extends DatabaseTest {
 			final String url = "http://test.com/test.xml";
 			final Date lastUpdated = new Date();
 			
-			FeedEntityHandler handler = new FeedEntityHandler();
+			FeedEntityHandler handler = new FeedEntityHandler(new FeedItemEntityHandler());
 			final int feedId = handler.insert(cnn, url, lastUpdated, title, testUserId);
 			
 			assertTrue("Expected a valid Feed ID to be specified", feedId > 0);

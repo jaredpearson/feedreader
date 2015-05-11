@@ -70,9 +70,11 @@ public class DataSourceModule extends AbstractModule {
 	}
 	
 	private static EntityManager createEntityManager(final DataSource dataSource) {
+		final FeedItemEntityHandler feedItemEntityHandler = new FeedItemEntityHandler();
+		
 		Map<Class<?>, EntityHandler> handlers = new Hashtable<Class<?>, EntityManager.EntityHandler>();
-		handlers.put(Feed.class, new FeedEntityHandler());
-		handlers.put(FeedItem.class, new FeedItemEntityHandler());
+		handlers.put(Feed.class, new FeedEntityHandler(feedItemEntityHandler));
+		handlers.put(FeedItem.class, feedItemEntityHandler);
 		handlers.put(FeedRequest.class, new FeedRequestEntityHandler());
 		handlers.put(FeedSubscription.class, new FeedSubscriptionEntityHandler());
 		handlers.put(User.class, new UserEntityHandler());

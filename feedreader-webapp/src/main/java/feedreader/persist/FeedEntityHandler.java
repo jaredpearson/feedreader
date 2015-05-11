@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import common.persist.DbUtils;
 import common.persist.EntityManager;
 import common.persist.RowMapper;
@@ -35,43 +37,47 @@ public class FeedEntityHandler implements EntityHandler {
 		ROW_MAPPER = new FeedRowMapper();
 	}
 	
-	@Override
-	public Object get(EntityManager.QueryContext queryContext, Object id) throws SQLException {
+	private final FeedItemEntityHandler feedItemEntityHandler;
+	
+	public FeedEntityHandler(FeedItemEntityHandler feedItemEntityHandler) {
+		this.feedItemEntityHandler = feedItemEntityHandler;
+	}
+	
+	public @Nullable Feed findFeedAndFeedItemsByFeedId(final Connection cnn, final int feedId) throws SQLException {
 		Feed feed = null;
-		Connection cnn = null;
+		
+		final PreparedStatement stmt = cnn.prepareStatement(SELECT_SQL_FRAGMENT + "where f.id = ? limit 1");
 		try {
-			cnn = queryContext.getConnection();
+			stmt.setInt(1, feedId);
 			
-			PreparedStatement stmt = null;
+			final ResultSet rst = stmt.executeQuery();
 			try {
-				stmt = cnn.prepareStatement(SELECT_SQL_FRAGMENT
-						+ "where f.id = ? "
-						+ "limit 1");
-				stmt.setInt(1, (Integer)id);
-				
-				ResultSet rst = null;
-				try {
-					rst = stmt.executeQuery();
-					if(rst.next()) {
-						feed = ROW_MAPPER.mapRow(rst);
-						
-						//load the related feed itemsR
-						List<FeedItem> feedItems = queryContext.getEntityManager().executeNamedQuery(FeedItem.class, "getFeedItemsForFeed", feed.getId());
-						feed.setItems(feedItems);
-					}
+				if(rst.next()) {
+					feed = ROW_MAPPER.mapRow(rst);
 					
-				} finally {
-					DbUtils.close(rst);
+					//load the related feed itemsR
+					List<FeedItem> feedItems = feedItemEntityHandler.getFeedItemsForFeed(cnn, feed.getId());
+					feed.setItems(feedItems);
 				}
 				
 			} finally {
-				DbUtils.close(stmt);
+				DbUtils.close(rst);
 			}
 			
 		} finally {
-			queryContext.releaseConnection(cnn);
+			DbUtils.close(stmt);
 		}
 		return feed;
+	}
+	
+	@Override
+	public Object get(EntityManager.QueryContext queryContext, Object id) throws SQLException {
+		final Connection cnn = queryContext.getConnection();
+		try {
+			return findFeedAndFeedItemsByFeedId(cnn, (Integer) id);
+		} finally {
+			queryContext.releaseConnection(cnn);
+		}
 	}
 
 	@Override
