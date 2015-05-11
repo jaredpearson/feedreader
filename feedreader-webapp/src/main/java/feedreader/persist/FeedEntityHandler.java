@@ -139,6 +139,40 @@ public class FeedEntityHandler implements EntityHandler {
 	}
 	
 	/**
+	 * Inserts a feed into the database.
+	 * @return the ID of the new feed
+	 */
+	public int insert(Connection cnn, String url, java.util.Date lastUpdated, String title, int createdByUserId) throws SQLException {
+		PreparedStatement stmt = cnn.prepareStatement("insert into feedreader.Feeds (url, lastUpdated, title, createdBy) values (?, ?, ?, ?) returning id");
+		try {
+			stmt.setString(1, url);
+			stmt.setDate(2, toSqlDate(lastUpdated));
+			stmt.setString(3, title);
+			stmt.setInt(4, createdByUserId);
+			
+			if(stmt.execute()) {
+				ResultSet rst = null;
+				try {
+					rst = stmt.getResultSet();
+					if(rst.next()) {
+						return rst.getInt("id");
+					} else {
+						throw new IllegalStateException("Unable to insert Feed");
+					}
+					
+				} finally {
+					DbUtils.close(rst);
+				}
+			} else {
+				throw new IllegalStateException("Unable to insert Feed");
+			}
+			
+		} finally {
+			DbUtils.close(stmt);
+		}
+	}
+	
+	/**
 	 * Attempts to find the Feed with the specified URL.
 	 */
 	private Feed findFeedByUrl(EntityManager.QueryContext queryContext, String url) throws SQLException {

@@ -21,6 +21,7 @@ import feedreader.FeedItem;
 import feedreader.FeedRequest;
 import feedreader.FeedRequestStatus;
 import feedreader.fetch.FeedLoader;
+import feedreader.persist.FeedEntityHandler;
 import feedreader.persist.FeedRequestEntityHandler;
 import feedreader.persist.FeedSubscriptionEntityHandler;
 
@@ -33,6 +34,7 @@ public class RetrieveFeedMessageHandler implements MessageHandler {
 	private final EntityManager entityManager;
 	private final Provider<FeedLoader> feedLoaderProvider;
 	private final DataSource dataSource;
+	private final FeedEntityHandler feedEntityHandler;
 	private final FeedRequestEntityHandler feedRequestEntityHandler;
 	private final FeedSubscriptionEntityHandler subscriptionEntityHandler;
 	
@@ -40,11 +42,13 @@ public class RetrieveFeedMessageHandler implements MessageHandler {
 			final EntityManager entityManager, 
 			final Provider<FeedLoader> feedLoaderProvider, 
 			final DataSource dataSource, 
+			final FeedEntityHandler feedEntityHandler,
 			final FeedRequestEntityHandler feedRequestEntityHandler,
 			final FeedSubscriptionEntityHandler feedSubscriptionEntityHandler) {
 		this.entityManager = entityManager;
 		this.feedLoaderProvider = feedLoaderProvider;
 		this.dataSource = dataSource;
+		this.feedEntityHandler = feedEntityHandler;
 		this.feedRequestEntityHandler = feedRequestEntityHandler;
 		this.subscriptionEntityHandler = feedSubscriptionEntityHandler;
 	}
@@ -113,15 +117,16 @@ public class RetrieveFeedMessageHandler implements MessageHandler {
 			//TODO: update the request with the error
 			throw new RuntimeException(exc);
 		}
-		
-		//save the feed to the database
-		entityManager.persist(feed);
-		for(FeedItem feedItem : feed.getItems()) {
-			entityManager.persist(feedItem);
-		}
-		
+
 		final Connection cnn = dataSource.getConnection();
 		try {
+			
+			//save the feed to the database
+			feedEntityHandler.insert(cnn, feed.getUrl(), feed.getLastUpdated(), feed.getTitle(), feedRequest.getCreatedBy().getId());
+			for(FeedItem feedItem : feed.getItems()) {
+				entityManager.persist(feedItem);
+			}
+		
 			//update the feed request
 			finalizeRequest(cnn, feedRequest, feed);
 			

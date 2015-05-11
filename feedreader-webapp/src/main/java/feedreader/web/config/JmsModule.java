@@ -24,6 +24,7 @@ import common.persist.EntityManagerFactory;
 import feedreader.fetch.FeedLoader;
 import feedreader.messagequeue.RetrieveFeedMessageBuilder;
 import feedreader.messagequeue.RetrieveFeedMessageHandler;
+import feedreader.persist.FeedEntityHandler;
 import feedreader.persist.FeedRequestEntityHandler;
 import feedreader.persist.FeedSubscriptionEntityHandler;
 
@@ -77,6 +78,7 @@ public class JmsModule extends AbstractModule {
 			@Named("jms") final Context context, 
 			final EntityManagerFactory entityManagerFactory,
 			final DataSource dataSource,
+			final FeedEntityHandler feedEntityHandler,
 			final FeedRequestEntityHandler feedRequestEntityHandler,
 			final FeedSubscriptionEntityHandler subscriptionEntityHandler) {
 		JmsMessageConsumer messageConsumer = new JmsMessageConsumer(connectionFactory, lookupDestination(context));
@@ -92,7 +94,7 @@ public class JmsModule extends AbstractModule {
 						return new FeedLoader();
 					}
 				};
-				return new RetrieveFeedMessageHandler(entityManager, feedLoaderProvider, dataSource, feedRequestEntityHandler, subscriptionEntityHandler);
+				return new RetrieveFeedMessageHandler(entityManager, feedLoaderProvider, dataSource, feedEntityHandler, feedRequestEntityHandler, subscriptionEntityHandler);
 			}
 		});
 		
