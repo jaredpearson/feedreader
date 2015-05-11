@@ -18,7 +18,7 @@ public class Stream {
 		//build a map of user feed items to feed item ID
 		this.userFeedItemsByFeedItemId = new HashMap<Integer, UserFeedItemContext>();
 		for(UserFeedItemContext context : userFeedItems) {
-			Integer feedItemId = context.getFeedItem().getId();
+			Integer feedItemId = context.getFeedItemId();
 			if(feedItemId == null) {
 				continue;
 			}

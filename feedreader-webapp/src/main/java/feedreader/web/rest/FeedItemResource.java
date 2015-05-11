@@ -14,11 +14,11 @@ class FeedItemResource {
 	
 	public static FeedItemResource fromFeedItem(UserFeedItemContext feedItem, ResourceHrefBuilder hrefBuilder) {
 		final FeedItemResource feedItemResource = new FeedItemResource();
-		feedItemResource.id = feedItem.getFeedItem().getId();
+		feedItemResource.id = feedItem.getFeedItemId();
 		feedItemResource.title = feedItem.getTitle();
 		feedItemResource.read = feedItem.isRead();
-		feedItemResource.pubDate = feedItem.getFeedItem().getPubDate();
-		feedItemResource.guid = feedItem.getFeedItem().getGuid();
+		feedItemResource.pubDate = feedItem.getPubDate();
+		feedItemResource.guid = feedItem.getGuid();
 		
 		final FeedResourceLink feedLink = new FeedResourceLink();
 		feedLink.id = feedItem.getFeedId();

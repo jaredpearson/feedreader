@@ -28,15 +28,11 @@ public class UserFeedItemContext {
 	}
 	
 	public String getTitle() {
-		return feedItem.getTitle();
+		return (feedItem == null) ? null : feedItem.getTitle();
 	}
 	
 	public Integer getFeedId() {
-		return feedItem.getFeedId();
-	}
-	
-	public FeedItem getFeedItem() {
-		return feedItem;
+		return (feedItem == null) ? null : feedItem.getFeedId();
 	}
 	
 	public void setFeedItem(FeedItem feedItem) {
@@ -74,5 +70,13 @@ public class UserFeedItemContext {
 	
 	public void setOwnerId(Integer ownerId) {
 		this.ownerId = ownerId;
+	}
+	
+	public Date getPubDate() {
+		return (feedItem == null) ? null : feedItem.getPubDate();
+	}
+	
+	public String getGuid() {
+		return (feedItem == null) ? null : feedItem.getGuid();
 	}
 }

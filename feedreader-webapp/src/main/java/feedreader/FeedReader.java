@@ -179,7 +179,7 @@ public class FeedReader {
 		//map each context by feed item id
 		Map<Integer, UserFeedItemContext> contextsByFeedItemId = new Hashtable<Integer, UserFeedItemContext>();
 		for(UserFeedItemContext context : contexts) {
-			contextsByFeedItemId.put(context.getFeedItem().getId(), context);
+			contextsByFeedItemId.put(context.getFeedItemId(), context);
 		}
 		
 		//build the final list of feed items from the feed contexts retrieved
