@@ -36,6 +36,7 @@ public class UserFeedItemContextEntityHandler implements EntityHandler {
 				+ "ci.pubDate feedItem_pubDate, "
 				+ "ci.guid feedItem_guid, "
 				+ "ci.created feedItem_created, "
+				+ "ci.feedId feedItem_feedId, "
 				
 				//feedItem.feed
 				+ "cif.id feed_id, "
@@ -55,7 +56,7 @@ public class UserFeedItemContextEntityHandler implements EntityHandler {
 				+ "inner join feedreader.Feeds cif on ci.feedId = cif.id "
 				+ "inner join feedreader.Users cifu on cif.createdBy = cifu.id ";
 		
-		ROW_MAPPER_FEED_ITEM = new FeedItemRowMapper("feedItem_", new FeedRowMapper("feed_"));
+		ROW_MAPPER_FEED_ITEM = new FeedItemRowMapper("feedItem_");
 	}
 	
 	@Override

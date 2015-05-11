@@ -28,6 +28,7 @@ public class FeedItemEntityHandler implements EntityHandler {
 			+ "i.pubDate feedItem_pubDate, "
 			+ "i.guid feedItem_guid, "
 			+ "i.created feedItem_created, "
+			+ "i.feedId feedItem_feedId, "
 			
 			//feed
 			+ "if.id feed_id, "
@@ -40,7 +41,7 @@ public class FeedItemEntityHandler implements EntityHandler {
 			+ "from feedreader.FeedItems i "
 			+ "inner join feedreader.Feeds if on i.feedId = if.id "
 			+ "inner join feedreader.Users ifu on if.createdBy = ifu.id ";
-		ROW_MAPPER = new FeedItemRowMapper(new FeedRowMapper("feed_"));
+		ROW_MAPPER = new FeedItemRowMapper();
 	}
 
 	@Override

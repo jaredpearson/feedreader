@@ -12,7 +12,7 @@ public class UserFeedItemContext {
 	private Integer id;
 	private Integer feedItemId;
 	private FeedItem feedItem;
-	private User owner;
+	private Integer ownerId;
 	private boolean read = false;
 	private long created = -1;
 	
@@ -29,6 +29,10 @@ public class UserFeedItemContext {
 	
 	public String getTitle() {
 		return feedItem.getTitle();
+	}
+	
+	public Integer getFeedId() {
+		return feedItem.getFeedId();
 	}
 	
 	public FeedItem getFeedItem() {
@@ -64,11 +68,11 @@ public class UserFeedItemContext {
 		this.created = DateUtils.toMillis(created);
 	}
 
-	public User getOwner() {
-		return this.owner;
+	public Integer getOwnerId() {
+		return this.ownerId;
 	}
 	
-	public void setOwner(User owner) {
-		this.owner = owner;
+	public void setOwnerId(Integer ownerId) {
+		this.ownerId = ownerId;
 	}
 }

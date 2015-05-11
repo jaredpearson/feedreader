@@ -21,9 +21,7 @@ class FeedItemResource {
 		feedItemResource.guid = feedItem.getFeedItem().getGuid();
 		
 		final FeedResourceLink feedLink = new FeedResourceLink();
-		//TODO: fix this multi-object traversal nastiness
-		feedLink.id = feedItem.getFeedItem().getFeed().getId();
-		feedLink.title = feedItem.getFeedItem().getFeed().getTitle();
+		feedLink.id = feedItem.getFeedId();
 		feedLink.href = hrefBuilder.buildHref("/feed/" + feedLink.id);
 		feedItemResource.feed = feedLink;
 		

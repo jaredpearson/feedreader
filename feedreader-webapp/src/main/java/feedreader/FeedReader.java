@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +13,8 @@ import javax.annotation.Nonnull;
 import javax.sql.DataSource;
 
 import com.google.common.base.Throwables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 import common.messagequeue.api.MessageSender;
 import common.persist.EntityManager;
@@ -29,7 +30,7 @@ import feedreader.persist.UserFeedItemContextEntityHandler;
 public class FeedReader {
 	private final DataSource dataSource;
 	private final EntityManagerFactory entityManagerFactory;
-	private final User user;
+	private final int userId;
 	private final MessageSender messageSender;
 	private final UserFeedItemContextEntityHandler userFeedItemContextEntityHandler;
 	private final FeedRequestEntityHandler feedRequestEntityHandler;
@@ -37,12 +38,13 @@ public class FeedReader {
 	public FeedReader(
 			DataSource dataSource, 
 			EntityManagerFactory entityManagerFactory, 
-			User user, MessageSender messageSender, 
+			User user, 
+			MessageSender messageSender, 
 			UserFeedItemContextEntityHandler userFeedItemContextEntityHandler,
 			FeedRequestEntityHandler feedRequestEntityHandler) {
 		this.dataSource = dataSource;
 		this.entityManagerFactory = entityManagerFactory;
-		this.user = user;
+		this.userId = user.getId();
 		this.messageSender = messageSender;
 		this.userFeedItemContextEntityHandler = userFeedItemContextEntityHandler;
 		this.feedRequestEntityHandler = feedRequestEntityHandler;
@@ -61,7 +63,7 @@ public class FeedReader {
 			try {
 
 				//create the request to retrieve the feed
-				final int requestId = feedRequestEntityHandler.insert(cnn, url, user.getId());
+				final int requestId = feedRequestEntityHandler.insert(cnn, url, userId);
 				
 				//queue up the url to be processed async
 				messageSender.send("feedRequest", new RetrieveFeedMessageBuilder(requestId));
@@ -81,7 +83,7 @@ public class FeedReader {
 	public Stream getStream() {
 		final int offset = 0;
 		final int size = 25;
-		List<FeedItem> feedItems = entityManagerFactory.get().executeNamedQuery(FeedItem.class, "getFeedItemsForStream", user.getId(), size, offset);
+		List<FeedItem> feedItems = entityManagerFactory.get().executeNamedQuery(FeedItem.class, "getFeedItemsForStream", userId, size, offset);
 		
 		//get all of the contexts for the user from the feed items
 		List<UserFeedItemContext> contexts = getFeedContexts(feedItems);
@@ -97,18 +99,16 @@ public class FeedReader {
 	 */
 	public UserFeedContext getFeed(int feedId) {
 		final EntityManager entityManager = entityManagerFactory.get();
-		Feed feed = entityManager.get(Feed.class, feedId);
+		final Feed feed = entityManager.get(Feed.class, feedId);
 		if(feed == null) {
 			throw new IllegalArgumentException();
 		}
 		
-		int userId = user.getId();
-		
 		//load the context for the feed items
-		List<UserFeedItemContext> itemContexts = entityManager.executeNamedQuery(UserFeedItemContext.class, "getFeedItemsForUserFeed", userId, feedId);
+		final List<UserFeedItemContext> itemContexts = entityManager.executeNamedQuery(UserFeedItemContext.class, "getFeedItemsForUserFeed", userId, feedId);
 		
 		//fanout all of the items so the user has a full set of feed items
-		List<UserFeedItemContext> userFeedItems = fanoutFeedItems(feed.getItems(), itemContexts);
+		final List<UserFeedItemContext> userFeedItems = fanoutFeedItems(feed.getItems(), itemContexts);
 		
 		//get the user context for the feed
 		return new UserFeedContext(feed, userFeedItems);
@@ -118,7 +118,6 @@ public class FeedReader {
 	 * Marks the feed item corresponding to the specified ID with the specified read status.
 	 */
 	public void markReadStatus(int feedItemId, boolean readStatus) {
-		final int userId = user.getId();
 		try {
 			final Connection cnn = dataSource.getConnection();
 			try {
@@ -144,19 +143,19 @@ public class FeedReader {
 	 * Gets all of the FeedContext object that correspond to the given feed items.
 	 */
 	private @Nonnull List<UserFeedItemContext> getFeedContexts(@Nonnull List<FeedItem> feedItems) {
-		Set<Integer> feedItemIds = new HashSet<Integer>(feedItems.size());
-		for(FeedItem feedItem : feedItems) {
+		final Set<Integer> feedItemIds = Sets.newHashSetWithExpectedSize(feedItems.size());
+		for(final FeedItem feedItem : feedItems) {
 			feedItemIds.add(feedItem.getId());
 		}
 		
-		return entityManagerFactory.get().executeNamedQuery(UserFeedItemContext.class, "getUserFeedItemsForFeedItems", user.getId(), feedItemIds); 
+		return entityManagerFactory.get().executeNamedQuery(UserFeedItemContext.class, "getUserFeedItemsForFeedItems", userId, feedItemIds); 
 	}
 	
 	/**
 	 * Given all of the feed items and the persisted contexts, fanout the feed items so that there is a context for
 	 * each feed item. The order of the returned contexts are guaranteed to be the same as the given feed items. 
 	 */
-	private List<UserFeedItemContext> fanoutFeedItems(List<FeedItem> feedItems, List<UserFeedItemContext> contexts) {
+	private @Nonnull List<UserFeedItemContext> fanoutFeedItems(@Nonnull List<FeedItem> feedItems, @Nonnull List<UserFeedItemContext> contexts) {
 
 		//map each context by feed item id
 		Map<Integer, UserFeedItemContext> contextsByFeedItemId = new Hashtable<Integer, UserFeedItemContext>();
@@ -165,14 +164,14 @@ public class FeedReader {
 		}
 		
 		//build the final list of feed items from the feed contexts retrieved
-		ArrayList<UserFeedItemContext> userFeedItems = new ArrayList<UserFeedItemContext>();
+		final ArrayList<UserFeedItemContext> userFeedItems = Lists.newArrayListWithExpectedSize(feedItems.size());
 		for(FeedItem feedItem : feedItems) {
 			if(contextsByFeedItemId.containsKey(feedItem.getId())) {
 				userFeedItems.add(contextsByFeedItemId.get(feedItem.getId()));
 			} else {
 				UserFeedItemContext context = new UserFeedItemContext();
 				context.setFeedItem(feedItem);
-				context.setOwner(user);
+				context.setOwnerId(userId);
 				userFeedItems.add(context);
 			}
 		}

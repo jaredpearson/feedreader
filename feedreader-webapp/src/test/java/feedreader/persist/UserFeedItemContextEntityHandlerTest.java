@@ -24,8 +24,8 @@ public class UserFeedItemContextEntityHandlerTest extends DatabaseTest {
 			UserFeedItemContext context = (UserFeedItemContext)handler.get(createQueryContext(cnn), contextId);
 			
 			assertTrue("Expected a UserFeedItemContext to be retrieved", context != null);
-			assertTrue(context.getFeedItem() != null);
-			assertTrue(context.getFeedItem().getFeed() != null);
+			assertTrue(context.getFeedItemId() != null);
+			assertTrue(context.getFeedId() != null);
 			
 		} finally {
 			DbUtils.close(cnn);

@@ -10,7 +10,7 @@ import common.DateUtils;
  */
 public class FeedItem {
 	private Integer id;
-	private Feed feed;
+	private Integer feedId;
 	private String title;
 	private String link;
 	private String description;
@@ -37,12 +37,12 @@ public class FeedItem {
 		return id;
 	}
 	
-	public void setFeed(Feed feed) {
-		this.feed = feed;
+	public Integer getFeedId() {
+		return feedId;
 	}
 	
-	public Feed getFeed() {
-		return feed;
+	public void setFeedId(Integer feedId) {
+		this.feedId = feedId;
 	}
 	
 	public void setTitle(String title) {

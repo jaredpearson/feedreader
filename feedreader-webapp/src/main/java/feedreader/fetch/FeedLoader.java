@@ -96,10 +96,6 @@ public class FeedLoader {
 		feed.setTitle(title);
 		feed.setItems(entries);
 		
-		for(FeedItem item : entries) {
-			item.setFeed(feed);
-		}
-		
 		return feed;
 	}
 	
