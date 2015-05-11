@@ -4,15 +4,16 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Date;
 import java.util.List;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import com.google.common.base.Preconditions;
 
 import common.persist.DbUtils;
 import common.persist.EntityManager.EntityHandler;
 import common.persist.EntityManager.QueryContext;
-import common.persist.RowMapper;
 import feedreader.FeedRequest;
 import feedreader.FeedRequestStatus;
 
@@ -21,77 +22,53 @@ import feedreader.FeedRequestStatus;
  * @author jared.pearson
  */
 public class FeedRequestEntityHandler implements EntityHandler {
-	private static final RowMapper<FeedRequestData> ROW_MAPPER;
-	
-	static {
-		ROW_MAPPER = new RowMapper<FeedRequestData>() {
-			@Override
-			public FeedRequestData mapRow(ResultSet rst) throws SQLException {
-				FeedRequestData feedRequest = new FeedRequestData();
-				feedRequest.id = rst.getInt(1);
-				feedRequest.url = rst.getString("url");
-				feedRequest.statusValue = rst.getString("status");
-				
-				//get the referenced feed, which is optional
-				int feedId = rst.getInt("feedId");
-				if(!rst.wasNull()) {
-					feedRequest.feedId = feedId; 
+
+	/**
+	 * Attempts to find the feed request with the specified ID value. If not found, then a null reference is returned.
+	 * @return the feed request with the ID or null if not found
+	 */
+	public @Nullable FeedRequest findFeedRequestById(@Nonnull Connection cnn, int feedRequestId) throws SQLException {
+		Preconditions.checkArgument(cnn != null, "cnn should not be null");
+
+		final PreparedStatement stmt = cnn.prepareStatement("select id, url, feedId, status, created, createdBy from feedreader.FeedRequests where id = ? limit 1");
+		try {
+			stmt.setInt(1, feedRequestId);
+			
+			final ResultSet rst = stmt.executeQuery();
+			try {
+				if(rst.next()) {
+					final FeedRequest feedRequest = new FeedRequest();
+					feedRequest.setId(rst.getInt(1));
+					feedRequest.setUrl(rst.getString("url"));
+					feedRequest.setStatus(FeedRequestStatus.fromDbValue(rst.getString("status")));
+					feedRequest.setCreated(rst.getTimestamp("created"));
+					feedRequest.setCreatedById(rst.getInt("createdBy"));
+					
+					//get the referenced feed, which is optional
+					int feedId = rst.getInt("feedId");
+					if(!rst.wasNull()) {
+						feedRequest.setFeedId(feedId); 
+					}
+					return feedRequest;
+				} else { 
+					return null;
 				}
-				
-				feedRequest.created = rst.getDate(5);
-				feedRequest.createdById = rst.getInt(6);
-				return feedRequest;
+			} finally {
+				DbUtils.close(rst);
 			}
-		};
+		} finally {
+			DbUtils.close(stmt);
+		}
 	}
 	
 	@Override
 	public Object get(QueryContext queryContext, Object id) throws SQLException {
-		FeedRequest feedRequest = null;
-		Connection cnn = null;
+		Connection cnn = queryContext.getConnection();
 		try {
-			cnn = queryContext.getConnection();
-			
-			// get the feed request data
-			FeedRequestData feedRequestData = null;
-			PreparedStatement stmt = null;
-			try {
-				stmt = cnn.prepareStatement(
-						"select id, url, feedId, status, created, createdBy "
-						+ "from feedreader.FeedRequests "
-						+ "where id = ? "
-						+ "limit 1");
-				stmt.setInt(1, (Integer)id);
-				
-				ResultSet rst = null;
-				try {
-					rst = stmt.executeQuery();
-					if(rst.next()) {
-						feedRequestData = ROW_MAPPER.mapRow(rst);
-					}
-				} finally {
-					DbUtils.close(rst);
-				}
-				
-			} finally {
-				DbUtils.close(stmt);
-			}
-
-			
-			// retrieve the referenced objects
-			if(feedRequestData != null) {
-				feedRequest = new FeedRequest();
-				feedRequest.setId(feedRequestData.id);
-				feedRequest.setStatus(FeedRequestStatus.fromDbValue(feedRequestData.statusValue));
-				feedRequest.setCreated(feedRequestData.created);
-				feedRequest.setUrl(feedRequestData.url);
-				feedRequest.setCreatedById(feedRequestData.createdById);
-				feedRequest.setFeedId(feedRequestData.feedId);
-			}
+			return findFeedRequestById(cnn, (Integer)id);
 		} finally {
 			queryContext.releaseConnection(cnn);
 		}
-		return feedRequest;
 	}
 	
 	@Override
@@ -167,14 +144,5 @@ public class FeedRequestEntityHandler implements EntityHandler {
 		} finally {
 			DbUtils.close(stmt);
 		}
-	}
-	
-	private static class FeedRequestData {
-		public int id;
-		public String url;
-		public Integer feedId;
-		public String statusValue;
-		public Date created;
-		public int createdById;
 	}
 }

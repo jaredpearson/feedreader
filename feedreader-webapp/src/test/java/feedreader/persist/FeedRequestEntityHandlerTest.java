@@ -10,9 +10,29 @@ import java.sql.SQLException;
 import org.junit.Test;
 
 import common.persist.DbUtils;
+import feedreader.FeedRequest;
 import feedreader.FeedRequestStatus;
 
 public class FeedRequestEntityHandlerTest extends DatabaseTest {
+	
+	@Test
+	public void testFindFeedRequestById() throws SQLException {
+		Connection cnn = getConnection();
+		try {
+			final String url = "http://cyber.law.harvard.edu/rss/examples/rss2sample.xml";
+			final int createdByUserId = ensureTestUser(cnn);
+			final int requestId = insertFeedRequest(cnn, url, createdByUserId);
+			
+			final FeedRequestEntityHandler handler = new FeedRequestEntityHandler();
+			final FeedRequest loadedRequest = handler.findFeedRequestById(cnn, requestId);
+			
+			assertNotNull("Expected findFeedByRequest to not return null", loadedRequest);
+			final String actualStatus = loadFeedRequestStatus(cnn, requestId);
+			assertEquals("Expected the status to be be the default.", FeedRequestStatus.NOT_STARTED.getDbValue(), actualStatus);
+		} finally {
+			DbUtils.close(cnn);
+		}
+	}
 
 	@Test
 	public void testUpdateRequestStatus() throws SQLException {
