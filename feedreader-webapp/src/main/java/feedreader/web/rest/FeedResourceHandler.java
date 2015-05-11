@@ -10,9 +10,10 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 
-import common.persist.EntityManager;
 import common.web.rest.Method;
 import common.web.rest.PathParameter;
 import common.web.rest.RequestHandler;
@@ -42,8 +43,8 @@ public class FeedResourceHandler implements ResourceHandler {
 	public void getFeed(HttpServletRequest request, HttpServletResponse response, FeedReader feedReader, @PathParameter(1) String feedIdValue) throws IOException, ServletException {
 		
 		//get the requested feed
-		int feedId = Integer.valueOf(feedIdValue);
-		UserFeedContext feedContext = feedReader.getFeed(feedId);
+		final int feedId = Integer.valueOf(feedIdValue);
+		final UserFeedContext feedContext = feedReader.getFeed(feedId);
 		
 		final ResourceHrefBuilder hrefBuilder = new ResourceHrefBuilder(request, "v1");
 		
@@ -62,45 +63,38 @@ public class FeedResourceHandler implements ResourceHandler {
 			feedModel.items[index] = feedItemResource;
 		}
 		
-		//output the model as JSON
-		response.setContentType("application/json");
-		Writer out = response.getWriter();
-		try {
-			objectMapper.writeValue(out, feedModel);
-		} finally {
-			out.close();
-		}
+		//output the model as the body of the response
+		writeResponse(response, feedModel);
 	}
 	
 	@RequestHandler(value = "^/v1/feed/([0-9]+)/item/([0-9]+)/read$", method = Method.POST)
-	public void markFeedItemRead(HttpServletResponse response, 
-			EntityManager entityManager, FeedReader feedReader, @PathParameter(1) String feedIdValue, 
+	public void markFeedItemRead(HttpServletResponse response, FeedReader feedReader, @PathParameter(1) String feedIdValue, 
 			@PathParameter(2) String feedItemIdValue) throws IOException, ServletException {
 		
 		//get the requested feed
-		int feedId = Integer.valueOf(feedIdValue);
-		UserFeedContext feedContext = feedReader.getFeed(feedId);
+		final int feedId = Integer.valueOf(feedIdValue);
+		final UserFeedContext feedContext = feedReader.getFeed(feedId);
 		
 		//get the request feed item
-		int feedItemId = Integer.valueOf(feedItemIdValue);
-		UserFeedItemContext feedItem = feedContext.getItemWithFeedItemId(feedItemId);
+		final int feedItemId = Integer.valueOf(feedItemIdValue);
+		final UserFeedItemContext feedItem = feedContext.getItemWithFeedItemId(feedItemId);
 		
 		if(feedItem == null) {
 			response.sendError(404);
 			return;
 		}
 		
-		//mark the item read
-		feedItem.setRead(true);
-		
-		//save the item
-		entityManager.persist(feedItem);
+		feedReader.markReadStatus(feedItemId, true);
 		
 		//create the response model
-		MarkReadResponseModel model = new MarkReadResponseModel();
+		final MarkReadResponseModel model = new MarkReadResponseModel();
 		model.success = true;
-		
-		//output to the response
+
+		//output the model as the body of the response
+		writeResponse(response, model);
+	}
+
+	private void writeResponse(final HttpServletResponse response, final Object model) throws IOException, JsonGenerationException, JsonMappingException {
 		response.setContentType("application/json");
 		Writer out = response.getWriter();
 		try {

@@ -1,12 +1,21 @@
 package feedreader;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
+
+import javax.annotation.Nonnull;
+import javax.sql.DataSource;
+
+import com.google.common.base.Throwables;
 
 import common.messagequeue.api.MessageSender;
 import common.persist.EntityManager;
@@ -18,11 +27,14 @@ import feedreader.messagequeue.RetrieveFeedMessageBuilder;
  * @author jared.pearson
  */
 public class FeedReader {
+	private static final Logger logger = Logger.getLogger(FeedReader.class.getName()); 
+	private final DataSource dataSource;
 	private final EntityManagerFactory entityManagerFactory;
 	private final User user;
 	private final MessageSender messageSender;
 	
-	public FeedReader(EntityManagerFactory entityManagerFactory, User user, MessageSender messageSender) {
+	public FeedReader(DataSource dataSource, EntityManagerFactory entityManagerFactory, User user, MessageSender messageSender) {
+		this.dataSource = dataSource;
 		this.entityManagerFactory = entityManagerFactory;
 		this.user = user;
 		this.messageSender = messageSender;
@@ -66,7 +78,7 @@ public class FeedReader {
 	}
 	
 	/**
-	 * Gets the feed with the specified ID.
+	 * Gets the feed with the specified ID for the current user.
 	 */
 	public UserFeedContext getFeed(int feedId) {
 		final EntityManager entityManager = entityManagerFactory.get();
@@ -87,7 +99,39 @@ public class FeedReader {
 		return new UserFeedContext(feed, userFeedItems);
 	}
 	
-	private List<UserFeedItemContext> getFeedContexts(List<FeedItem> feedItems) {
+	/**
+	 * Marks the feed item corresponding to the specified ID with the specified read status.
+	 */
+	public void markReadStatus(int feedItemId, boolean readStatus) {
+		final int userId = user.getId();
+		try {
+			final Connection cnn = dataSource.getConnection();
+			try {
+				
+				final PreparedStatement stmt = cnn.prepareStatement("update feedreader.UserFeedItemContexts set read = ? where owner = ? and feedItemdId = ?");
+				try {
+					stmt.setBoolean(1, readStatus);
+					stmt.setInt(2, userId);
+					stmt.setInt(3, feedItemId);
+					
+					final int rowsUpdated = stmt.executeUpdate();
+					logger.fine(String.format("Set the read status on %d records", rowsUpdated));
+				} finally {
+					stmt.close();
+				}
+				
+			} finally {
+				cnn.close();
+			}
+		} catch(SQLException exc) {
+			throw Throwables.propagate(exc);
+		}
+	}
+	
+	/**
+	 * Gets all of the FeedContext object that correspond to the given feed items.
+	 */
+	private @Nonnull List<UserFeedItemContext> getFeedContexts(@Nonnull List<FeedItem> feedItems) {
 		Set<Integer> feedItemIds = new HashSet<Integer>(feedItems.size());
 		for(FeedItem feedItem : feedItems) {
 			feedItemIds.add(feedItem.getId());

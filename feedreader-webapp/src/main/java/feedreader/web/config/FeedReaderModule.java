@@ -10,6 +10,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
+import javax.sql.DataSource;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provider;
@@ -104,11 +105,14 @@ class FeedReaderModule extends AbstractModule {
 		
 		@Inject
 		UserSession userSession;
+		
+		@Inject
+		DataSource dataSource;
 
 		@Override
 		public FeedReader get() {
 			final User user = userSession.getUser();
-			return new FeedReader(entityManagerFactory, user, messageSender);
+			return new FeedReader(dataSource, entityManagerFactory, user, messageSender);
 		}
 	}
 }

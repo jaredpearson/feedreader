@@ -60,8 +60,6 @@ public class FeedResourceHandlerTest {
 		when(feedContext.getTitle()).thenReturn("Test Feed");
 		when(feedContext.getItemWithFeedItemId(1)).thenReturn(feedItemContext);
 		
-		EntityManager entityManager = mock(EntityManager.class);
-		
 		FeedReader feedReader = mock(FeedReader.class);
 		when(feedReader.getFeed(eq(1))).thenReturn(feedContext);
 		
@@ -73,9 +71,9 @@ public class FeedResourceHandlerTest {
 		when(response.getWriter()).thenReturn(new PrintWriter(writer));
 		
 		FeedResourceHandler handler = new FeedResourceHandler(new ObjectMapper());
-		handler.markFeedItemRead(response, entityManager, feedReader, "1", "1");
+		handler.markFeedItemRead(response, feedReader, "1", "1");
 		
-		verify(entityManager).persist(eq(feedItemContext));
+		verify(feedReader).markReadStatus(eq(1), eq(true));
 		
 		String expected = "{\"success\":true}";
 		assertEquals(expected, writer.toString());
