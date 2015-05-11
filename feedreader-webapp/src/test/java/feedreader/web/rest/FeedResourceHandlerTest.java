@@ -12,7 +12,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 
-import common.persist.EntityManager;
 import feedreader.Feed;
 import feedreader.FeedReader;
 import feedreader.UserFeedContext;
@@ -29,9 +28,6 @@ public class FeedResourceHandlerTest {
 		UserFeedContext feedContext = mock(UserFeedContext.class);
 		when(feedContext.getId()).thenReturn(1);
 		when(feedContext.getTitle()).thenReturn("Test Feed");
-		
-		EntityManager entityManager = mock(EntityManager.class);
-		when(entityManager.get(eq(Feed.class), eq(1))).thenReturn(feed);
 		
 		FeedReader feedReader = mock(FeedReader.class);
 		when(feedReader.getFeed(1)).thenReturn(feedContext);
