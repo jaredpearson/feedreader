@@ -13,7 +13,6 @@ import common.persist.DbUtils;
 import common.persist.EntityManager.EntityHandler;
 import common.persist.EntityManager.QueryContext;
 import common.persist.RowMapper;
-import feedreader.Feed;
 import feedreader.FeedRequest;
 import feedreader.FeedRequestStatus;
 
@@ -97,11 +96,7 @@ public class FeedRequestEntityHandler implements EntityHandler {
 				feedRequest.setCreated(feedRequestData.created);
 				feedRequest.setUrl(feedRequestData.url);
 				feedRequest.setCreatedById(feedRequestData.createdById);
-				
-				if(feedRequestData.feedId != null) {
-					Feed feed = queryContext.getEntityManager().get(Feed.class, feedRequestData.feedId);
-					feedRequest.setFeed(feed);
-				}
+				feedRequest.setFeedId(feedRequestData.feedId);
 			}
 		} finally {
 			queryContext.releaseConnection(cnn);
@@ -193,7 +188,7 @@ public class FeedRequestEntityHandler implements EntityHandler {
 			try {
 				stmt = cnn.prepareStatement("insert into feedreader.FeedRequests (url, feedId, status, createdBy) values (?, ?, ?, ?) returning id, created");
 				stmt.setString(1, feedRequest.getUrl());
-				DbUtils.setInt(stmt, 2, (feedRequest.getFeed() == null) ? null : feedRequest.getFeed().getId());
+				DbUtils.setInt(stmt, 2, feedRequest.getFeedId());
 				stmt.setString(3, feedRequest.getStatus().getDbValue());
 				DbUtils.setInt(stmt, 4, feedRequest.getCreatedById());
 				
@@ -229,7 +224,7 @@ public class FeedRequestEntityHandler implements EntityHandler {
 			try {
 				stmt = cnn.prepareStatement("update feedreader.FeedRequests set url = ?, feedId = ?, status = ?, createdBy = ? where id = ?");
 				stmt.setString(1, feedRequest.getUrl());
-				DbUtils.setInt(stmt, 2, (feedRequest.getFeed() == null) ? null : feedRequest.getFeed().getId());
+				DbUtils.setInt(stmt, 2, feedRequest.getFeedId());
 				stmt.setString(3, feedRequest.getStatus().getDbValue());
 				DbUtils.setInt(stmt, 4, feedRequest.getCreatedById());
 				stmt.setInt(5, feedRequest.getId());

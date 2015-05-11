@@ -7,7 +7,7 @@ import common.DateUtils;
 public class FeedRequest {
 	private Integer id;
 	private String url;
-	private Feed feed;
+	private Integer feedId;
 	private FeedRequestStatus status = FeedRequestStatus.NOT_STARTED;
 	private long created = -1;
 	private Integer createdById;
@@ -28,12 +28,12 @@ public class FeedRequest {
 		return url;
 	}
 	
-	public void setFeed(Feed feed) {
-		this.feed = feed;
+	public void setFeedId(Integer feedId) {
+		this.feedId = feedId;
 	}
-	
-	public Feed getFeed() {
-		return feed;
+
+	public Integer getFeedId() {
+		return feedId;
 	}
 	
 	public void setStatus(FeedRequestStatus status) {
@@ -59,4 +59,5 @@ public class FeedRequest {
 	public void setCreatedById(Integer createdById) {
 		this.createdById = createdById;
 	}
+
 }
