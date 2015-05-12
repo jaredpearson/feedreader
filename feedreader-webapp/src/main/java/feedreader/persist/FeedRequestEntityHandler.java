@@ -62,16 +62,6 @@ public class FeedRequestEntityHandler implements EntityHandler {
 	}
 	
 	@Override
-	public Object get(QueryContext queryContext, Object id) throws SQLException {
-		Connection cnn = queryContext.getConnection();
-		try {
-			return findFeedRequestById(cnn, (Integer)id);
-		} finally {
-			queryContext.releaseConnection(cnn);
-		}
-	}
-	
-	@Override
 	public List<?> executeNamedQuery(QueryContext context, String query, Object... parameters) throws SQLException {
 		// TODO Auto-generated method stub
 		return null;

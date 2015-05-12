@@ -9,7 +9,6 @@ import java.util.Random;
 import org.junit.Test;
 
 import common.persist.DbUtils;
-import common.persist.EntityManager;
 import feedreader.User;
 
 public class UserEntityHandlerTest extends DatabaseTest {
@@ -28,29 +27,6 @@ public class UserEntityHandlerTest extends DatabaseTest {
 			
 			int recordCountAfter = countUsers(cnn);
 			assertEquals("Expected there to be only one record in the database after the persist", recordCountBefore + 1, recordCountAfter);
-		} finally {
-			DbUtils.close(cnn);
-		}
-	}
-	
-	@Test
-	public void testGet() throws Exception {
-		Connection cnn = null;
-		try {
-			cnn = getConnection();
-			
-			//insert a test user into the database
-			int testUserId = insertTestUser(cnn);
-			
-			//get the context
-			EntityManager.QueryContext context = createQueryContext(cnn);
-			
-			//attempt to load the user using the handler
-			UserEntityHandler handler = new UserEntityHandler();
-			User user = (User)handler.get(context, testUserId);
-			
-			assertTrue("Expected get to return a valid user account", user != null);
-			assertEquals("Expected email to be the one specified in the database", "test@test.com", user.getEmail());
 		} finally {
 			DbUtils.close(cnn);
 		}

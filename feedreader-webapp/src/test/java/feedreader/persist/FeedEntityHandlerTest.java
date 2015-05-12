@@ -1,49 +1,20 @@
 package feedreader.persist;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 
 import org.junit.Test;
 
 import common.persist.DbUtils;
-import common.persist.EntityManager;
 import feedreader.Feed;
-import feedreader.FeedItem;
 
 public class FeedEntityHandlerTest extends DatabaseTest {
 	
-	@Test
-	public void testGet() throws SQLException {
-		Connection cnn = null;
-		try {
-			cnn = getConnection();
-			
-			int feedId = ensureTestFeed(cnn);
-			
-			EntityManager entityManager = mock(EntityManager.class);
-			when(entityManager.executeNamedQuery(eq(FeedItem.class), eq("getFeedItemsForFeed"), any())).thenReturn(new ArrayList<FeedItem>());
-			
-			FeedEntityHandler handler = new FeedEntityHandler(new FeedItemEntityHandler());
-			Feed feed = (Feed)handler.get(createQueryContext(cnn, entityManager), feedId);
-			
-			assertTrue(feed != null);
-			assertEquals(Integer.valueOf(feedId), feed.getId());
-		} finally {
-			DbUtils.close(cnn);
-		}
-	}
-
 	@Test
 	public void testFindFeedAndFeedItemsByFeedId() throws SQLException {
 		final Connection cnn = getConnection();

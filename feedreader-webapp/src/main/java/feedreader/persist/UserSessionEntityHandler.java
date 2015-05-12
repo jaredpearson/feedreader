@@ -61,18 +61,6 @@ public class UserSessionEntityHandler implements EntityHandler {
 		return session;
 	}
 	
-	@Override
-	public Object get(EntityManager.QueryContext queryContext, Object id) throws SQLException {
-		final int sessionId = (Integer)id;
-		final Connection cnn = queryContext.getConnection();
-		try {
-			return findUserSessionById(cnn, sessionId);
-		} finally {
-			queryContext.releaseConnection(cnn);
-		}
-		
-	}
-	
 	/**
 	 * Inserts a new user session into the database for the given user.
 	 * @return the ID of the new session

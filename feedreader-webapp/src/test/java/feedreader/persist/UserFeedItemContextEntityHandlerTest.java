@@ -18,24 +18,6 @@ import feedreader.UserFeedItemContext;
 public class UserFeedItemContextEntityHandlerTest extends DatabaseTest {
 	
 	@Test
-	public void testGet() throws SQLException {
-		Connection cnn = getConnection();
-		try {
-			int contextId = ensureTestUserFeedItemContext(cnn);
-			
-			UserFeedItemContextEntityHandler handler = new UserFeedItemContextEntityHandler();
-			UserFeedItemContext context = (UserFeedItemContext)handler.get(createQueryContext(cnn), contextId);
-			
-			assertTrue("Expected a UserFeedItemContext to be retrieved", context != null);
-			assertTrue(context.getFeedItemId() != null);
-			assertTrue(context.getFeedId() != null);
-			
-		} finally {
-			DbUtils.close(cnn);
-		}
-	}
-	
-	@Test
 	public void testInsert() throws SQLException {
 		Connection cnn = getConnection();
 		try {

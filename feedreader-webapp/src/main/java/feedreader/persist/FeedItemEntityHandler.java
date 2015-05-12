@@ -11,7 +11,6 @@ import java.util.List;
 import com.google.common.base.Preconditions;
 
 import common.persist.DbUtils;
-import common.persist.EntityManager;
 import common.persist.RowMapper;
 import common.persist.EntityManager.EntityHandler;
 import common.persist.EntityManager.QueryContext;
@@ -44,26 +43,6 @@ public class FeedItemEntityHandler implements EntityHandler {
 			+ "inner join feedreader.Feeds if on i.feedId = if.id "
 			+ "inner join feedreader.Users ifu on if.createdBy = ifu.id ";
 		ROW_MAPPER = new FeedItemRowMapper();
-	}
-
-	@Override
-	public Object get(EntityManager.QueryContext queryContext, Object id) throws SQLException {
-		FeedItem feedItem = null;
-		Connection cnn = null;
-		try {
-			cnn = queryContext.getConnection();
-			
-			ArrayList<Integer> feedItemIds = new ArrayList<Integer>(1);
-			feedItemIds.add((Integer)id);
-			
-			List<FeedItem> feedItems = getFeedItems(cnn, feedItemIds);
-			if(!feedItems.isEmpty()) {
-				feedItem = feedItems.get(0);
-			}
-		} finally {
-			DbUtils.close(cnn);
-		}
-		return feedItem;
 	}
 
 	@Override

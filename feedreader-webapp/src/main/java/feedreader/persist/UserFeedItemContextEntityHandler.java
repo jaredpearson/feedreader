@@ -64,42 +64,6 @@ public class UserFeedItemContextEntityHandler implements EntityHandler {
 	}
 	
 	@Override
-	public Object get(EntityManager.QueryContext queryContext, Object id) throws SQLException {
-		UserFeedItemContext feedItemContext = null;
-		int contextId = (Integer)id;
-		Connection cnn = null;
-		try {
-			cnn = queryContext.getConnection();
-			
-			PreparedStatement stmt = null;
-			try {
-				stmt = cnn.prepareStatement(SELECT_SQL_FRAGMENT
-						+ "where c.id = ? "
-						+ "limit 1");
-				stmt.setInt(1, contextId);
-				
-				ResultSet rst = null;
-				try {
-					rst = stmt.executeQuery();
-					if(rst.next()) {
-						feedItemContext = mapRow(rst);
-					}
-					
-				} finally {
-					DbUtils.close(rst);
-				}
-			} finally {
-				DbUtils.close(stmt);
-			}
-			
-		} finally {
-			queryContext.releaseConnection(cnn);
-		}
-		
-		return feedItemContext;
-	}
-	
-	@Override
 	@SuppressWarnings("unchecked")
 	public List<?> executeNamedQuery(EntityManager.QueryContext queryContext, String query, Object... parameters)
 			throws SQLException {

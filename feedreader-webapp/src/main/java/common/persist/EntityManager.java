@@ -11,7 +11,6 @@ import javax.sql.DataSource;
 
 public class EntityManager {
 	public interface EntityHandler {
-		public Object get(QueryContext context, Object id) throws SQLException;
 		public List<?> executeNamedQuery(QueryContext context, String query, Object... parameters) throws SQLException;
 	}
 	
@@ -62,22 +61,6 @@ public class EntityManager {
 	public EntityManager(DataSource dataSource, Map<Class<?>, EntityHandler> handlers) {
 		this.dataSource = dataSource;
 		this.handlers = handlers;
-	}
-	
-	@SuppressWarnings("unchecked")
-	public <T> T get(Class<T> entityClass, Object id) {
-		QueryContextImpl queryContext = new QueryContextImpl(this);
-		try {
-			return (T)ensureHandler(entityClass).get(queryContext, id);
-		} catch(SQLException exc) {
-			throw propagate(exc);
-		} finally {
-			try {
-				queryContext.close();
-			} catch (IOException exc) {
-				throw propagate(exc);
-			}
-		}
 	}
 	
 	@SuppressWarnings("unchecked")

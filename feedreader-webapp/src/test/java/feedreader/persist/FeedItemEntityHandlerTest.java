@@ -1,39 +1,32 @@
 package feedreader.persist;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.*;
-
+import static org.junit.Assert.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.Test;
 
 import common.persist.DbUtils;
-import common.persist.EntityManager;
 import feedreader.FeedItem;
 
 public class FeedItemEntityHandlerTest extends DatabaseTest {
 
 	@Test
-	public void testGet() throws SQLException {
-		Connection cnn = null;
+	public void testGetFeedItemsForFeed() throws Exception {
+		final Connection cnn = getConnection();
 		try {
-			cnn = getConnection();
+			final int feedId = ensureTestFeed(cnn);
+			final int feedItemId = insertTestFeedItem(cnn, feedId);
 			
-			int feedItemId = ensureTestFeedItem(cnn);
+			final FeedItemEntityHandler handler = new FeedItemEntityHandler();
+			final List<FeedItem> feedItems = handler.getFeedItemsForFeed(cnn, feedId);
 			
-			EntityManager entityManager = mock(EntityManager.class);
-			when(entityManager.executeNamedQuery(eq(FeedItem.class), eq("getFeedItemsForFeed"), any())).thenReturn(new ArrayList<FeedItem>());
-			
-			FeedItemEntityHandler handler = new FeedItemEntityHandler();
-			FeedItem feedItem = (FeedItem)handler.get(createQueryContext(cnn, entityManager), feedItemId);
-			
-			assertTrue(feedItem != null);
-			assertEquals(Integer.valueOf(feedItemId), feedItem.getId());
+			assertNotNull("Expected getFeedItemsForFeed to return a value", feedItems);
+			assertEquals("Expected only the feed item created within this test to be returned", 1, feedItems.size());
+			assertEquals("Expected the feed item to be returned", Integer.valueOf(feedItemId), feedItems.get(0).getId());
 		} finally {
 			DbUtils.close(cnn);
 		}

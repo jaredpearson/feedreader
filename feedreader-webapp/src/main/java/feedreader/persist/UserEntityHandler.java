@@ -20,16 +20,6 @@ import feedreader.User;
 public class UserEntityHandler implements EntityManager.EntityHandler {
 	
 	@Override
-	public Object get(EntityManager.QueryContext queryContext, Object id) throws SQLException {
-		final Connection cnn = queryContext.getConnection();
-		try {
-			return loadUserById(cnn, (Integer)id);
-		} finally {
-			queryContext.releaseConnection(cnn);
-		}
-	}
-	
-	@Override
 	public List<Object> executeNamedQuery(EntityManager.QueryContext queryContext, String query, Object... parameters) throws SQLException {
 		if("getUserByEmail".equals(query)) {
 			return asList(getUserByEmail(queryContext, (String)parameters[0]));
