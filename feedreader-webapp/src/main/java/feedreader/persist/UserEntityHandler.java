@@ -4,10 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.inject.Singleton;
@@ -15,7 +11,6 @@ import javax.inject.Singleton;
 import com.google.common.base.Preconditions;
 
 import common.persist.DbUtils;
-import common.persist.EntityManager;
 import feedreader.User;
 
 /**
@@ -23,16 +18,7 @@ import feedreader.User;
  * @author jared.pearson
  */
 @Singleton
-public class UserEntityHandler implements EntityManager.EntityHandler {
-	
-	@Override
-	public List<Object> executeNamedQuery(EntityManager.QueryContext queryContext, String query, Object... parameters) throws SQLException {
-		if("getUserByEmail".equals(query)) {
-			return asList(getUserByEmail(queryContext, (String)parameters[0]));
-		}
-		
-		throw new IllegalArgumentException("Unknown query specified: " + query);
-	}
+public class UserEntityHandler {
 	
 	/**
 	 * Inserts a new user with the specified email.
@@ -123,15 +109,6 @@ public class UserEntityHandler implements EntityManager.EntityHandler {
 		
 	}
 	
-	private User getUserByEmail(EntityManager.QueryContext queryContext, String email) throws SQLException {
-		Connection cnn = queryContext.getConnection();
-		try {
-			return findUserByEmail(cnn, email);
-		} finally {
-			queryContext.releaseConnection(cnn);
-		}
-	}
-	
 	private User createUser(ResultSet rst) throws SQLException {
 		User user = new User();
 		user.setId(rst.getInt("id"));
@@ -139,12 +116,4 @@ public class UserEntityHandler implements EntityManager.EntityHandler {
 		return user;
 	}
 	
-	private List<Object> asList(User user) {
-		if(user == null) {
-			return Collections.emptyList();
-		}
-		ArrayList<Object> users = new ArrayList<Object>(1);
-		users.add(user);
-		return users;
-	}
 }

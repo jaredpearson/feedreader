@@ -4,18 +4,18 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
+
+import javax.inject.Singleton;
 
 import common.persist.DbUtils;
-import common.persist.EntityManager.EntityHandler;
-import common.persist.EntityManager.QueryContext;
 import feedreader.FeedSubscription;
 
 /**
  * Entity handler for persisting instances of {@link FeedSubscription}
  * @author jared.pearson
  */
-public class FeedSubscriptionEntityHandler implements EntityHandler {
+@Singleton
+public class FeedSubscriptionEntityHandler {
 	
 	/**
 	 * Inserts a new subscription for the given user (subscriber ID) to the given feed ID.
@@ -48,9 +48,4 @@ public class FeedSubscriptionEntityHandler implements EntityHandler {
 		}
 	}
 	
-	@Override
-	public List<?> executeNamedQuery(QueryContext context, String query,
-			Object... parameters) throws SQLException {
-		throw new UnsupportedOperationException();
-	}
 }

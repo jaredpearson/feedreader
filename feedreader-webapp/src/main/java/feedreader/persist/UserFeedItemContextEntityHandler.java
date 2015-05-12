@@ -9,16 +9,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Singleton;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 import common.persist.DbUtils;
-import common.persist.EntityManager;
-import common.persist.EntityManager.EntityHandler;
 import feedreader.FeedItem;
 import feedreader.UserFeedItemContext;
 
-public class UserFeedItemContextEntityHandler implements EntityHandler {
+@Singleton
+public class UserFeedItemContextEntityHandler {
 	private static final String SELECT_SQL_FRAGMENT;
 	private static final FeedItemRowMapper ROW_MAPPER_FEED_ITEM;
 	
@@ -63,19 +64,6 @@ public class UserFeedItemContextEntityHandler implements EntityHandler {
 		ROW_MAPPER_FEED_ITEM = new FeedItemRowMapper("feedItem_");
 	}
 	
-	@Override
-	@SuppressWarnings("unchecked")
-	public List<?> executeNamedQuery(EntityManager.QueryContext queryContext, String query, Object... parameters)
-			throws SQLException {
-		if(query.equalsIgnoreCase("getFeedItemsForUserFeed")) {
-			return getFeedItemsForUserFeed(queryContext, (Integer)parameters[0], (Integer)parameters[1]);
-		} else if(query.equalsIgnoreCase("getUserFeedItemsForFeedItems")) {
-			return getUserFeedItemsForFeedItems(queryContext, (Integer)parameters[0], (Set<Integer>)parameters[1]);
-		} else {
-			throw new UnsupportedOperationException();
-		}
-	}
-	
 	public List<UserFeedItemContext> getFeedItemsForUserFeed(Connection cnn, int userId, int feedId) throws SQLException {
 		final List<UserFeedItemContext> feedItemContexts = new ArrayList<UserFeedItemContext>();
 		
@@ -100,15 +88,6 @@ public class UserFeedItemContextEntityHandler implements EntityHandler {
 		return feedItemContexts;
 	}
 	
-	public List<UserFeedItemContext> getFeedItemsForUserFeed(EntityManager.QueryContext queryContext, int userId, int feedId) throws SQLException {
-		final Connection cnn = queryContext.getConnection();
-		try {
-			return getFeedItemsForUserFeed(cnn, userId, feedId);
-		} finally {
-			queryContext.releaseConnection(cnn);
-		}
-	}
-
 	/**
 	 * Gets all of the context items for the given feed item IDs. If there is no context for the given IDs, then it is not represented
 	 * in the list.
@@ -150,17 +129,6 @@ public class UserFeedItemContextEntityHandler implements EntityHandler {
 		}
 		
 		return feedItemContexts;
-	}
-	
-	public List<UserFeedItemContext> getUserFeedItemsForFeedItems(EntityManager.QueryContext queryContext, int userId, Set<Integer> feedItemIds) throws SQLException {
-		
-		final Connection cnn = queryContext.getConnection();
-		try {
-			return getUserFeedItemsForFeedItems(cnn, userId, feedItemIds);
-		} finally {
-			queryContext.releaseConnection(cnn);
-		}
-		
 	}
 	
 	/**

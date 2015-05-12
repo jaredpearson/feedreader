@@ -14,7 +14,6 @@ import com.google.common.base.Preconditions;
 
 import common.persist.ConnectionHandler;
 import common.persist.DbUtils;
-import common.persist.EntityManager;
 
 public class DatabaseTest {
 	private DataSource dataSource;
@@ -51,29 +50,6 @@ public class DatabaseTest {
 			this.dataSource = pgDataSource;
 		}
 		return dataSource;
-	}
-	
-	protected EntityManager.QueryContext createQueryContext(final Connection cnn, final EntityManager entityManager) {
-		return new EntityManager.QueryContext() {
-			@Override
-			public void releaseConnection(Connection cnn) throws SQLException {
-				
-			}
-			
-			@Override
-			public Connection getConnection() throws SQLException {
-				return cnn;
-			}
-			
-			@Override
-			public EntityManager getEntityManager() {
-				return entityManager;
-			}
-		};
-	}
-	
-	protected EntityManager.QueryContext createQueryContext(final Connection cnn) {
-		return createQueryContext(cnn, null);
 	}
 	
 	protected int ensureTestUser(Connection cnn) throws SQLException {

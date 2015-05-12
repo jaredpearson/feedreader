@@ -4,8 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -16,14 +14,12 @@ import javax.inject.Singleton;
 import com.google.common.base.Preconditions;
 
 import common.persist.DbUtils;
-import common.persist.EntityManager;
 import common.persist.RowMapper;
-import common.persist.EntityManager.EntityHandler;
 import feedreader.Feed;
 import feedreader.FeedItem;
 
 @Singleton
-public class FeedEntityHandler implements EntityHandler {
+public class FeedEntityHandler {
 	private static final String SELECT_SQL_FRAGMENT;
 	private static final RowMapper<Feed> ROW_MAPPER;
 	
@@ -122,25 +118,6 @@ public class FeedEntityHandler implements EntityHandler {
 		return feed;
 	}
 	
-	@Override
-	public List<?> executeNamedQuery(EntityManager.QueryContext queryContext, String query, Object... parameters)
-			throws SQLException {
-		
-		if("findFeedByUrl".equalsIgnoreCase(query)) {
-			Feed feed = findFeedByUrl(queryContext, (String)parameters[0]);
-			if(feed == null) {
-				return Collections.emptyList();
-			} else {
-				List<Feed> feeds = new ArrayList<Feed>();
-				feeds.add(feed);
-				return feeds;
-			}
-		} else {
-			throw new UnsupportedOperationException("Unsupported query specified: " + query);
-		}
-		
-	}
-	
 	/**
 	 * Inserts a feed into the database.
 	 * @return the ID of the new feed
@@ -172,21 +149,6 @@ public class FeedEntityHandler implements EntityHandler {
 			
 		} finally {
 			DbUtils.close(stmt);
-		}
-	}
-	
-	/**
-	 * Attempts to find the Feed with the specified URL.
-	 */
-	private Feed findFeedByUrl(EntityManager.QueryContext queryContext, String url) throws SQLException {
-		
-		Connection cnn = queryContext.getConnection();
-		try {
-			
-			return findFeedAndFeedItemsByUrl(cnn, url);
-			
-		} finally {
-			queryContext.releaseConnection(cnn);
 		}
 	}
 	

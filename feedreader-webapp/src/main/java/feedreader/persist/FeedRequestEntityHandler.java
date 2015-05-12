@@ -4,16 +4,14 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.inject.Singleton;
 
 import com.google.common.base.Preconditions;
 
 import common.persist.DbUtils;
-import common.persist.EntityManager.EntityHandler;
-import common.persist.EntityManager.QueryContext;
 import feedreader.FeedRequest;
 import feedreader.FeedRequestStatus;
 
@@ -21,7 +19,8 @@ import feedreader.FeedRequestStatus;
  * Persistence handler for the {@link FeedRequest} entity.
  * @author jared.pearson
  */
-public class FeedRequestEntityHandler implements EntityHandler {
+@Singleton
+public class FeedRequestEntityHandler {
 
 	/**
 	 * Attempts to find the feed request with the specified ID value. If not found, then a null reference is returned.
@@ -59,12 +58,6 @@ public class FeedRequestEntityHandler implements EntityHandler {
 		} finally {
 			DbUtils.close(stmt);
 		}
-	}
-	
-	@Override
-	public List<?> executeNamedQuery(QueryContext context, String query, Object... parameters) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
 	}
 	
 	/**

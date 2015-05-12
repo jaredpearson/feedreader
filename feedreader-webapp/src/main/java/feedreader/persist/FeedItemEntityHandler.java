@@ -11,16 +11,16 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.inject.Singleton;
 
 import com.google.common.base.Preconditions;
 
 import common.persist.DbUtils;
 import common.persist.RowMapper;
-import common.persist.EntityManager.EntityHandler;
-import common.persist.EntityManager.QueryContext;
 import feedreader.FeedItem;
 
-public class FeedItemEntityHandler implements EntityHandler {
+@Singleton
+public class FeedItemEntityHandler {
 	private static final String SELECT_SQL_FRAGMENT;
 	private static final RowMapper<FeedItem> ROW_MAPPER;
 	
@@ -47,18 +47,6 @@ public class FeedItemEntityHandler implements EntityHandler {
 			+ "inner join feedreader.Feeds if on i.feedId = if.id "
 			+ "inner join feedreader.Users ifu on if.createdBy = ifu.id ";
 		ROW_MAPPER = new FeedItemRowMapper();
-	}
-
-	@Override
-	public List<?> executeNamedQuery(QueryContext queryContext, String query, Object... parameters)
-			throws SQLException {
-		if(query.equalsIgnoreCase("getFeedItemsForFeed")) {
-			return getFeedItemsForFeed(queryContext, (Integer)parameters[0]);
-		} else if(query.equalsIgnoreCase("getFeedItemsForStream")) {
-			return getFeedItemsForStream(queryContext, (Integer)parameters[0], (Integer)parameters[1], (Integer)parameters[2]);
-		} else {
-			throw new UnsupportedOperationException("No method registered with name: " + query);
-		}
 	}
 	
 	/**
@@ -136,30 +124,6 @@ public class FeedItemEntityHandler implements EntityHandler {
 		return feedItems;
 	}
 	
-	/**
-	 * Gets all of the feed items for the specified feed
-	 */
-	public List<FeedItem> getFeedItemsForFeed(QueryContext queryContext, int feedId) throws SQLException {
-		final Connection cnn = queryContext.getConnection();
-		try {
-			return getFeedItemsForFeed(cnn, feedId);
-		} finally {
-			DbUtils.close(cnn);
-		}
-	}
-
-	/**
-	 * Gets all of the feed items the user is subscribed to.
-	 */
-	public List<FeedItem> getFeedItemsForStream(QueryContext queryContext, int userId, int size, int offset) throws SQLException {
-		Connection cnn = queryContext.getConnection();
-		try {
-			return getFeedItemsForStream(cnn, userId, size, offset);
-		} finally {
-			DbUtils.close(cnn);
-		}
-	}
-
 	/**
 	 * Gets all of the feed items the user is subscribed to.
 	 */

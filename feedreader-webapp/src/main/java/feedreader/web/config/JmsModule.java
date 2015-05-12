@@ -19,7 +19,6 @@ import common.messagequeue.api.MessageHandler;
 import common.messagequeue.api.MessageSender;
 import common.messagequeue.jms.JmsMessageConsumer;
 import common.messagequeue.jms.JmsMessageSender;
-import common.persist.EntityManagerFactory;
 import feedreader.fetch.FeedLoader;
 import feedreader.messagequeue.RetrieveFeedMessageBuilder;
 import feedreader.messagequeue.RetrieveFeedMessageHandler;
@@ -76,7 +75,6 @@ public class JmsModule extends AbstractModule {
 	@Singleton
 	JmsMessageConsumer createMessageConsumer(final ConnectionFactory connectionFactory, 
 			@Named("jms") final Context context, 
-			final EntityManagerFactory entityManagerFactory,
 			final DataSource dataSource,
 			final FeedEntityHandler feedEntityHandler,
 			final FeedItemEntityHandler feedItemEntityHandler,
