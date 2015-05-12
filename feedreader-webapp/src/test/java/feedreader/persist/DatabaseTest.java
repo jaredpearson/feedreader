@@ -10,6 +10,8 @@ import javax.sql.DataSource;
 
 import org.postgresql.ds.PGSimpleDataSource;
 
+import com.google.common.base.Preconditions;
+
 import common.persist.ConnectionHandler;
 import common.persist.DbUtils;
 import common.persist.EntityManager;
@@ -119,13 +121,18 @@ public class DatabaseTest {
 	}
 	
 	protected int insertTestFeed(Connection cnn) throws SQLException {
+		return insertTestFeed(cnn, "http://test.com/test.xml");
+	}
+	
+	protected int insertTestFeed(Connection cnn, String url) throws SQLException {
+		Preconditions.checkArgument(url != null && !url.isEmpty(), "url should not be null");
 		int testUserId = ensureTestUser(cnn);
 		
 		int testFeedId = -1;
 		PreparedStatement stmt = null;
 		try {
 			stmt = cnn.prepareStatement("insert into feedreader.Feeds (url, title, lastUpdated, createdBy) values (?, ?, ?, ?) returning id");
-			stmt.setString(1, "http://test.com/test.xml");
+			stmt.setString(1, url);
 			stmt.setString(2, "Test Feed");
 			setDate(stmt, 3, 2013, 6, 10);
 			

@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Savepoint;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -16,7 +15,6 @@ import com.google.common.base.Throwables;
 import common.Provider;
 import common.messagequeue.api.Message;
 import common.messagequeue.api.MessageHandler;
-import common.persist.EntityManager;
 import feedreader.Feed;
 import feedreader.FeedItem;
 import feedreader.FeedRequest;
@@ -32,8 +30,7 @@ import feedreader.persist.FeedSubscriptionEntityHandler;
  * @author jared.pearson
  */
 public class RetrieveFeedMessageHandler implements MessageHandler {
-	private static final Logger logger = Logger.getLogger(RetrieveFeedMessageHandler.class.getName()); 
-	private final EntityManager entityManager;
+	private static final Logger logger = Logger.getLogger(RetrieveFeedMessageHandler.class.getName());
 	private final Provider<FeedLoader> feedLoaderProvider;
 	private final DataSource dataSource;
 	private final FeedEntityHandler feedEntityHandler;
@@ -42,14 +39,12 @@ public class RetrieveFeedMessageHandler implements MessageHandler {
 	private final FeedSubscriptionEntityHandler subscriptionEntityHandler;
 	
 	public RetrieveFeedMessageHandler(
-			final EntityManager entityManager, 
 			final Provider<FeedLoader> feedLoaderProvider, 
 			final DataSource dataSource, 
 			final FeedEntityHandler feedEntityHandler,
 			final FeedItemEntityHandler feedItemEntityHandler,
 			final FeedRequestEntityHandler feedRequestEntityHandler,
 			final FeedSubscriptionEntityHandler feedSubscriptionEntityHandler) {
-		this.entityManager = entityManager;
 		this.feedLoaderProvider = feedLoaderProvider;
 		this.dataSource = dataSource;
 		this.feedEntityHandler = feedEntityHandler;
@@ -83,11 +78,10 @@ public class RetrieveFeedMessageHandler implements MessageHandler {
 				
 				//check to see if the URL has already been retrieved. if so, create a subscription for the user
 				//otherwise, let's go out and request the feed
-				final List<Feed> matchingFeeds = entityManager.executeNamedQuery(Feed.class, "findFeedByUrl", feedRequest.getUrl());
-				if(!matchingFeeds.isEmpty()) {
-					final Feed feed = matchingFeeds.get(0);
-					subscribe(cnn, feed.getId(), feedRequest.getCreatedById());
-					finalizeRequest(cnn, feedRequest.getId(), feed.getId());
+				final Feed matchingFeed = feedEntityHandler.findFeedAndFeedItemsByUrl(cnn, feedRequest.getUrl());
+				if(matchingFeed != null) {
+					subscribe(cnn, matchingFeed.getId(), feedRequest.getCreatedById());
+					finalizeRequest(cnn, feedRequest.getId(), matchingFeed.getId());
 				} else {
 					retrieveFeedFromUrl(feedRequest);
 				}

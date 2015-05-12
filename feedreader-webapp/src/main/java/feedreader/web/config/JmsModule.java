@@ -19,7 +19,6 @@ import common.messagequeue.api.MessageHandler;
 import common.messagequeue.api.MessageSender;
 import common.messagequeue.jms.JmsMessageConsumer;
 import common.messagequeue.jms.JmsMessageSender;
-import common.persist.EntityManager;
 import common.persist.EntityManagerFactory;
 import feedreader.fetch.FeedLoader;
 import feedreader.messagequeue.RetrieveFeedMessageBuilder;
@@ -89,14 +88,13 @@ public class JmsModule extends AbstractModule {
 			@Override
 			public MessageHandler get() {
 				// have the handler process the received message
-				EntityManager entityManager = entityManagerFactory.get();
 				Provider<FeedLoader> feedLoaderProvider = new Provider<FeedLoader>() {
 					@Override
 					public FeedLoader get() {
 						return new FeedLoader();
 					}
 				};
-				return new RetrieveFeedMessageHandler(entityManager, feedLoaderProvider, dataSource, feedEntityHandler, feedItemEntityHandler, feedRequestEntityHandler, subscriptionEntityHandler);
+				return new RetrieveFeedMessageHandler(feedLoaderProvider, dataSource, feedEntityHandler, feedItemEntityHandler, feedRequestEntityHandler, subscriptionEntityHandler);
 			}
 		});
 		

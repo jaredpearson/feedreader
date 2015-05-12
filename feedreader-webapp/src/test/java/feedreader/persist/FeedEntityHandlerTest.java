@@ -1,12 +1,14 @@
 package feedreader.persist;
 
 import static org.junit.Assert.*;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Random;
 
 import org.junit.Test;
 
@@ -24,6 +26,25 @@ public class FeedEntityHandlerTest extends DatabaseTest {
 			
 			final FeedEntityHandler handler = new FeedEntityHandler(new FeedItemEntityHandler());
 			final Feed feed = handler.findFeedAndFeedItemsByFeedId(cnn, feedId);
+			
+			assertNotNull("Expected the feed to be loaded since it exists in the database", feed);
+			assertEquals("Expected the feed to coorespond to the ID specified", Integer.valueOf(feedId), feed.getId());
+			assertEquals("Expected 1 feed item to be loaded", 1, feed.getItems().size());
+		} finally {
+			DbUtils.close(cnn);
+		}
+	}
+
+	@Test
+	public void testFindFeedAndFeedItemsByUrl() throws SQLException {
+		final Connection cnn = getConnection();
+		try {
+			final String url = "http://test.com/test" + (new Random().nextInt()) + ".xml";
+			final int feedId = insertTestFeed(cnn, url);
+			insertTestFeedItem(cnn, feedId);
+			
+			final FeedEntityHandler handler = new FeedEntityHandler(new FeedItemEntityHandler());
+			final Feed feed = handler.findFeedAndFeedItemsByUrl(cnn, url);
 			
 			assertNotNull("Expected the feed to be loaded since it exists in the database", feed);
 			assertEquals("Expected the feed to coorespond to the ID specified", Integer.valueOf(feedId), feed.getId());

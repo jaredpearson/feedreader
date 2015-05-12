@@ -8,9 +8,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
+import com.google.common.base.Preconditions;
 
 import common.persist.DbUtils;
 import common.persist.EntityManager;
@@ -46,8 +49,12 @@ public class FeedEntityHandler implements EntityHandler {
 	public FeedEntityHandler(FeedItemEntityHandler feedItemEntityHandler) {
 		this.feedItemEntityHandler = feedItemEntityHandler;
 	}
-	
+
+	/**
+	 * Finds the feed that corresponds to the specified ID. If no feed matches, then a null reference is returned.
+	 */
 	public @Nullable Feed findFeedAndFeedItemsByFeedId(final Connection cnn, final int feedId) throws SQLException {
+		Preconditions.checkArgument(cnn != null, "cnn should not be null");
 		Feed feed = null;
 		
 		final PreparedStatement stmt = cnn.prepareStatement(SELECT_SQL_FRAGMENT + "where f.id = ? limit 1");
@@ -59,7 +66,7 @@ public class FeedEntityHandler implements EntityHandler {
 				if(rst.next()) {
 					feed = ROW_MAPPER.mapRow(rst);
 					
-					//load the related feed itemsR
+					//load the related feed items
 					List<FeedItem> feedItems = feedItemEntityHandler.getFeedItemsForFeed(cnn, feed.getId());
 					feed.setItems(feedItems);
 				}
@@ -71,6 +78,39 @@ public class FeedEntityHandler implements EntityHandler {
 		} finally {
 			DbUtils.close(stmt);
 		}
+		return feed;
+	}
+
+	/**
+	 * Finds the feed that corresponds to the specified URL. If no feed matches, then a null reference is returned.
+	 */
+	public @Nullable Feed findFeedAndFeedItemsByUrl(@Nonnull final Connection cnn, @Nonnull final String url) throws SQLException {
+		Preconditions.checkArgument(cnn != null, "cnn should not be null");
+		Preconditions.checkArgument(url != null && !url.isEmpty(), "url should not be null");
+		Feed feed = null;
+		
+		final PreparedStatement stmt = cnn.prepareStatement(SELECT_SQL_FRAGMENT + "where lower(f.url) = lower(?) limit 1");
+		try {
+			stmt.setString(1, url);
+			
+			final ResultSet rst = stmt.executeQuery();
+			try {
+				
+				if (rst.next()) {
+					feed = ROW_MAPPER.mapRow(rst);
+
+					//load the related feed items
+					List<FeedItem> feedItems = feedItemEntityHandler.getFeedItemsForFeed(cnn, feed.getId());
+					feed.setItems(feedItems);
+				}
+				
+			} finally {
+				DbUtils.close(rst);
+			}
+		} finally {
+			DbUtils.close(stmt);
+		}
+		
 		return feed;
 	}
 	
@@ -131,37 +171,15 @@ public class FeedEntityHandler implements EntityHandler {
 	 * Attempts to find the Feed with the specified URL.
 	 */
 	private Feed findFeedByUrl(EntityManager.QueryContext queryContext, String url) throws SQLException {
-		Feed feed = null;
-		Connection cnn = null;
+		
+		Connection cnn = queryContext.getConnection();
 		try {
-			cnn = queryContext.getConnection();
 			
-			PreparedStatement stmt = null;
-			try {
-				stmt = cnn.prepareStatement(SELECT_SQL_FRAGMENT
-						+ "where lower(f.url) = lower(?) "
-						+ "limit 1");
-				stmt.setString(1, url);
-				
-				ResultSet rst = null;
-				try {
-					rst = stmt.executeQuery();
-					while(rst.next()) {
-						feed = ROW_MAPPER.mapRow(rst);
-					}
-					
-				} finally {
-					DbUtils.close(rst);
-				}
-			} finally {
-				DbUtils.close(stmt);
-			}
+			return findFeedAndFeedItemsByUrl(cnn, url);
 			
 		} finally {
 			queryContext.releaseConnection(cnn);
 		}
-		
-		return feed;
 	}
 	
 	private java.sql.Date toSqlDate(java.util.Date value) {
