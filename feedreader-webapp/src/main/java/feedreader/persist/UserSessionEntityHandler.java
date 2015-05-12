@@ -6,6 +6,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import com.google.common.base.Preconditions;
 
 import common.persist.DbUtils;
@@ -22,45 +25,52 @@ public class UserSessionEntityHandler implements EntityHandler {
 		throw new UnsupportedOperationException();
 	}
 	
+	/**
+	 * Gets the user session with the given session ID. If no session exists, then a null reference is returned.
+	 * @return the session with the session ID or null if not found
+	 */
+	public @Nullable UserSession findUserSessionById(@Nonnull Connection cnn, int sessionId) throws SQLException {
+		Preconditions.checkArgument(cnn != null, "cnn should not be null");
+		UserSession session = null;
+		
+		final PreparedStatement stmt = cnn.prepareStatement("select s.id sessionId, s.created, u.id userId, u.email from feedreader.UserSessions s inner join feedreader.Users u on s.userId = u.id where s.id = ? limit 1");
+		try {
+			stmt.setInt(1, sessionId);
+			
+			final ResultSet rst = stmt.executeQuery();
+			try {
+				
+				if (rst.next()) {
+					session = new UserSession();
+					session.setId(rst.getInt("sessionId"));
+					session.setCreated(rst.getDate("created"));
+					
+					User user = new User();
+					user.setId(rst.getInt("userId"));
+					user.setEmail(rst.getString("email"));
+					session.setUser(user);
+				}
+				
+			} finally {
+				DbUtils.close(rst);
+			}
+		} finally {
+			DbUtils.close(stmt);
+		}
+		
+		return session;
+	}
+	
 	@Override
 	public Object get(EntityManager.QueryContext queryContext, Object id) throws SQLException {
-		UserSession session = null;
-		int sessionId = (Integer)id;
-		Connection cnn = null;
+		final int sessionId = (Integer)id;
+		final Connection cnn = queryContext.getConnection();
 		try {
-			cnn = queryContext.getConnection();
-			
-			PreparedStatement stmt = null;
-			try {
-				stmt = cnn.prepareStatement("select s.id sessionId, s.created, u.id userId, u.email from feedreader.UserSessions s inner join feedreader.Users u on s.userId = u.id where s.id = ? limit 1");
-				stmt.setInt(1, sessionId);
-				
-				ResultSet rst = null;
-				try {
-					rst = stmt.executeQuery();
-					while(rst.next()) {
-						session = new UserSession();
-						session.setId(rst.getInt("sessionId"));
-						session.setCreated(rst.getDate("created"));
-						
-						User user = new User();
-						user.setId(rst.getInt("userId"));
-						user.setEmail(rst.getString("email"));
-						session.setUser(user);
-					}
-					
-				} finally {
-					DbUtils.close(rst);
-				}
-			} finally {
-				DbUtils.close(stmt);
-			}
-			
+			return findUserSessionById(cnn, sessionId);
 		} finally {
 			queryContext.releaseConnection(cnn);
 		}
 		
-		return session;
 	}
 	
 	/**

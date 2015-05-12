@@ -1,6 +1,8 @@
 package feedreader.web;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -13,10 +15,10 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.sql.DataSource;
 
-import common.persist.EntityManager;
-import common.persist.EntityManagerFactory;
 import feedreader.UserSession;
+import feedreader.persist.UserSessionEntityHandler;
 
 /**
  * Filter for checking if a web request is authorized.
@@ -25,11 +27,17 @@ import feedreader.UserSession;
 @Singleton
 public class AuthorizationFilter implements Filter {
 	public static final String SESSION_ID_COOKIE_NAME = "sid";
-	private EntityManagerFactory entityManagerFactory;
+	private DataSource dataSource;
+	private UserSessionEntityHandler userSessionEntityHandler;
 	
 	@Inject
-	public void setEntityManagerProvider(EntityManagerFactory entityManagerFactory) {
-		this.entityManagerFactory = entityManagerFactory;
+	public void setDataSource(DataSource dataSource) {
+		this.dataSource = dataSource;
+	}
+	
+	@Inject
+	public void setUserSessionEntityHandler(UserSessionEntityHandler userSessionEntityHandler) {
+		this.userSessionEntityHandler = userSessionEntityHandler;
 	}
 	
 	@Override
@@ -38,25 +46,33 @@ public class AuthorizationFilter implements Filter {
 		HttpServletRequest httpRequest = (HttpServletRequest)request;
 		HttpServletResponse httpResponse = (HttpServletResponse)response;
 		
-		EntityManager entityManager = entityManagerFactory.get();
-		
-		//attempt to get the session ID from cookie
-		int sessionId = getSessionId(httpRequest);
-		if(sessionId == -1) {
-			httpResponse.sendError(401);
-			return;
+		try {
+			final Connection cnn = dataSource.getConnection();
+			try {
+				
+				//attempt to get the session ID from cookie
+				int sessionId = getSessionId(httpRequest);
+				if(sessionId == -1) {
+					httpResponse.sendError(401);
+					return;
+				}
+				
+				//load the session to see if it is still active
+				UserSession userSession = userSessionEntityHandler.findUserSessionById(cnn, sessionId);
+				if(userSession.isExpired()) {
+					httpResponse.sendError(401);
+					return;
+				}
+				
+				httpRequest.setAttribute("feedreader.UserSession", userSession);
+				
+				chain.doFilter(httpRequest, httpResponse);
+			} finally {
+				cnn.close();
+			}
+		} catch(SQLException exc) {
+			throw new ServletException(exc);
 		}
-		
-		//load the session to see if it is still active
-		UserSession userSession = entityManager.get(UserSession.class, sessionId);
-		if(userSession.isExpired()) {
-			httpResponse.sendError(401);
-			return;
-		}
-		
-		httpRequest.setAttribute("feedreader.UserSession", userSession);
-		
-		chain.doFilter(httpRequest, httpResponse);
 	}
 	
 	@Override
