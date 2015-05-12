@@ -10,19 +10,26 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Random;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import common.persist.DbUtils;
 import feedreader.Feed;
 
-public class FeedEntityHandlerTest extends DatabaseTest {
+public class FeedEntityHandlerTest {
+	private DatabaseTestUtils databaseTestUtils;
+	
+	@Before
+	public void setup() {
+		this.databaseTestUtils = new DatabaseTestUtils();
+	}
 	
 	@Test
 	public void testFindFeedAndFeedItemsByFeedId() throws SQLException {
-		final Connection cnn = getConnection();
+		final Connection cnn = databaseTestUtils.getConnection();
 		try {
-			final int feedId = ensureTestFeed(cnn);
-			insertTestFeedItem(cnn, feedId);
+			final int feedId = databaseTestUtils.ensureTestFeed(cnn);
+			databaseTestUtils.insertTestFeedItem(cnn, feedId);
 			
 			final FeedEntityHandler handler = new FeedEntityHandler(new FeedItemEntityHandler());
 			final Feed feed = handler.findFeedAndFeedItemsByFeedId(cnn, feedId);
@@ -37,11 +44,11 @@ public class FeedEntityHandlerTest extends DatabaseTest {
 
 	@Test
 	public void testFindFeedAndFeedItemsByUrl() throws SQLException {
-		final Connection cnn = getConnection();
+		final Connection cnn = databaseTestUtils.getConnection();
 		try {
 			final String url = "http://test.com/test" + (new Random().nextInt()) + ".xml";
-			final int feedId = insertTestFeed(cnn, url);
-			insertTestFeedItem(cnn, feedId);
+			final int feedId = databaseTestUtils.insertTestFeed(cnn, url);
+			databaseTestUtils.insertTestFeedItem(cnn, feedId);
 			
 			final FeedEntityHandler handler = new FeedEntityHandler(new FeedItemEntityHandler());
 			final Feed feed = handler.findFeedAndFeedItemsByUrl(cnn, url);
@@ -56,9 +63,9 @@ public class FeedEntityHandlerTest extends DatabaseTest {
 	
 	@Test
 	public void testInsert() throws SQLException {
-		Connection cnn = getConnection();
+		final Connection cnn = databaseTestUtils.getConnection();
 		try {
-			final int testUserId = ensureTestUser(cnn);
+			final int testUserId = databaseTestUtils.ensureTestUser(cnn);
 			final String title = "Test Feed";
 			final String url = "http://test.com/test.xml";
 			final Date lastUpdated = new Date();

@@ -7,20 +7,27 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import common.persist.DbUtils;
 import feedreader.FeedRequest;
 import feedreader.FeedRequestStatus;
 
-public class FeedRequestEntityHandlerTest extends DatabaseTest {
+public class FeedRequestEntityHandlerTest {
+	private DatabaseTestUtils databaseTestUtils;
+	
+	@Before
+	public void setup() {
+		this.databaseTestUtils = new DatabaseTestUtils();
+	}
 	
 	@Test
 	public void testFindFeedRequestById() throws SQLException {
-		Connection cnn = getConnection();
+		final Connection cnn = databaseTestUtils.getConnection();
 		try {
 			final String url = "http://cyber.law.harvard.edu/rss/examples/rss2sample.xml";
-			final int createdByUserId = ensureTestUser(cnn);
+			final int createdByUserId = databaseTestUtils.ensureTestUser(cnn);
 			final int requestId = insertFeedRequest(cnn, url, createdByUserId);
 			
 			final FeedRequestEntityHandler handler = new FeedRequestEntityHandler();
@@ -36,10 +43,10 @@ public class FeedRequestEntityHandlerTest extends DatabaseTest {
 
 	@Test
 	public void testUpdateRequestStatus() throws SQLException {
-		Connection cnn = getConnection();
+		final Connection cnn = databaseTestUtils.getConnection();
 		try {
 			final String url = "http://cyber.law.harvard.edu/rss/examples/rss2sample.xml";
-			final int createdByUserId = ensureTestUser(cnn);
+			final int createdByUserId = databaseTestUtils.ensureTestUser(cnn);
 			final int requestId = insertFeedRequest(cnn, url, createdByUserId);
 			
 			final FeedRequestEntityHandler handler = new FeedRequestEntityHandler();
@@ -56,12 +63,12 @@ public class FeedRequestEntityHandlerTest extends DatabaseTest {
 	
 	@Test
 	public void testUpdateRequestFeedAndStatus() throws SQLException {
-		Connection cnn = getConnection();
+		final Connection cnn = databaseTestUtils.getConnection();
 		try {
 			final String url = "http://cyber.law.harvard.edu/rss/examples/rss2sample.xml";
-			final int createdByUserId = ensureTestUser(cnn);
+			final int createdByUserId = databaseTestUtils.ensureTestUser(cnn);
 			final int requestId = insertFeedRequest(cnn, url, createdByUserId);
-			final int feedId = ensureTestFeed(cnn);
+			final int feedId = databaseTestUtils.ensureTestFeed(cnn);
 			
 			final FeedRequestEntityHandler handler = new FeedRequestEntityHandler();
 			final boolean result = handler.updateRequestFeedAndStatus(cnn, requestId, feedId, FeedRequestStatus.FINISHED);

@@ -8,6 +8,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.Sets;
@@ -15,14 +16,20 @@ import com.google.common.collect.Sets;
 import common.persist.DbUtils;
 import feedreader.UserFeedItemContext;
 
-public class UserFeedItemContextEntityHandlerTest extends DatabaseTest {
+public class UserFeedItemContextEntityHandlerTest {
+	private DatabaseTestUtils databaseTestUtils;
+	
+	@Before
+	public void setup() {
+		this.databaseTestUtils = new DatabaseTestUtils();
+	}
 	
 	@Test
-	public void testInsert() throws SQLException {
-		Connection cnn = getConnection();
+	public void testInsert() throws Exception {
+		final Connection cnn = databaseTestUtils.getConnection();
 		try {
-			int ownerId = ensureTestUser(cnn);
-			int feedItemId = ensureTestFeedItem(cnn);
+			final int ownerId = databaseTestUtils.ensureTestUser(cnn);
+			final int feedItemId = databaseTestUtils.ensureTestFeedItem(cnn);
 			
 			//insert the entity
 			final UserFeedItemContextEntityHandler handler = new UserFeedItemContextEntityHandler();
@@ -36,12 +43,12 @@ public class UserFeedItemContextEntityHandlerTest extends DatabaseTest {
 
 	@Test
 	public void testUpdate() throws SQLException {
-		Connection cnn = getConnection();
+		final Connection cnn = databaseTestUtils.getConnection();
 		try {
 			
-			final int ownerId = ensureTestUser(cnn);
-			final int feedItemId = ensureTestFeedItem(cnn);
-			final int contextId = ensureTestUserFeedItemContext(cnn);
+			final int ownerId = databaseTestUtils.ensureTestUser(cnn);
+			final int feedItemId = databaseTestUtils.ensureTestFeedItem(cnn);
+			final int contextId = databaseTestUtils.ensureTestUserFeedItemContext(cnn);
 			final boolean readValueBeforeUpdate = getReadValue(cnn, contextId);
 			
 			//update the entity
@@ -56,12 +63,12 @@ public class UserFeedItemContextEntityHandlerTest extends DatabaseTest {
 	
 	@Test
 	public void testLoadReadStatus() throws Exception {
-		final Connection cnn = getConnection();
+		final Connection cnn = databaseTestUtils.getConnection();
 		try {
 			
-			final int ownerId = ensureTestUser(cnn);
-			final int feedItemId = ensureTestFeedItem(cnn);
-			final int contextId = ensureTestUserFeedItemContext(cnn);
+			final int ownerId = databaseTestUtils.ensureTestUser(cnn);
+			final int feedItemId = databaseTestUtils.ensureTestFeedItem(cnn);
+			final int contextId = databaseTestUtils.ensureTestUserFeedItemContext(cnn);
 			final boolean readValue = getReadValue(cnn, contextId);
 			
 			//update the entity
@@ -76,11 +83,11 @@ public class UserFeedItemContextEntityHandlerTest extends DatabaseTest {
 	
 	@Test
 	public void testGetFeedItemsForUserFeedWithNoContexts() throws Exception {
-		final Connection cnn = getConnection();
+		final Connection cnn = databaseTestUtils.getConnection();
 		try {
 			
-			final int userId = ensureTestUser(cnn);
-			final int feedId = ensureTestFeed(cnn);
+			final int userId = databaseTestUtils.ensureTestUser(cnn);
+			final int feedId = databaseTestUtils.ensureTestFeed(cnn);
 			
 			//update the entity
 			final UserFeedItemContextEntityHandler handler = new UserFeedItemContextEntityHandler();
@@ -96,12 +103,12 @@ public class UserFeedItemContextEntityHandlerTest extends DatabaseTest {
 	
 	@Test
 	public void testGetFeedItemsForUserFeedWithContext() throws Exception {
-		final Connection cnn = getConnection();
+		final Connection cnn = databaseTestUtils.getConnection();
 		try {
 			
-			final int userId = ensureTestUser(cnn);
-			final int feedId = ensureTestFeed(cnn);
-			final int feedItemContextId = ensureTestUserFeedItemContext(cnn);
+			final int userId = databaseTestUtils.ensureTestUser(cnn);
+			final int feedId = databaseTestUtils.ensureTestFeed(cnn);
+			final int feedItemContextId = databaseTestUtils.ensureTestUserFeedItemContext(cnn);
 			
 			//update the entity
 			final UserFeedItemContextEntityHandler handler = new UserFeedItemContextEntityHandler();
@@ -117,11 +124,11 @@ public class UserFeedItemContextEntityHandlerTest extends DatabaseTest {
 	
 	@Test
 	public void testGetUserFeedItemsForFeedItemsWithNoContext() throws Exception {
-		final Connection cnn = getConnection();
+		final Connection cnn = databaseTestUtils.getConnection();
 		try {
 			
-			final int userId = ensureTestUser(cnn);
-			final int feedItemId = ensureTestFeedItem(cnn);
+			final int userId = databaseTestUtils.ensureTestUser(cnn);
+			final int feedItemId = databaseTestUtils.ensureTestFeedItem(cnn);
 			
 			//update the entity
 			final UserFeedItemContextEntityHandler handler = new UserFeedItemContextEntityHandler();
@@ -136,12 +143,12 @@ public class UserFeedItemContextEntityHandlerTest extends DatabaseTest {
 
 	@Test
 	public void testGetUserFeedItemsForFeedItemsWithContext() throws Exception {
-		final Connection cnn = getConnection();
+		final Connection cnn = databaseTestUtils.getConnection();
 		try {
 			
-			final int userId = ensureTestUser(cnn);
-			final int feedItemId = ensureTestFeedItem(cnn);
-			final int feedItemContextId = insertTestUserFeedItemContext(cnn, feedItemId);
+			final int userId = databaseTestUtils.ensureTestUser(cnn);
+			final int feedItemId = databaseTestUtils.ensureTestFeedItem(cnn);
+			final int feedItemContextId = databaseTestUtils.insertTestUserFeedItemContext(cnn, feedItemId);
 			
 			//update the entity
 			final UserFeedItemContextEntityHandler handler = new UserFeedItemContextEntityHandler();

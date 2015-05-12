@@ -11,11 +11,10 @@ import javax.sql.DataSource;
 import org.postgresql.ds.PGSimpleDataSource;
 
 import com.google.common.base.Preconditions;
-
 import common.persist.ConnectionHandler;
 import common.persist.DbUtils;
 
-public class DatabaseTest {
+public class DatabaseTestUtils {
 	private DataSource dataSource;
 	private Integer testUserId;
 	private Integer testFeedId;

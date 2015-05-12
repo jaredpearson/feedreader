@@ -8,19 +8,26 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import common.persist.DbUtils;
 import feedreader.FeedItem;
 
-public class FeedItemEntityHandlerTest extends DatabaseTest {
-
+public class FeedItemEntityHandlerTest {
+	private DatabaseTestUtils databaseTestUtils;
+	
+	@Before
+	public void setup() {
+		this.databaseTestUtils = new DatabaseTestUtils();
+	}
+	
 	@Test
 	public void testGetFeedItemsForFeed() throws Exception {
-		final Connection cnn = getConnection();
+		final Connection cnn = databaseTestUtils.getConnection();
 		try {
-			final int feedId = ensureTestFeed(cnn);
-			final int feedItemId = insertTestFeedItem(cnn, feedId);
+			final int feedId = databaseTestUtils.ensureTestFeed(cnn);
+			final int feedItemId = databaseTestUtils.insertTestFeedItem(cnn, feedId);
 			
 			final FeedItemEntityHandler handler = new FeedItemEntityHandler();
 			final List<FeedItem> feedItems = handler.getFeedItemsForFeed(cnn, feedId);
@@ -35,9 +42,9 @@ public class FeedItemEntityHandlerTest extends DatabaseTest {
 	
 	@Test
 	public void testInsert() throws SQLException {
-		final Connection cnn = getConnection();
+		final Connection cnn = databaseTestUtils.getConnection();
 		try {
-			final int feedId = ensureTestFeed(cnn);
+			final int feedId = databaseTestUtils.ensureTestFeed(cnn);
 			
 			final FeedItemEntityHandler handler = new FeedItemEntityHandler();
 			final int feedItemId = handler.insert(cnn, feedId, null, null, null, null, null);

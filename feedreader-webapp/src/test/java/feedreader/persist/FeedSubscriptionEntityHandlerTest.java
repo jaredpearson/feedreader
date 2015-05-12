@@ -7,16 +7,23 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.junit.Before;
 import org.junit.Test;
 
-public class FeedSubscriptionEntityHandlerTest extends DatabaseTest {
+public class FeedSubscriptionEntityHandlerTest {
+	private DatabaseTestUtils databaseTestUtils;
+	
+	@Before
+	public void setup() {
+		this.databaseTestUtils = new DatabaseTestUtils();
+	}
 	
 	@Test
 	public void testInsert() throws Exception {
-		final Connection cnn = getConnection();
+		final Connection cnn = databaseTestUtils.getConnection();
 		try {
-			final int userId = ensureTestUser(cnn);
-			final int feedId = ensureTestFeed(cnn);
+			final int userId = databaseTestUtils.ensureTestUser(cnn);
+			final int feedId = databaseTestUtils.ensureTestFeed(cnn);
 			
 			final FeedSubscriptionEntityHandler handler = new FeedSubscriptionEntityHandler();
 			final int subscriptionId = handler.insert(cnn, userId, feedId);

@@ -7,6 +7,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.base.Preconditions;
@@ -14,13 +15,19 @@ import com.google.common.base.Preconditions;
 import common.persist.DbUtils;
 import feedreader.UserSession;
 
-public class UserSessionEntityHandlerTest extends DatabaseTest {
+public class UserSessionEntityHandlerTest {
+	private DatabaseTestUtils databaseTestUtils;
+	
+	@Before
+	public void setup() {
+		this.databaseTestUtils = new DatabaseTestUtils();
+	}
 	
 	@Test
 	public void testFindUserSessionById() throws Exception {
-		final Connection cnn = getConnection();
+		final Connection cnn = databaseTestUtils.getConnection();
 		try {
-			int userId = ensureTestUser(cnn);
+			int userId = databaseTestUtils.ensureTestUser(cnn);
 			int sessionId = insertUserSession(cnn, userId);
 			
 			//insert the entity
@@ -36,9 +43,9 @@ public class UserSessionEntityHandlerTest extends DatabaseTest {
 	
 	@Test
 	public void testInsert() throws Exception {
-		Connection cnn = getConnection();
+		final Connection cnn = databaseTestUtils.getConnection();
 		try {
-			int userId = ensureTestUser(cnn);
+			final int userId = databaseTestUtils.ensureTestUser(cnn);
 			
 			//insert the entity
 			final UserSessionEntityHandler handler = new UserSessionEntityHandler();
@@ -52,15 +59,13 @@ public class UserSessionEntityHandlerTest extends DatabaseTest {
 	
 	private int insertUserSession(Connection cnn, int userId) throws SQLException {
 		Preconditions.checkArgument(cnn != null, "cnn should not be null");
-		PreparedStatement stmt = cnn.prepareStatement("insert into feedreader.UserSessions (userId) values (?) returning id");
+		final PreparedStatement stmt = cnn.prepareStatement("insert into feedreader.UserSessions (userId) values (?) returning id");
 		try {
 			stmt.setInt(1, userId);
 			
 			if(stmt.execute()) {
-				ResultSet rst = null;
+				final ResultSet rst = stmt.getResultSet();
 				try {
-					rst = stmt.getResultSet();
-					
 					if(rst.next()) {
 						return rst.getInt("id");
 					} else {

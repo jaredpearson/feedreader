@@ -6,16 +6,23 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Random;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import common.persist.DbUtils;
 import feedreader.User;
 
-public class UserEntityHandlerTest extends DatabaseTest {
+public class UserEntityHandlerTest {
+	private DatabaseTestUtils databaseTestUtils;
+	
+	@Before
+	public void setup() {
+		this.databaseTestUtils = new DatabaseTestUtils();
+	}
 	
 	@Test
 	public void testInsert() throws Exception {
-		final Connection cnn = getConnection();
+		final Connection cnn = databaseTestUtils.getConnection();
 		try {
 			int recordCountBefore = countUsers(cnn);
 			
@@ -34,10 +41,10 @@ public class UserEntityHandlerTest extends DatabaseTest {
 	
 	@Test
 	public void testLoadById() throws Exception {
-		final Connection cnn = getConnection();
+		final Connection cnn = databaseTestUtils.getConnection();
 		try {
 			//insert a test user into the database
-			int testUserId = insertTestUser(cnn);
+			int testUserId = databaseTestUtils.insertTestUser(cnn);
 			
 			//attempt to load the user using the handler
 			final UserEntityHandler handler = new UserEntityHandler();
@@ -52,7 +59,7 @@ public class UserEntityHandlerTest extends DatabaseTest {
 
 	@Test
 	public void testLoadByIdWithInvalidId() throws Exception {
-		final Connection cnn = getConnection();
+		final Connection cnn = databaseTestUtils.getConnection();
 		try {
 			//attempt to load the user using the handler
 			final UserEntityHandler handler = new UserEntityHandler();
