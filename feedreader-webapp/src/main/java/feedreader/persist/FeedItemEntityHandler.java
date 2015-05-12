@@ -152,21 +152,26 @@ public class FeedItemEntityHandler implements EntityHandler {
 	 * Gets all of the feed items the user is subscribed to.
 	 */
 	public List<FeedItem> getFeedItemsForStream(QueryContext queryContext, int userId, int size, int offset) throws SQLException {
-		List<FeedItem> feedItems = null;
-		Connection cnn = null;
+		Connection cnn = queryContext.getConnection();
 		try {
-			cnn = queryContext.getConnection();
-			
-			//get all of the feed item ids
-			final List<Integer> feedItemIds = getSubscribedFeedItemIds(cnn, userId, size, offset);
-			
-			//get all of the feed items that match
-			feedItems = getFeedItems(cnn, feedItemIds);
-			
+			return getFeedItemsForStream(cnn, userId, size, offset);
 		} finally {
 			DbUtils.close(cnn);
 		}
-		return feedItems;
+	}
+
+	/**
+	 * Gets all of the feed items the user is subscribed to.
+	 */
+	public @Nonnull List<FeedItem> getFeedItemsForStream(@Nonnull Connection cnn, int userId, int size, int offset) throws SQLException {
+		Preconditions.checkArgument(cnn != null, "cnn should not be null");
+
+		//get all of the feed item ids
+		final List<Integer> feedItemIds = getSubscribedFeedItemIds(cnn, userId, size, offset);
+		
+		//get all of the feed items that match
+		return getFeedItems(cnn, feedItemIds);
+		
 	}
 	
 	/**

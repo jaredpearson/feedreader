@@ -18,11 +18,11 @@ import com.google.inject.Provides;
 import com.google.inject.servlet.ServletScopes;
 
 import common.messagequeue.api.MessageSender;
-import common.persist.EntityManagerFactory;
 import feedreader.FeedReader;
 import feedreader.User;
 import feedreader.UserSession;
 import feedreader.persist.FeedEntityHandler;
+import feedreader.persist.FeedItemEntityHandler;
 import feedreader.persist.FeedRequestEntityHandler;
 import feedreader.persist.UserFeedItemContextEntityHandler;
 import feedreader.web.StartupListener;
@@ -100,8 +100,6 @@ class FeedReaderModule extends AbstractModule {
 	}
 	
 	private static final class FeedReaderProvider implements Provider<FeedReader> {
-		@Inject
-		EntityManagerFactory entityManagerFactory;
 		
 		@Inject
 		MessageSender messageSender;
@@ -116,6 +114,9 @@ class FeedReaderModule extends AbstractModule {
 		FeedEntityHandler feedEntityHandler;
 		
 		@Inject
+		FeedItemEntityHandler feedItemEntityHandler;
+		
+		@Inject
 		UserFeedItemContextEntityHandler userFeedItemContextEntityHandler;
 		
 		@Inject
@@ -124,7 +125,7 @@ class FeedReaderModule extends AbstractModule {
 		@Override
 		public FeedReader get() {
 			final User user = userSession.getUser();
-			return new FeedReader(dataSource, entityManagerFactory, user, messageSender, feedEntityHandler, userFeedItemContextEntityHandler, feedRequestEntityHandler);
+			return new FeedReader(dataSource, user, messageSender, feedEntityHandler, feedItemEntityHandler, userFeedItemContextEntityHandler, feedRequestEntityHandler);
 		}
 	}
 }

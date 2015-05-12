@@ -17,9 +17,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import common.messagequeue.api.MessageSender;
-import common.persist.EntityManagerFactory;
 import feedreader.messagequeue.RetrieveFeedMessageBuilder;
 import feedreader.persist.FeedEntityHandler;
+import feedreader.persist.FeedItemEntityHandler;
 import feedreader.persist.FeedRequestEntityHandler;
 import feedreader.persist.UserFeedItemContextEntityHandler;
 
@@ -29,26 +29,26 @@ import feedreader.persist.UserFeedItemContextEntityHandler;
  */
 public class FeedReader {
 	private final DataSource dataSource;
-	private final EntityManagerFactory entityManagerFactory;
 	private final int userId;
 	private final MessageSender messageSender;
 	private final FeedEntityHandler feedEntityHandler;
+	private final FeedItemEntityHandler feedItemEntityHandler;
 	private final UserFeedItemContextEntityHandler userFeedItemContextEntityHandler;
 	private final FeedRequestEntityHandler feedRequestEntityHandler;
 	
 	public FeedReader(
 			DataSource dataSource, 
-			EntityManagerFactory entityManagerFactory, 
 			User user, 
 			MessageSender messageSender,
 			FeedEntityHandler feedEntityHandler,
+			FeedItemEntityHandler feedItemEntityHandler,
 			UserFeedItemContextEntityHandler userFeedItemContextEntityHandler,
 			FeedRequestEntityHandler feedRequestEntityHandler) {
 		this.dataSource = dataSource;
-		this.entityManagerFactory = entityManagerFactory;
 		this.userId = user.getId();
 		this.messageSender = messageSender;
 		this.feedEntityHandler = feedEntityHandler;
+		this.feedItemEntityHandler = feedItemEntityHandler;
 		this.userFeedItemContextEntityHandler = userFeedItemContextEntityHandler;
 		this.feedRequestEntityHandler = feedRequestEntityHandler;
 	}
@@ -84,14 +84,14 @@ public class FeedReader {
 	 * Gets a stream for the current user. A stream is a collection of feed items the user is subscribed to.
 	 */
 	public Stream getStream() {
-		final int offset = 0;
-		final int size = 25;
-		List<FeedItem> feedItems = entityManagerFactory.get().executeNamedQuery(FeedItem.class, "getFeedItemsForStream", userId, size, offset);
-		
-
 		try {
 			final Connection cnn = dataSource.getConnection();
 			try {
+				final int offset = 0;
+				final int size = 25;
+				List<FeedItem> feedItems = feedItemEntityHandler.getFeedItemsForStream(cnn, userId, size, offset);
+		
+
 				//get all of the contexts for the user from the feed items
 				List<UserFeedItemContext> contexts = getFeedContexts(cnn, feedItems);
 				
