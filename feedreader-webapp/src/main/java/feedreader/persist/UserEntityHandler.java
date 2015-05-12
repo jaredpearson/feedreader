@@ -10,6 +10,7 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.inject.Singleton;
 
 import com.google.common.base.Preconditions;
 
@@ -17,6 +18,11 @@ import common.persist.DbUtils;
 import common.persist.EntityManager;
 import feedreader.User;
 
+/**
+ * Entity handler for {@link User} entities
+ * @author jared.pearson
+ */
+@Singleton
 public class UserEntityHandler implements EntityManager.EntityHandler {
 	
 	@Override
@@ -87,38 +93,43 @@ public class UserEntityHandler implements EntityManager.EntityHandler {
 			DbUtils.close(stmt);
 		}
 	}
+
+	/**
+	 * Finds the user with the specified email. If no user has that email then a null reference is returned.
+	 * @return the user with the specified email or null if not found
+	 */
+	public @Nullable User findUserByEmail(@Nonnull Connection cnn, @Nonnull String email) throws SQLException {
+		Preconditions.checkArgument(cnn != null, "cnn should not be empty");
+		Preconditions.checkArgument(email != null && !email.isEmpty(), "email should not be empty");
+		final PreparedStatement stmt = cnn.prepareStatement("select id, email from feedreader.Users where email = ? limit 1");
+		try {
+			stmt.setString(1, email);
+			
+			final ResultSet rst = stmt.executeQuery();
+			try {
+				
+				if(rst.next()) {
+					return createUser(rst);
+				} else {
+					return null;
+				}
+				
+			} finally {
+				DbUtils.close(rst);
+			}
+		} finally {
+			DbUtils.close(stmt);
+		}
+		
+	}
 	
 	private User getUserByEmail(EntityManager.QueryContext queryContext, String email) throws SQLException {
-		User user = null;
-		Connection cnn = null;
+		Connection cnn = queryContext.getConnection();
 		try {
-			cnn = queryContext.getConnection();
-			
-			PreparedStatement stmt = null;
-			try {
-				stmt = cnn.prepareStatement("select id, email from feedreader.Users where email = ? limit 1");
-				stmt.setString(1, email);
-				
-				ResultSet rst = null;
-				try {
-					rst = stmt.executeQuery();
-					
-					if(rst.next()) {
-						user = createUser(rst);
-					}
-					
-				} finally {
-					DbUtils.close(rst);
-				}
-			} finally {
-				DbUtils.close(stmt);
-			}
-			
+			return findUserByEmail(cnn, email);
 		} finally {
 			queryContext.releaseConnection(cnn);
 		}
-		
-		return user;
 	}
 	
 	private User createUser(ResultSet rst) throws SQLException {
