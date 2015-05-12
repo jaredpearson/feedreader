@@ -85,6 +85,14 @@ public class FeedEntityHandler implements EntityHandler {
 	 * Finds the feed that corresponds to the specified URL. If no feed matches, then a null reference is returned.
 	 */
 	public @Nullable Feed findFeedAndFeedItemsByUrl(@Nonnull final Connection cnn, @Nonnull final String url) throws SQLException {
+		return findFeedAndFeedItemsByUrl(cnn, url, null);
+	}
+	
+	/**
+	 * Finds the feed that corresponds to the specified URL. If no feed matches, then a null reference is returned.
+	 * @param feedItemLimit the max number of feed items to retrieve. set to null to retrieve all of the feed items 
+	 */
+	public @Nullable Feed findFeedAndFeedItemsByUrl(@Nonnull final Connection cnn, @Nonnull final String url, @Nullable final Integer feedItemLimit) throws SQLException {
 		Preconditions.checkArgument(cnn != null, "cnn should not be null");
 		Preconditions.checkArgument(url != null && !url.isEmpty(), "url should not be null");
 		Feed feed = null;
@@ -100,7 +108,7 @@ public class FeedEntityHandler implements EntityHandler {
 					feed = ROW_MAPPER.mapRow(rst);
 
 					//load the related feed items
-					List<FeedItem> feedItems = feedItemEntityHandler.getFeedItemsForFeed(cnn, feed.getId());
+					List<FeedItem> feedItems = feedItemEntityHandler.getFeedItemsForFeed(cnn, feed.getId(), feedItemLimit);
 					feed.setItems(feedItems);
 				}
 				

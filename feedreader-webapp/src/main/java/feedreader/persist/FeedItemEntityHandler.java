@@ -5,8 +5,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import com.google.common.base.Preconditions;
 
@@ -96,10 +100,22 @@ public class FeedItemEntityHandler implements EntityHandler {
 	 * Gets the feed items for the specified feed ID.
 	 * @return the feed items for the specified feed ID.
 	 */
-	public List<FeedItem> getFeedItemsForFeed(Connection cnn, int feedId) throws SQLException {
+	public @Nonnull List<FeedItem> getFeedItemsForFeed(Connection cnn, int feedId) throws SQLException {
+		return getFeedItemsForFeed(cnn, feedId, null);
+	}
+	
+	/**
+	 * Gets the feed items for the specified feed ID.
+	 * @return the feed items for the specified feed ID.
+	 */
+	public @Nonnull List<FeedItem> getFeedItemsForFeed(Connection cnn, int feedId, @Nullable Integer limit) throws SQLException {
 		Preconditions.checkArgument(cnn != null, "cnn should not be null");
+		if (limit != null && limit < 1) {
+			return Collections.emptyList();
+		}
+		
 		final List<FeedItem> feedItems = new ArrayList<FeedItem>();
-		final PreparedStatement stmt = cnn.prepareStatement(SELECT_SQL_FRAGMENT + "where if.id = ? ");
+		final PreparedStatement stmt = cnn.prepareStatement(SELECT_SQL_FRAGMENT + "where if.id = ? " + (limit != null ? " limit " + limit : ""));
 		try {
 			stmt.setInt(1, feedId);
 			

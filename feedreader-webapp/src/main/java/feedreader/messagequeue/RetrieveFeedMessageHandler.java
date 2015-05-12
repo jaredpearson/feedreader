@@ -78,7 +78,7 @@ public class RetrieveFeedMessageHandler implements MessageHandler {
 				
 				//check to see if the URL has already been retrieved. if so, create a subscription for the user
 				//otherwise, let's go out and request the feed
-				final Feed matchingFeed = feedEntityHandler.findFeedAndFeedItemsByUrl(cnn, feedRequest.getUrl());
+				final Feed matchingFeed = feedEntityHandler.findFeedAndFeedItemsByUrl(cnn, feedRequest.getUrl(), 0);
 				if(matchingFeed != null) {
 					subscribe(cnn, matchingFeed.getId(), feedRequest.getCreatedById());
 					finalizeRequest(cnn, feedRequest.getId(), matchingFeed.getId());
