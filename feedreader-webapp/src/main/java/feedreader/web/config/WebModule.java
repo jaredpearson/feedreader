@@ -9,6 +9,7 @@ import feedreader.web.AuthorizationFilter;
 import feedreader.web.CreateUserServlet;
 import feedreader.web.HomeServlet;
 import feedreader.web.ReaderServlet;
+import feedreader.web.RssSampleServlet;
 import feedreader.web.SignInServlet;
 import feedreader.web.rest.FeedResourceHandler;
 import feedreader.web.rest.FeedSubscriptionResourceHandler;
@@ -43,6 +44,8 @@ class WebModule extends ServletModule {
 		
 		bind(ReaderServlet.class).in(Scopes.SINGLETON);
 		serve("/reader").with(ReaderServlet.class);
+		
+		serve("/rssSamples/*").with(RssSampleServlet.class);
 		
 		//configure the rest servlet
 		filter("/services/*", "/services").through(RestAuthorizationFilter.class);
