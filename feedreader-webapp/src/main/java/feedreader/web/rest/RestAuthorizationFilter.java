@@ -17,10 +17,10 @@ public class RestAuthorizationFilter extends AuthorizationFilter {
 	protected int getSessionId(HttpServletRequest httpRequest) throws ServletException {
 		String authorizationHeader = httpRequest.getHeader("Authorization");
 		if(authorizationHeader == null) {
-			throw new ServletException("Authorization header must be specified");
+			return -1;
 		}
 		if(!authorizationHeader.startsWith(AUTH_HEADER_STARTS_WITH)) {
-			throw new ServletException("Unsupported Authorization type specified");
+			return -1;
 		}
 		String sidValue = authorizationHeader.substring(AUTH_HEADER_STARTS_WITH.length());
 		
