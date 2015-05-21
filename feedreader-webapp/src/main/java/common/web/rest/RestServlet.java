@@ -90,7 +90,7 @@ public class RestServlet extends HttpServlet {
 			}
 		}
 		
-		throw new IllegalStateException("No mapping specified for request");
+		throw new IllegalStateException("No mapping specified for request: " + request.getRequestURL());
 	}
 	
 	private static class RequestHandlerMapping {
