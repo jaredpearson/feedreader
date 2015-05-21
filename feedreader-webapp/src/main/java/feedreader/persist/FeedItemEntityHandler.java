@@ -60,13 +60,12 @@ public class FeedItemEntityHandler {
 			stmt.setString(2, title);
 			stmt.setString(3, description);
 			stmt.setString(4, link);
-			DbUtils.setDate(stmt, 5, pubDate);
+			DbUtils.setTimestamp(stmt, 5, pubDate);
 			stmt.setString(6, guid);
 			
 			if (stmt.execute()) {
-				ResultSet rst = null;
+				final ResultSet rst = stmt.getResultSet();
 				try {
-					rst = stmt.getResultSet();
 					if (rst.next()) {
 						return rst.getInt("id");
 					} else {

@@ -6,6 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.sql.Types;
 
 import javax.sql.DataSource;
@@ -123,6 +124,14 @@ public class DbUtils {
 			stmt.setNull(index, Types.DATE);
 		} else {
 			stmt.setDate(index, new java.sql.Date(date.getTime()));
+		}
+	}
+	
+	public static void setTimestamp(PreparedStatement stmt, int index, java.util.Date date) throws SQLException {
+		if (date == null) {
+			stmt.setNull(index, Types.TIMESTAMP);
+		} else {
+			stmt.setTimestamp(index, new Timestamp(date.getTime()));
 		}
 	}
 }
