@@ -148,7 +148,7 @@ public class FeedItemEntityHandler {
 			stmt = cnn.prepareStatement("select fi.id feedItemId "
 					+ "from feedreader.FeedSubscriptions fs inner join feedreader.FeedItems fi on fs.feedId = fi.feedId "
 					+ "where fs.subscriber = ? "
-					+ "order by fi.created desc limit " + size + " offset " + offset);
+					+ "order by fi.pubDate desc limit " + size + " offset " + offset);
 			stmt.setInt(1, userId);
 			
 			ResultSet rst = null;
