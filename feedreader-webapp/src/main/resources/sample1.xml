@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<rss version="2.0">
+   <channel>
+      <title>Sample 1</title>
+      <link>http://example.com/</link>
+      <description>Sample 1 RSS Feed</description>
+      <language>en-us</language>
+      <pubDate>Thu, 21 May 2015 09:19:23 GMT</pubDate>
+      <lastBuildDate>Thu, 21 May 2015 09:19:23 GMT</lastBuildDate>
+      <docs>http://example.com/rss</docs>
+      <generator>Handwritten</generator>
+      <managingEditor>editor@example.com</managingEditor>
+      <webMaster>webmaster@example.com</webMaster>
+      <item>
+         <title>Sample 1 Item 4</title>
+         <link>http://example.com/news/1/4</link>
+         <description>Sample 1 Item 4 Description</description>
+         <pubDate>Thu, 21 May 2015 07:19:42 GMT</pubDate>
+         <guid>http://example.com/news/1/4</guid>
+      </item>
+      <item>
+         <description>Sample 1 Item 3 Description</description>
+         <pubDate>Wed, 20 May 2015 11:39:50 GMT</pubDate>
+         <guid>http://example.com/news/1/3</guid>
+      </item>
+      <item>
+         <title>Sample 1 Item 2</title>
+         <link>http://example.com/news/1/2</link>
+         <description>Sample 1 Item 2 Description</description>
+         <pubDate>Tue, 19 May 2015 23:29:42 GMT</pubDate>
+         <guid>http://example.com/news/1/2</guid>
+      </item>
+      <item>
+         <title>Sample 1 Item 1</title>
+         <link>http://example.com/news/1/1</link>
+         <description>Sample 1 Item 1</description>
+         <pubDate>Tue, 19 May 2015 14:55:01 GMT</pubDate>
+         <guid>http://example.com/news/1/1</guid>
+      </item>
+   </channel>
+</rss>

@@ -25,11 +25,10 @@ public class RssSampleServlet extends HttpServlet {
 	
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		final File sampleFile;
-		try {
-			sampleFile = new File(Thread.currentThread().getContextClassLoader().getResource("rss2sample.xml").toURI());
-		} catch(URISyntaxException exc) {
-			throw new ServletException(exc);
+		final File sampleFile = getSampleFile(request);
+		if (sampleFile == null) {
+			response.sendError(404);
+			return;
 		}
 		
 		response.setContentLength((int)sampleFile.length());
@@ -49,5 +48,21 @@ public class RssSampleServlet extends HttpServlet {
 			outputStream.close();
 		}
 		
+	}
+	
+	private File getSampleFile(HttpServletRequest request) throws IOException {
+		try {
+			final String pathInfo = request.getPathInfo();
+			if (pathInfo.startsWith("/sample1")) {
+				return new File(Thread.currentThread().getContextClassLoader().getResource("sample1.xml").toURI());
+			} else if (pathInfo.startsWith("/sample2")) {
+				return new File(Thread.currentThread().getContextClassLoader().getResource("sample2.xml").toURI());
+			} else {
+				return new File(Thread.currentThread().getContextClassLoader().getResource("rss2sample.xml").toURI());
+			}
+	
+		} catch(URISyntaxException exc) {
+			throw new RuntimeException(exc);
+		}
 	}
 }

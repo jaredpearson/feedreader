@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<rss version="2.0">
+   <channel>
+      <title>Sample 2</title>
+      <link>http://example.com/</link>
+      <description>Sample 2 RSS Feed</description>
+      <language>en-us</language>
+      <pubDate>Thu, 21 May 2015 09:19:23 GMT</pubDate>
+      <lastBuildDate>Thu, 21 May 2015 09:19:23 GMT</lastBuildDate>
+      <docs>http://example.com/rss</docs>
+      <generator>Handwritten</generator>
+      <managingEditor>editor@example.com</managingEditor>
+      <webMaster>webmaster@example.com</webMaster>
+      <item>
+         <title>Sample 2 Item 4</title>
+         <link>http://example.com/news/2/4</link>
+         <description>Sample 2 Item 4 Description</description>
+         <pubDate>Thu, 21 May 2015 08:03:42 GMT</pubDate>
+         <guid>http://example.com/news/2/4</guid>
+      </item>
+      <item>
+         <title>Sample 2 Item 3</title>
+         <description>Sample 2 Item 3 Description</description>
+         <pubDate>Wed, 20 May 2015 13:45:11 GMT</pubDate>
+         <guid>http://example.com/news/2/3</guid>
+      </item>
+      <item>
+         <title>Sample 2 Item 2</title>
+         <link>http://example.com/news/2/2</link>
+         <description>Sample 2 Item 2 Description</description>
+         <pubDate>Tue, 19 May 2015 02:06:47 GMT</pubDate>
+         <guid>http://example.com/news/2/2</guid>
+      </item>
+      <item>
+         <title>Sample 2 Item 1</title>
+         <link>http://example.com/news/2/1</link>
+         <description>Sample 2 Item 1</description>
+         <pubDate>Mon, 18 May 2015 00:01:34 GMT</pubDate>
+         <guid>http://example.com/news/2/1</guid>
+      </item>
+   </channel>
+</rss>
