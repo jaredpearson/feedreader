@@ -11,6 +11,7 @@ import javax.annotation.Nonnull;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
@@ -212,10 +213,61 @@ public class RestEndToEndTest {
 		assertEquals("Expected the \"items\" property to be an empty array", 4, jsonNode.get("items").size());
 		
 		JsonNode itemsArrayNode = jsonNode.get("items");
-		assertFeedItem(itemsArrayNode.get(0), "Sample 1 Item 4", "http://example.com/news/1/4");
 		assertFeedItem(itemsArrayNode.get(1), null, "http://example.com/news/1/3");
 		assertFeedItem(itemsArrayNode.get(2), "Sample 1 Item 2", "http://example.com/news/1/2");
 		assertFeedItem(itemsArrayNode.get(3), "Sample 1 Item 1", "http://example.com/news/1/1");
+	}
+
+	/**
+	 * Verifies that a user can mark a feed item read
+	 */
+	@Test
+	public void testMarkRead() throws Exception {
+		final HttpClient client = HttpClients.createDefault();
+		final int userId = createUniqueUser();
+		final int sessionId = userSessionUtils.createUserSession(userId);
+		final String expectedFeedItemTitle = "Sample 1 Item 4";
+		final String expectedFeedItemGuid = "http://example.com/news/1/4";
+		
+		// request the RSS feed
+		final String rssSample1Url = createUrl("/rssSamples/sample1-" + (new Random()).nextInt() + ".xml");
+		final FeedRequest request = requestFeedAndWait(client, sessionId, rssSample1Url);
+		
+		// request the feed
+		final HttpGet getFeedRequest = new HttpGet(createUrl("/services/v1/feed/" + request.getFeedId()));
+		getFeedRequest.addHeader("Authorization", "SID " + sessionId);
+		
+		final JsonRestResponse getFeedRequestResponse = createFromHttpResponse(client.execute(getFeedRequest));
+		final JsonNode feedNode = getFeedRequestResponse.getBodyAsJsonNode();
+
+		assertEquals(200, getFeedRequestResponse.getStatusCode());
+		assertTrue("Expected the response to have an \"items\" property", feedNode.has("items"));
+		assertTrue("Expected the \"items\" property to be an array", feedNode.get("items").isArray());
+		assertEquals("Expected the \"items\" property to be an array of 4 items", 4, feedNode.get("items").size());
+		
+		final JsonNode itemsArrayNode = feedNode.get("items");
+		final JsonNode feedItemNode = itemsArrayNode.get(0);
+		assertFeedItem(feedItemNode, expectedFeedItemTitle, expectedFeedItemGuid, false);
+		final int feedItemId = feedItemNode.get("id").asInt();
+		
+		// patch the request so that the read status is now true
+		final HttpPatch patchRequest = new HttpPatch(createUrl("/services/v1/feedItem/" + feedItemId));
+		patchRequest.addHeader("Authorization", "SID " + sessionId);
+		patchRequest.setEntity(new StringEntity("{\"read\":true}"));
+		
+		final JsonRestResponse patchResponse = createFromHttpResponse(client.execute(patchRequest));
+		
+		assertEquals(200, patchResponse.getStatusCode());
+		assertFeedItem(patchResponse.getBodyAsJsonNode(), expectedFeedItemTitle, expectedFeedItemGuid, true);
+		
+		// reload the request so that we know that the read status has been updated
+		final HttpGet feedItemRequest = new HttpGet(createUrl("/services/v1/feedItem/" + feedItemId));
+		feedItemRequest.addHeader("Authorization", "SID " + sessionId);
+		
+		final JsonRestResponse feedItemResponse = createFromHttpResponse(client.execute(patchRequest));
+		
+		assertEquals(200, feedItemResponse.getStatusCode());
+		assertFeedItem(feedItemResponse.getBodyAsJsonNode(), expectedFeedItemTitle, expectedFeedItemGuid, true);
 	}
 	
 	/**
@@ -250,7 +302,7 @@ public class RestEndToEndTest {
 			assertEquals(200, getFeedRequestResponse.getStatusCode());
 			assertFeedRequest(getFeedRequestResponseNode, feedRequestId, rssUrl);
 			
-			feedRequest = FeedRequest.createFromJsonNode(getFeedRequestResponseNode);
+			feedRequest = objectMapper.readValue(getFeedRequestResponseNode, FeedRequest.class);
 			
 			retrieveStatusCount++;
 			if (feedRequest.isNotStarted()) {
@@ -291,6 +343,17 @@ public class RestEndToEndTest {
 	 * @param guid the guid of the node or null if the guid should not be specified
 	 */
 	private static void assertFeedItem(@Nonnull JsonNode feedItemNode, String title, String guid) {
+		assertFeedItem(feedItemNode, title, guid, false);
+	}
+
+	/**
+	 * Asserts that the feed item node has the given title and guid.
+	 * @param feedItemNode the node to verify
+	 * @param title the title of the node or null if the title should not be specified
+	 * @param guid the guid of the node or null if the guid should not be specified
+	 * @param readStatus the read status of the node
+	 */
+	private static void assertFeedItem(@Nonnull JsonNode feedItemNode, String title, String guid, boolean readStatus) {
 		assertTrue("Expected feedItem to have a \"title\" property", feedItemNode.has("title"));
 		if (title == null) {
 			assertTrue("Unexpected value for feedItem \"title\" property: " + feedItemNode.get("title"), feedItemNode.get("title").isNull());
@@ -304,6 +367,9 @@ public class RestEndToEndTest {
 		} else {
 			assertEquals("Unexpected value for feedItem \"guid\" property", guid, feedItemNode.get("guid").asText());
 		}
+		
+		assertTrue("Expected feedItem to have a \"read\" property", feedItemNode.has("read"));
+		assertEquals("Unexpected value for feedItem \"read\" property", readStatus, feedItemNode.get("read").asBoolean());
 	}
 
 	/**
@@ -367,45 +433,57 @@ public class RestEndToEndTest {
 		}
 	}
 	
-	private enum FeedRequestStatus {
+	enum FeedRequestStatus {
 		NOT_STARTED,
 		FINISHED,
 		ERROR
 	}
 	
-	private static class FeedRequest {
-		private final int id; 
-		private final FeedRequestStatus status;
-		private final Integer feedId;
+	static class FeedRequest {
+		private int id; 
+		private FeedRequestStatus status;
+		private Integer feedId;
+		private String url;
 		
-		public FeedRequest(int id, FeedRequestStatus status, Integer feedId) {
-			this.id = id;
-			this.status = status;
-			this.feedId = feedId;
+		public FeedRequest() {
 		}
 		
 		public int getId() {
 			return id;
 		}
 		
+		public void setId(int id) {
+			this.id = id;
+		}
+		
 		public FeedRequestStatus getStatus() {
 			return status;
+		}
+		
+		public void setStatus(FeedRequestStatus status) {
+			this.status = status;
 		}
 		
 		public Integer getFeedId() {
 			return feedId;
 		}
 		
+		public void setFeedId(Integer feedId) {
+			this.feedId = feedId;
+		}
+		
+		public String getUrl() {
+			return url;
+		}
+		
+		public void setUrl(String url) {
+			this.url = url;
+		}
+		
 		public boolean isNotStarted() {
 			return FeedRequestStatus.NOT_STARTED.equals(this.status);
 		}
 		
-		public static FeedRequest createFromJsonNode(JsonNode feedRequestNode) {
-			Preconditions.checkArgument(feedRequestNode != null, "feedRequestNode should not be null");
-			final int id = feedRequestNode.get("id").asInt();
-			final FeedRequestStatus status = FeedRequestStatus.valueOf(feedRequestNode.get("status").asText());
-			final Integer feedId = !feedRequestNode.has("feedId") || feedRequestNode.get("feedId").isNull() ? null : feedRequestNode.get("feedId").asInt();
-			return new FeedRequest(id, status, feedId);
-		}
 	}
+	
 }

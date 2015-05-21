@@ -82,6 +82,36 @@ public class FeedItemEntityHandler {
 			DbUtils.close(stmt);
 		}
 	}
+
+	/**
+	 * Gets the feed item with the given feed item ID
+	 * @param feedItemId the ID of the feed item to retrieve
+	 * @return the feed item with the ID or null if no feed item is found
+	 */
+	public @Nullable FeedItem getFeedItemById(Connection cnn, int feedItemId) throws SQLException {
+		Preconditions.checkArgument(cnn != null, "cnn should not be null");
+		
+		final PreparedStatement stmt = cnn.prepareStatement(SELECT_SQL_FRAGMENT + "where i.id = ? limit 1");
+		try {
+			stmt.setInt(1, feedItemId);
+			
+			final ResultSet rst = stmt.executeQuery();
+			try {
+				
+				if(rst.next()) {
+					return ROW_MAPPER.mapRow(rst);
+				} else {
+					return null;
+				}
+				
+			} finally {
+				DbUtils.close(rst);
+			}
+			
+		} finally {
+			DbUtils.close(stmt);
+		}
+	}
 	
 	/**
 	 * Gets the feed items for the specified feed ID.

@@ -15,7 +15,6 @@ import org.junit.Test;
 import feedreader.Feed;
 import feedreader.FeedReader;
 import feedreader.UserFeedContext;
-import feedreader.UserFeedItemContext;
 
 public class FeedResourceHandlerTest {
 	
@@ -47,31 +46,4 @@ public class FeedResourceHandlerTest {
 		assertEquals(expected, writer.toString());
 	}
 	
-	@Test
-	public void testMarkRead() throws Exception {
-		UserFeedItemContext feedItemContext = mock(UserFeedItemContext.class);
-		
-		UserFeedContext feedContext = mock(UserFeedContext.class);
-		when(feedContext.getId()).thenReturn(1);
-		when(feedContext.getTitle()).thenReturn("Test Feed");
-		when(feedContext.getItemWithFeedItemId(1)).thenReturn(feedItemContext);
-		
-		FeedReader feedReader = mock(FeedReader.class);
-		when(feedReader.getFeed(eq(1))).thenReturn(feedContext);
-		
-		HttpServletRequest request = mock(HttpServletRequest.class);
-		when(request.getPathInfo()).thenReturn("/v1/feed/1/item/1/read");
-		
-		StringWriter writer = new StringWriter();
-		HttpServletResponse response = mock(HttpServletResponse.class);
-		when(response.getWriter()).thenReturn(new PrintWriter(writer));
-		
-		FeedResourceHandler handler = new FeedResourceHandler(new ObjectMapper());
-		handler.markFeedItemRead(response, feedReader, "1", "1");
-		
-		verify(feedReader).markReadStatus(eq(1), eq(true));
-		
-		String expected = "{\"success\":true}";
-		assertEquals(expected, writer.toString());
-	}
 }

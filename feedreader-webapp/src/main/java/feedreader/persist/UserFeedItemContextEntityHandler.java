@@ -9,6 +9,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.inject.Singleton;
 
 import com.google.common.base.Preconditions;
@@ -64,7 +66,38 @@ public class UserFeedItemContextEntityHandler {
 		ROW_MAPPER_FEED_ITEM = new FeedItemRowMapper("feedItem_");
 	}
 	
-	public List<UserFeedItemContext> getFeedItemsForUserFeed(Connection cnn, int userId, int feedId) throws SQLException {
+	/**
+	 * Gets the feed item for the given user ID and feed item ID. If no context has been established in the DB for the user and feed item, then a
+	 * null reference is returned.
+	 * @param cnn the current DB connection to use
+	 * @param userId the ID of the user
+	 * @param feedItemId the ID of the feed item
+	 * @return the feed item for the given user ID and feed item ID or null if no context has been established yet.
+	 */
+	public @Nullable UserFeedItemContext getFeedItem(Connection cnn, int userId, int feedItemId) throws SQLException {
+		Preconditions.checkArgument(cnn != null, "cnn should not be null");
+		final PreparedStatement stmt = cnn.prepareStatement(SELECT_SQL_FRAGMENT + "where c.owner = ? and c.feedItemId = ? limit 1");
+		try {
+			stmt.setInt(1, userId);
+			stmt.setInt(2, feedItemId);
+			
+			final ResultSet rst = stmt.executeQuery();
+			try {
+				if(rst.next()) {
+					return mapRow(rst);
+				} else {
+					return null;
+				}
+			} finally {
+				DbUtils.close(rst);
+			}
+		} finally {
+			DbUtils.close(stmt);
+		}
+	}
+	
+	public @Nonnull List<UserFeedItemContext> getFeedItemsForUserFeed(Connection cnn, int userId, int feedId) throws SQLException {
+		Preconditions.checkArgument(cnn != null, "cnn should not be null");
 		final List<UserFeedItemContext> feedItemContexts = new ArrayList<UserFeedItemContext>();
 		
 		final PreparedStatement stmt = cnn.prepareStatement(SELECT_SQL_FRAGMENT + "where c.owner = ? and cif.id = ? ");
@@ -92,7 +125,7 @@ public class UserFeedItemContextEntityHandler {
 	 * Gets all of the context items for the given feed item IDs. If there is no context for the given IDs, then it is not represented
 	 * in the list.
 	 */
-	public List<UserFeedItemContext> getUserFeedItemsForFeedItems(Connection cnn, int userId, Set<Integer> feedItemIds) throws SQLException {
+	public @Nonnull List<UserFeedItemContext> getUserFeedItemsForFeedItems(Connection cnn, int userId, Set<Integer> feedItemIds) throws SQLException {
 		Preconditions.checkArgument(cnn != null, "cnn should not be null");
 		
 		if (feedItemIds == null || feedItemIds.isEmpty()) {
@@ -101,7 +134,7 @@ public class UserFeedItemContextEntityHandler {
 		
 		final List<UserFeedItemContext> feedItemContexts = Lists.newArrayListWithExpectedSize(feedItemIds.size());
 		
-		final PreparedStatement stmt = cnn.prepareStatement(SELECT_SQL_FRAGMENT + "where c.owner = ? and ci.id = ? ");
+		final PreparedStatement stmt = cnn.prepareStatement(SELECT_SQL_FRAGMENT + "where c.owner = ? and ci.id = ? limit 1");
 		try {
 			for(Integer feedItemId : feedItemIds) {
 				stmt.clearWarnings();
@@ -137,7 +170,7 @@ public class UserFeedItemContextEntityHandler {
 	 * @return the value of the read status field or null if the read status field has not been set yet.
 	 */
 	public Boolean loadReadStatus(Connection cnn, int feedItemId, int ownerId) throws SQLException {
-		final PreparedStatement selectStmt = cnn.prepareStatement("select read from feedreader.UserFeedItemContexts where owner = ? and feedItemId = ?");
+		final PreparedStatement selectStmt = cnn.prepareStatement("select read from feedreader.UserFeedItemContexts where owner = ? and feedItemId = ? limit 1");
 		try {
 			selectStmt.setInt(1, ownerId);
 			selectStmt.setInt(2, feedItemId);
@@ -158,7 +191,7 @@ public class UserFeedItemContextEntityHandler {
 	}
 	
 	public int insert(Connection cnn, int feedItemId, int ownerId, boolean readStatus) throws SQLException {
-		PreparedStatement stmt = cnn.prepareStatement("insert into feedreader.UserFeedItemContexts (feedItemId, owner, read) values (?, ?, ?) returning id, read, created");
+		PreparedStatement stmt = cnn.prepareStatement("insert into feedreader.UserFeedItemContexts (feedItemId, owner, read) values (?, ?, ?) returning id");
 		try {
 			stmt.setInt(1, feedItemId);
 			stmt.setInt(2, ownerId);

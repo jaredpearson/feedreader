@@ -134,6 +134,33 @@ public class FeedReader {
 			throw Throwables.propagate(exc);
 		}
 	}
+
+	/**
+	 * Gets the feed item with the specified ID for the current user.
+	 */
+	public UserFeedItemContext getFeedItem(int feedItemId) {
+		try {
+			final Connection cnn = dataSource.getConnection();
+			try {
+				final UserFeedItemContext feedItemContext = userFeedItemContextEntityHandler.getFeedItem(cnn, userId, feedItemId);
+				
+				if (feedItemContext == null) {
+					final FeedItem feedItem = feedItemEntityHandler.getFeedItemById(cnn, feedItemId);
+					final UserFeedItemContext context = new UserFeedItemContext();
+					context.setFeedItem(feedItem);
+					context.setOwnerId(userId);
+					return context;
+				}
+				
+				return feedItemContext;
+				
+			} finally {
+				cnn.close();
+			}
+		} catch(SQLException exc) {
+			throw Throwables.propagate(exc);
+		}
+	}
 	
 	/**
 	 * Marks the feed item corresponding to the specified ID with the specified read status.

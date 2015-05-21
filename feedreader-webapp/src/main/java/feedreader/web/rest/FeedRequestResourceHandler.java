@@ -64,6 +64,7 @@ public class FeedRequestResourceHandler implements ResourceHandler {
 		responseModel.id = feedRequest.getId();
 		responseModel.url = feedRequest.getUrl();
 		responseModel.status = feedRequest.getStatus();
+		responseModel.feedId = feedRequest.getFeedId();
 		return responseModel;
 	}
 	
@@ -71,5 +72,6 @@ public class FeedRequestResourceHandler implements ResourceHandler {
 		public int id;
 		public String url;
 		public FeedRequestStatus status;
+		public Integer feedId;
 	}
 }

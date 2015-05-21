@@ -21,6 +21,38 @@ public class FeedItemEntityHandlerTest {
 	public void setup() {
 		this.databaseTestUtils = new DatabaseTestUtils();
 	}
+
+	@Test
+	public void testGetFeedItemById() throws Exception {
+		final Connection cnn = databaseTestUtils.getConnection();
+		try {
+			final int feedId = databaseTestUtils.ensureTestFeed(cnn);
+			final int feedItemId = databaseTestUtils.insertTestFeedItem(cnn, feedId);
+			
+			final FeedItemEntityHandler handler = new FeedItemEntityHandler();
+			final FeedItem feedItem = handler.getFeedItemById(cnn, feedItemId);
+			
+			assertNotNull("Expected getFeedItemById to return a value", feedItem);
+			assertEquals("Expected the feed item to be returned", Integer.valueOf(feedItemId), feedItem.getId());
+		} finally {
+			DbUtils.close(cnn);
+		}
+	}
+
+	@Test
+	public void testGetFeedItemByIdWithUnknownId() throws Exception {
+		final Connection cnn = databaseTestUtils.getConnection();
+		try {
+			final int feedItemId = -1;
+			
+			final FeedItemEntityHandler handler = new FeedItemEntityHandler();
+			final FeedItem feedItem = handler.getFeedItemById(cnn, feedItemId);
+			
+			assertNull("Expected getFeedItemById to return null since the ID is not valid", feedItem);
+		} finally {
+			DbUtils.close(cnn);
+		}
+	}
 	
 	@Test
 	public void testGetFeedItemsForFeed() throws Exception {

@@ -67,33 +67,6 @@ public class FeedResourceHandler implements ResourceHandler {
 		writeResponse(response, feedModel);
 	}
 	
-	@RequestHandler(value = "^/v1/feed/([0-9]+)/item/([0-9]+)/read$", method = Method.POST)
-	public void markFeedItemRead(HttpServletResponse response, FeedReader feedReader, @PathParameter(1) String feedIdValue, 
-			@PathParameter(2) String feedItemIdValue) throws IOException, ServletException {
-		
-		//get the requested feed
-		final int feedId = Integer.valueOf(feedIdValue);
-		final UserFeedContext feedContext = feedReader.getFeed(feedId);
-		
-		//get the request feed item
-		final int feedItemId = Integer.valueOf(feedItemIdValue);
-		final UserFeedItemContext feedItem = feedContext.getItemWithFeedItemId(feedItemId);
-		
-		if(feedItem == null) {
-			response.sendError(404);
-			return;
-		}
-		
-		feedReader.markReadStatus(feedItemId, true);
-		
-		//create the response model
-		final MarkReadResponseModel model = new MarkReadResponseModel();
-		model.success = true;
-
-		//output the model as the body of the response
-		writeResponse(response, model);
-	}
-
 	private void writeResponse(final HttpServletResponse response, final Object model) throws IOException, JsonGenerationException, JsonMappingException {
 		response.setContentType("application/json");
 		Writer out = response.getWriter();
@@ -102,10 +75,6 @@ public class FeedResourceHandler implements ResourceHandler {
 		} finally {
 			out.close();
 		}
-	}
-	
-	public static class MarkReadResponseModel {
-		public boolean success;
 	}
 	
 	static class FeedResource {

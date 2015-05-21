@@ -80,6 +80,42 @@ public class UserFeedItemContextEntityHandlerTest {
 			DbUtils.close(cnn);
 		}
 	}
+
+	@Test
+	public void testGetFeedItemWithNoContext() throws Exception {
+		final Connection cnn = databaseTestUtils.getConnection();
+		try {
+			final int userId = databaseTestUtils.ensureTestUser(cnn);
+			final int feedItemId = databaseTestUtils.ensureTestFeedItem(cnn);
+			
+			//get the feed item
+			final UserFeedItemContextEntityHandler handler = new UserFeedItemContextEntityHandler();
+			final UserFeedItemContext feedItemContext = handler.getFeedItem(cnn, userId, feedItemId);
+			
+			assertNull("getFeedItem should return null when no context is found", feedItemContext);
+		} finally {
+			DbUtils.close(cnn);
+		}
+	}
+
+	@Test
+	public void testGetFeedItemWithContext() throws Exception {
+		final Connection cnn = databaseTestUtils.getConnection();
+		try {
+			final int userId = databaseTestUtils.ensureTestUser(cnn);
+			final int feedItemId = databaseTestUtils.ensureTestFeedItem(cnn);
+			final int feedItemContextId = databaseTestUtils.insertTestUserFeedItemContext(cnn, feedItemId);
+			
+			//get the feed item
+			final UserFeedItemContextEntityHandler handler = new UserFeedItemContextEntityHandler();
+			final UserFeedItemContext feedItemContext = handler.getFeedItem(cnn, userId, feedItemId);
+			
+			assertNotNull("getFeedItem should not return null since the context should be found", feedItemContext);
+			assertEquals("Expected UserFeedItemContext ID to be the one requested", Integer.valueOf(feedItemContextId), feedItemContext.getId());
+		} finally {
+			DbUtils.close(cnn);
+		}
+	}
 	
 	@Test
 	public void testGetFeedItemsForUserFeedWithNoContexts() throws Exception {
@@ -89,7 +125,7 @@ public class UserFeedItemContextEntityHandlerTest {
 			final int userId = databaseTestUtils.ensureTestUser(cnn);
 			final int feedId = databaseTestUtils.ensureTestFeed(cnn);
 			
-			//update the entity
+			//get the feed items for the user's feed
 			final UserFeedItemContextEntityHandler handler = new UserFeedItemContextEntityHandler();
 			final List<UserFeedItemContext> feedItemContextList = handler.getFeedItemsForUserFeed(cnn, userId, feedId);
 			
@@ -99,7 +135,6 @@ public class UserFeedItemContextEntityHandlerTest {
 			DbUtils.close(cnn);
 		}
 	}
-
 	
 	@Test
 	public void testGetFeedItemsForUserFeedWithContext() throws Exception {
@@ -110,7 +145,7 @@ public class UserFeedItemContextEntityHandlerTest {
 			final int feedId = databaseTestUtils.ensureTestFeed(cnn);
 			final int feedItemContextId = databaseTestUtils.ensureTestUserFeedItemContext(cnn);
 			
-			//update the entity
+			//get the feed items for the user's feed
 			final UserFeedItemContextEntityHandler handler = new UserFeedItemContextEntityHandler();
 			final List<UserFeedItemContext> feedItemContextList = handler.getFeedItemsForUserFeed(cnn, userId, feedId);
 			
@@ -130,7 +165,7 @@ public class UserFeedItemContextEntityHandlerTest {
 			final int userId = databaseTestUtils.ensureTestUser(cnn);
 			final int feedItemId = databaseTestUtils.ensureTestFeedItem(cnn);
 			
-			//update the entity
+			//gets the feed items corresponding to the given feed item ID
 			final UserFeedItemContextEntityHandler handler = new UserFeedItemContextEntityHandler();
 			final List<UserFeedItemContext> feedItemContextList = handler.getUserFeedItemsForFeedItems(cnn, userId, Sets.<Integer>newHashSet(feedItemId));
 			

@@ -23,15 +23,15 @@ public class StreamResourceHandler implements ResourceHandler {
 	 */
 	@RequestHandler(value = "^/v1/stream$", method = Method.GET)
 	public StreamResource getStream(HttpServletRequest request, FeedReader feedReader) throws IOException, ServletException {
-		final Stream feed = feedReader.getStream();
+		final Stream stream = feedReader.getStream();
 		
 		final ResourceHrefBuilder hrefBuilder = new ResourceHrefBuilder(request, "v1");
 		
 		//create the response models
 		final StreamResource streamResource = new StreamResource();
-		streamResource.items = new FeedItemResource[feed.getItems().size()];
-		for(int index = 0; index < feed.getItems().size(); index++) {
-			final UserFeedItemContext feedItem = feed.getItems().get(index);
+		streamResource.items = new FeedItemResource[stream.getItems().size()];
+		for(int index = 0; index < stream.getItems().size(); index++) {
+			final UserFeedItemContext feedItem = stream.getItems().get(index);
 			final FeedItemResource feedItemResource = FeedItemResource.fromFeedItem(feedItem, hrefBuilder);
 			streamResource.items[index] = feedItemResource; 
 		}
