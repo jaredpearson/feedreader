@@ -11,6 +11,7 @@ import feedreader.web.HomeServlet;
 import feedreader.web.ReaderServlet;
 import feedreader.web.RssSampleServlet;
 import feedreader.web.SignInServlet;
+import feedreader.web.rest.FeedRequestResourceHandler;
 import feedreader.web.rest.FeedResourceHandler;
 import feedreader.web.rest.FeedSubscriptionResourceHandler;
 import feedreader.web.rest.RestAuthorizationFilter;
@@ -51,6 +52,7 @@ class WebModule extends ServletModule {
 		filter("/services/*", "/services").through(RestAuthorizationFilter.class);
 		Multibinder<ResourceHandler> handlerBinder = Multibinder.newSetBinder(binder(), ResourceHandler.class);
 		handlerBinder.addBinding().to(FeedSubscriptionResourceHandler.class);
+		handlerBinder.addBinding().to(FeedRequestResourceHandler.class);
 		handlerBinder.addBinding().to(FeedResourceHandler.class);
 		handlerBinder.addBinding().to(ServiceResourceHandler.class);
 		handlerBinder.addBinding().to(StreamResourceHandler.class);
