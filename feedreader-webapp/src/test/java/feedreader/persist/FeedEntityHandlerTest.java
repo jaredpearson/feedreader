@@ -6,7 +6,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.Random;
 
@@ -81,14 +80,6 @@ public class FeedEntityHandlerTest {
 	}
 	
 	private  void assertFeed(Connection cnn, int feedId, String url, java.util.Date lastUpdated, String title, int createdByUserId) throws SQLException {
-		// the last updated value in the database is just MM/dd/yyyy
-		Calendar cal = Calendar.getInstance();
-		cal.setTime(lastUpdated);
-		cal.set(Calendar.HOUR_OF_DAY, 0);
-		cal.clear(Calendar.MINUTE);
-		cal.clear(Calendar.SECOND);
-		cal.clear(Calendar.MILLISECOND);
-		
 		final PreparedStatement stmt = cnn.prepareStatement("select url, lastUpdated, title, createdBy from feedreader.Feeds where id = ?");
 		try {
 			stmt.setInt(1, feedId);
@@ -97,7 +88,7 @@ public class FeedEntityHandlerTest {
 			try {
 				if(rst.next()) {
 					assertEquals("url in DB was different", url, rst.getString("url"));
-					assertEquals("lastUpdated in DB was different", cal.getTime(), rst.getTimestamp("lastUpdated"));
+					assertEquals("lastUpdated in DB was different", lastUpdated, rst.getTimestamp("lastUpdated"));
 					assertEquals("title in DB was different", title, rst.getString("title"));
 					assertEquals("createdByUserId in DB was different", createdByUserId, rst.getInt("createdBy"));
 				} else {

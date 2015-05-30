@@ -123,7 +123,7 @@ public class FeedEntityHandler {
 		final PreparedStatement stmt = cnn.prepareStatement("insert into feedreader.Feeds (url, lastUpdated, title, createdBy) values (?, ?, ?, ?) returning id");
 		try {
 			stmt.setString(1, url);
-			stmt.setDate(2, toSqlDate(lastUpdated));
+			DbUtils.setTimestamp(stmt, 2, lastUpdated);
 			stmt.setString(3, title);
 			stmt.setInt(4, createdByUserId);
 			
@@ -160,9 +160,9 @@ public class FeedEntityHandler {
 		Feed feed = new Feed();
 		feed.setId(rst.getInt("feed_id"));
 		feed.setUrl(rst.getString("feed_url"));
-		feed.setLastUpdated(rst.getDate("feed_lastUpdated"));
+		feed.setLastUpdated(rst.getTimestamp("feed_lastUpdated"));
 		feed.setTitle(rst.getString("feed_title"));
-		feed.setCreated(rst.getDate("feed_created"));
+		feed.setCreated(rst.getTimestamp("feed_created"));
 		feed.setCreatedById(rst.getInt("feed_createdBy"));
 		return feed;
 	}
