@@ -60,32 +60,44 @@ public class RetrieveFeedMessageHandler implements MessageHandler {
 	public void dequeue(final Message message) throws IOException {
 		final RetrieveFeedMessageBuilder feedMessage = new RetrieveFeedMessageBuilder(message);
 		final int feedRequestId = feedMessage.getFeedRequestId();
-
+		
 		try {
 			final Connection cnn = dataSource.getConnection();
 			try {
-				final FeedRequest feedRequest = feedRequestEntityHandler.findFeedRequestById(cnn, feedRequestId);
+				cnn.setAutoCommit(false);
+				final Savepoint savepoint = cnn.setSavepoint();
+				try {
 				
-				//check that the request can be found; this could occur if the request was deleted before the message was processed
-				if(feedRequest == null) {
-					return;
+					final FeedRequest feedRequest = feedRequestEntityHandler.findFeedRequestById(cnn, feedRequestId);
+					
+					//check that the request can be found; this could occur if the request was deleted before the message was processed
+					if(feedRequest == null) {
+						return;
+					}
+					
+					//check to see if the URL has already been retrieved. if not, then fetch and save it
+					final int feedId;
+					final Feed matchingFeed = feedEntityHandler.findFeedAndFeedItemsByUrl(cnn, feedRequest.getUrl(), 0);
+					if(matchingFeed != null) {
+						feedId = matchingFeed.getId();
+					} else {
+						final Feed newFeed = retrieveFeedFromUrl(feedRequest.getUrl());
+						feedId = saveFeedAndFeedItems(cnn, newFeed, feedRequest.getCreatedById());
+					}
+					
+					subscribe(cnn, feedId, feedRequest.getCreatedById());
+
+					//if the feed request has already finished, then no need to set the status again
+					if(feedRequest.getStatus() != FeedRequestStatus.FINISHED) {
+						finalizeRequest(cnn, feedRequest.getId(), feedId);
+					}
+			
+					cnn.commit();
+					
+				} catch(Exception exc) {
+					cnn.rollback(savepoint);
+					throw exc;
 				}
-				
-				//if the feed request has already finished, then no need to process it again
-				if(feedRequest.getStatus() == FeedRequestStatus.FINISHED) {
-					return;
-				}
-				
-				//check to see if the URL has already been retrieved. if so, create a subscription for the user
-				//otherwise, let's go out and request the feed
-				final Feed matchingFeed = feedEntityHandler.findFeedAndFeedItemsByUrl(cnn, feedRequest.getUrl(), 0);
-				if(matchingFeed != null) {
-					subscribe(cnn, matchingFeed.getId(), feedRequest.getCreatedById());
-					finalizeRequest(cnn, feedRequest.getId(), matchingFeed.getId());
-				} else {
-					retrieveFeedFromUrl(feedRequest);
-				}
-		
 			} finally {
 				cnn.close();
 			}
@@ -101,55 +113,34 @@ public class RetrieveFeedMessageHandler implements MessageHandler {
 				// log but continue if we can't set the status
 				logger.log(Level.WARNING, "Status of request could not be set. Continuing as if this error didn't occur.", exc2);
 			}
-			throw Throwables.propagate(exc);
+			
+			if (exc instanceof IOException) {
+				throw (IOException) exc;
+			} else {
+				throw Throwables.propagate(exc);
+			}
 		}
 	}
 	
-	private void retrieveFeedFromUrl(final FeedRequest feedRequest) throws IOException, SQLException {
+	private Feed retrieveFeedFromUrl(final String url) throws IOException {
 		//retrieve the feed from the URL given in the request
 		final FeedLoader feedLoader = feedLoaderProvider.get();
 		Feed feed = null;
 		try {
-			feed = feedLoader.loadFromUrl(feedRequest.getUrl());
+			feed = feedLoader.loadFromUrl(url);
 		} catch (XMLStreamException exc) {
 			//TODO: update the request with the error
 			throw new RuntimeException(exc);
 		}
-
-		final Integer userId = feedRequest.getCreatedById();
-		final Connection cnn = dataSource.getConnection();
-		try {
-			cnn.setAutoCommit(false);
-			final Savepoint savepoint = cnn.setSavepoint();
-			try {
-				
-				//save the feed to the database
-				final int feedId = feedEntityHandler.insert(cnn, feed.getUrl(), feed.getLastUpdated(), feed.getTitle(), userId);
-				for(FeedItem feedItem : feed.getItems()) {
-					feedItemEntityHandler.insert(cnn, feedId, feedItem.getTitle(), feedItem.getDescription(), feedItem.getLink(), feedItem.getPubDate(), feedItem.getGuid());
-				}
-				
-				//update the feed request
-				finalizeRequest(cnn, feedRequest.getId(), feedId);
-				
-				//create a subscription for the user to the feed
-				subscribe(cnn, feedId, userId);
-				
-				cnn.commit();
-			} catch (Throwable t) {
-				cnn.rollback(savepoint);
-				
-				if (t instanceof SQLException) {
-					throw (SQLException) t;
-				} else if (t instanceof IOException) {
-					throw (IOException) t;
-				} else {
-					throw Throwables.propagate(t);
-				}
-			}
-		} finally {
-			cnn.close();
+		return feed;
+	}
+	
+	private int saveFeedAndFeedItems(final Connection cnn, final Feed feed, final int userId) throws SQLException {
+		final int feedId = feedEntityHandler.insert(cnn, feed.getUrl(), feed.getLastUpdated(), feed.getTitle(), userId);
+		for(FeedItem feedItem : feed.getItems()) {
+			feedItemEntityHandler.insert(cnn, feedId, feedItem.getTitle(), feedItem.getDescription(), feedItem.getLink(), feedItem.getPubDate(), feedItem.getGuid());
 		}
+		return feedId;
 	}
 	
 	private void finalizeRequest(final Connection cnn, final int feedRequestId, final int feedId) throws SQLException {
