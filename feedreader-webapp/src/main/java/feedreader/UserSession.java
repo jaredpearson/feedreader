@@ -7,7 +7,7 @@ import common.DateUtils;
 
 public class UserSession {
 	private Integer id;
-	private User user;
+	private Integer userId;
 	private long created = -1;
 	
 	public Integer getId() {
@@ -18,12 +18,12 @@ public class UserSession {
 		this.id = id;
 	}
 	
-	public User getUser() {
-		return user;
+	public Integer getUserId() {
+		return userId;
 	}
 	
-	public void setUser(User user) {
-		this.user = user;
+	public void setUserId(Integer userId) {
+		this.userId = userId;
 	}
 	
 	public Date getCreated() {

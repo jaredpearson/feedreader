@@ -11,7 +11,6 @@ import javax.inject.Singleton;
 import com.google.common.base.Preconditions;
 
 import common.persist.DbUtils;
-import feedreader.User;
 import feedreader.UserSession;
 
 @Singleton
@@ -23,9 +22,8 @@ public class UserSessionEntityHandler {
 	 */
 	public @Nullable UserSession findUserSessionById(@Nonnull Connection cnn, int sessionId) throws SQLException {
 		Preconditions.checkArgument(cnn != null, "cnn should not be null");
-		UserSession session = null;
 		
-		final PreparedStatement stmt = cnn.prepareStatement("select s.id sessionId, s.created, u.id userId, u.email from feedreader.UserSessions s inner join feedreader.Users u on s.userId = u.id where s.id = ? limit 1");
+		final PreparedStatement stmt = cnn.prepareStatement("select s.id sessionId, s.created, s.userId from feedreader.UserSessions s where s.id = ? limit 1");
 		try {
 			stmt.setInt(1, sessionId);
 			
@@ -33,14 +31,13 @@ public class UserSessionEntityHandler {
 			try {
 				
 				if (rst.next()) {
-					session = new UserSession();
+					final UserSession session = new UserSession();
 					session.setId(rst.getInt("sessionId"));
 					session.setCreated(rst.getDate("created"));
-					
-					User user = new User();
-					user.setId(rst.getInt("userId"));
-					user.setEmail(rst.getString("email"));
-					session.setUser(user);
+					session.setUserId(rst.getInt("userId"));
+					return session;
+				} else {
+					return null;
 				}
 				
 			} finally {
@@ -49,8 +46,6 @@ public class UserSessionEntityHandler {
 		} finally {
 			DbUtils.close(stmt);
 		}
-		
-		return session;
 	}
 	
 	/**

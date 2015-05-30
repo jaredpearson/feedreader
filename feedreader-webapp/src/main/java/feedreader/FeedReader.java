@@ -38,14 +38,14 @@ public class FeedReader {
 	
 	public FeedReader(
 			DataSource dataSource, 
-			User user, 
+			int userId, 
 			MessageSender messageSender,
 			FeedEntityHandler feedEntityHandler,
 			FeedItemEntityHandler feedItemEntityHandler,
 			UserFeedItemContextEntityHandler userFeedItemContextEntityHandler,
 			FeedRequestEntityHandler feedRequestEntityHandler) {
 		this.dataSource = dataSource;
-		this.userId = user.getId();
+		this.userId = userId;
 		this.messageSender = messageSender;
 		this.feedEntityHandler = feedEntityHandler;
 		this.feedItemEntityHandler = feedItemEntityHandler;

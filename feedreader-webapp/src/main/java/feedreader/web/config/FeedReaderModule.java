@@ -19,7 +19,6 @@ import com.google.inject.servlet.ServletScopes;
 
 import common.messagequeue.api.MessageSender;
 import feedreader.FeedReader;
-import feedreader.User;
 import feedreader.UserSession;
 import feedreader.persist.FeedEntityHandler;
 import feedreader.persist.FeedItemEntityHandler;
@@ -124,8 +123,8 @@ class FeedReaderModule extends AbstractModule {
 
 		@Override
 		public FeedReader get() {
-			final User user = userSession.getUser();
-			return new FeedReader(dataSource, user, messageSender, feedEntityHandler, feedItemEntityHandler, userFeedItemContextEntityHandler, feedRequestEntityHandler);
+			final Integer userId = userSession.getUserId();
+			return new FeedReader(dataSource, userId, messageSender, feedEntityHandler, feedItemEntityHandler, userFeedItemContextEntityHandler, feedRequestEntityHandler);
 		}
 	}
 }
