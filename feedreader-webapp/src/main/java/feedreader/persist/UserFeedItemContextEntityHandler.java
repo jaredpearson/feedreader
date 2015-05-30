@@ -31,8 +31,6 @@ public class UserFeedItemContextEntityHandler {
 				+ "c.read context_read, "
 				+ "c.created context_created, "
 				+ "c.feedItemId context_feedItemId, "
-				
-				//owner
 				+ "c.owner context_owner, "
 				
 				//feedItem
@@ -43,25 +41,10 @@ public class UserFeedItemContextEntityHandler {
 				+ "ci.pubDate feedItem_pubDate, "
 				+ "ci.guid feedItem_guid, "
 				+ "ci.created feedItem_created, "
-				+ "ci.feedId feedItem_feedId, "
-				
-				//feedItem.feed
-				+ "cif.id feed_id, "
-				+ "cif.url feed_url, "
-				+ "cif.lastUpdated feed_lastUpdated, "
-				+ "cif.title feed_title, "
-				+ "cif.created feed_created, "
-				+ "cif.createdBy feed_createdBy, "
-				
-				//feedItem.feed.createdBy
-				+ "cifu.id feed_createdBy_id, "
-				+ "cifu.email feed_createdBy_email "
+				+ "ci.feedId feedItem_feedId "
 				
 				+ "from feedreader.UserFeedItemContexts c "
-				+ "inner join feedreader.Users cu on c.owner = cu.id "
-				+ "inner join feedreader.FeedItems ci on c.feedItemId = ci.id "
-				+ "inner join feedreader.Feeds cif on ci.feedId = cif.id "
-				+ "inner join feedreader.Users cifu on cif.createdBy = cifu.id ";
+				+ "inner join feedreader.FeedItems ci on c.feedItemId = ci.id ";
 		
 		ROW_MAPPER_FEED_ITEM = new FeedItemRowMapper("feedItem_");
 	}
@@ -100,7 +83,7 @@ public class UserFeedItemContextEntityHandler {
 		Preconditions.checkArgument(cnn != null, "cnn should not be null");
 		final List<UserFeedItemContext> feedItemContexts = new ArrayList<UserFeedItemContext>();
 		
-		final PreparedStatement stmt = cnn.prepareStatement(SELECT_SQL_FRAGMENT + "where c.owner = ? and cif.id = ? ");
+		final PreparedStatement stmt = cnn.prepareStatement(SELECT_SQL_FRAGMENT + "where c.owner = ? and ci.feedId = ? ");
 		try {
 			stmt.setInt(1, userId);
 			stmt.setInt(2, feedId);

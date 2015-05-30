@@ -25,8 +25,8 @@ public class FeedItemRowMapper implements RowMapper<FeedItem> {
 		feedItem.setTitle(rst.getString(prefix + "title"));
 		feedItem.setDescription(rst.getString(prefix + "description"));
 		feedItem.setLink(rst.getString(prefix + "link"));
-		feedItem.setCreated(rst.getDate(prefix + "created"));
-		feedItem.setPubDate(rst.getDate(prefix + "pubDate"));
+		feedItem.setCreated(rst.getTimestamp(prefix + "created"));
+		feedItem.setPubDate(rst.getTimestamp(prefix + "pubDate"));
 		feedItem.setGuid(rst.getString(prefix + "guid"));
 		feedItem.setFeedId(rst.getInt(prefix + "feedId"));
 		

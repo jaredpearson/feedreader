@@ -33,19 +33,9 @@ public class FeedItemEntityHandler {
 			+ "i.pubDate feedItem_pubDate, "
 			+ "i.guid feedItem_guid, "
 			+ "i.created feedItem_created, "
-			+ "i.feedId feedItem_feedId, "
+			+ "i.feedId feedItem_feedId "
 			
-			//feed
-			+ "if.id feed_id, "
-			+ "if.url feed_url, "
-			+ "if.lastUpdated feed_lastUpdated, "
-			+ "if.title feed_title, "
-			+ "if.created feed_created, "
-			+ "if.createdBy feed_createdBy "
-			
-			+ "from feedreader.FeedItems i "
-			+ "inner join feedreader.Feeds if on i.feedId = if.id "
-			+ "inner join feedreader.Users ifu on if.createdBy = ifu.id ";
+			+ "from feedreader.FeedItems i ";
 		ROW_MAPPER = new FeedItemRowMapper();
 	}
 	
@@ -132,7 +122,7 @@ public class FeedItemEntityHandler {
 		}
 		
 		final List<FeedItem> feedItems = new ArrayList<FeedItem>();
-		final PreparedStatement stmt = cnn.prepareStatement(SELECT_SQL_FRAGMENT + "where if.id = ? " + (limit != null ? " limit " + limit : ""));
+		final PreparedStatement stmt = cnn.prepareStatement(SELECT_SQL_FRAGMENT + "where i.feedId = ? " + (limit != null ? " limit " + limit : ""));
 		try {
 			stmt.setInt(1, feedId);
 			
