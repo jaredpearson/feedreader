@@ -14,14 +14,12 @@ import javax.inject.Singleton;
 import com.google.common.base.Preconditions;
 
 import common.persist.DbUtils;
-import common.persist.RowMapper;
 import feedreader.Feed;
 import feedreader.FeedItem;
 
 @Singleton
 public class FeedEntityHandler {
 	private static final String SELECT_SQL_FRAGMENT;
-	private static final RowMapper<Feed> ROW_MAPPER;
 	
 	static {
 		SELECT_SQL_FRAGMENT = "select "
@@ -35,8 +33,6 @@ public class FeedEntityHandler {
 				
 				+ "from feedreader.Feeds f "
 				+ "inner join feedreader.Users u on f.createdBy = u.id ";
-		
-		ROW_MAPPER = new FeedRowMapper();
 	}
 	
 	private final FeedItemEntityHandler feedItemEntityHandler;
@@ -60,7 +56,7 @@ public class FeedEntityHandler {
 			final ResultSet rst = stmt.executeQuery();
 			try {
 				if(rst.next()) {
-					feed = ROW_MAPPER.mapRow(rst);
+					feed = mapRow(rst);
 					
 					//load the related feed items
 					List<FeedItem> feedItems = feedItemEntityHandler.getFeedItemsForFeed(cnn, feed.getId());
@@ -101,7 +97,7 @@ public class FeedEntityHandler {
 			try {
 				
 				if (rst.next()) {
-					feed = ROW_MAPPER.mapRow(rst);
+					feed = mapRow(rst);
 
 					//load the related feed items
 					List<FeedItem> feedItems = feedItemEntityHandler.getFeedItemsForFeed(cnn, feed.getId(), feedItemLimit);
@@ -122,8 +118,9 @@ public class FeedEntityHandler {
 	 * Inserts a feed into the database.
 	 * @return the ID of the new feed
 	 */
-	public int insert(Connection cnn, String url, java.util.Date lastUpdated, String title, int createdByUserId) throws SQLException {
-		PreparedStatement stmt = cnn.prepareStatement("insert into feedreader.Feeds (url, lastUpdated, title, createdBy) values (?, ?, ?, ?) returning id");
+	public int insert(@Nonnull Connection cnn, String url, java.util.Date lastUpdated, String title, int createdByUserId) throws SQLException {
+		Preconditions.checkArgument(cnn != null, "cnn should not be null");
+		final PreparedStatement stmt = cnn.prepareStatement("insert into feedreader.Feeds (url, lastUpdated, title, createdBy) values (?, ?, ?, ?) returning id");
 		try {
 			stmt.setString(1, url);
 			stmt.setDate(2, toSqlDate(lastUpdated));
@@ -131,9 +128,9 @@ public class FeedEntityHandler {
 			stmt.setInt(4, createdByUserId);
 			
 			if(stmt.execute()) {
-				ResultSet rst = null;
-				try {
-					rst = stmt.getResultSet();
+				final ResultSet rst = stmt.getResultSet();
+				try { 
+					
 					if(rst.next()) {
 						return rst.getInt("id");
 					} else {
@@ -157,5 +154,16 @@ public class FeedEntityHandler {
 			return null;
 		}
 		return new java.sql.Date(value.getTime());
+	}
+
+	private Feed mapRow(ResultSet rst) throws SQLException {
+		Feed feed = new Feed();
+		feed.setId(rst.getInt("feed_id"));
+		feed.setUrl(rst.getString("feed_url"));
+		feed.setLastUpdated(rst.getDate("feed_lastUpdated"));
+		feed.setTitle(rst.getString("feed_title"));
+		feed.setCreated(rst.getDate("feed_created"));
+		feed.setCreatedById(rst.getInt("feed_createdBy"));
+		return feed;
 	}
 }
