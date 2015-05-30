@@ -149,13 +149,6 @@ public class FeedEntityHandler {
 		}
 	}
 	
-	private java.sql.Date toSqlDate(java.util.Date value) {
-		if(value == null) {
-			return null;
-		}
-		return new java.sql.Date(value.getTime());
-	}
-
 	private Feed mapRow(ResultSet rst) throws SQLException {
 		Feed feed = new Feed();
 		feed.setId(rst.getInt("feed_id"));
