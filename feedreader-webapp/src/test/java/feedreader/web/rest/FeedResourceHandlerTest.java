@@ -15,6 +15,7 @@ import org.junit.Test;
 import feedreader.Feed;
 import feedreader.FeedReader;
 import feedreader.UserFeedContext;
+import feedreader.web.rest.handlers.FeedResourceHandler;
 
 public class FeedResourceHandlerTest {
 	

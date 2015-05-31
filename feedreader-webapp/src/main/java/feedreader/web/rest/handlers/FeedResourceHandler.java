@@ -1,8 +1,7 @@
-package feedreader.web.rest;
+package feedreader.web.rest.handlers;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.Date;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -22,6 +21,9 @@ import feedreader.Feed;
 import feedreader.FeedReader;
 import feedreader.UserFeedContext;
 import feedreader.UserFeedItemContext;
+import feedreader.web.rest.output.FeedItemResource;
+import feedreader.web.rest.output.FeedResource;
+import feedreader.web.rest.output.ResourceHrefBuilder;
 
 /**
  * Handler that provides REST-ful services for the {@link Feed}
@@ -75,13 +77,5 @@ public class FeedResourceHandler implements ResourceHandler {
 		} finally {
 			out.close();
 		}
-	}
-	
-	static class FeedResource {
-		public int id;
-		public String title;
-		public Date created;
-		public String url;
-		public FeedItemResource[] items;
 	}
 }

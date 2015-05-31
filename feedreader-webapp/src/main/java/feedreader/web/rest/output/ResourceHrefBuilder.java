@@ -1,8 +1,8 @@
-package feedreader.web.rest;
+package feedreader.web.rest.output;
 
 import javax.servlet.http.HttpServletRequest;
 
-class ResourceHrefBuilder {
+public class ResourceHrefBuilder {
 	private final String protocol;
 	private final String serverName;
 	private final int serverPort;

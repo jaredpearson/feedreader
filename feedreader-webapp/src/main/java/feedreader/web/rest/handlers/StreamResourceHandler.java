@@ -1,4 +1,4 @@
-package feedreader.web.rest;
+package feedreader.web.rest.handlers;
 
 import java.io.IOException;
 
@@ -11,6 +11,9 @@ import common.web.rest.ResourceHandler;
 import feedreader.FeedReader;
 import feedreader.Stream;
 import feedreader.UserFeedItemContext;
+import feedreader.web.rest.output.FeedItemResource;
+import feedreader.web.rest.output.ResourceHrefBuilder;
+import feedreader.web.rest.output.StreamResource;
 
 /**
  * Handler that provides REST-ful services for the {@link Stream}
@@ -28,19 +31,14 @@ public class StreamResourceHandler implements ResourceHandler {
 		final ResourceHrefBuilder hrefBuilder = new ResourceHrefBuilder(request, "v1");
 		
 		//create the response models
-		final StreamResource streamResource = new StreamResource();
-		streamResource.items = new FeedItemResource[stream.getItems().size()];
+		final FeedItemResource[] items = new FeedItemResource[stream.getItems().size()];
 		for(int index = 0; index < stream.getItems().size(); index++) {
 			final UserFeedItemContext feedItem = stream.getItems().get(index);
 			final FeedItemResource feedItemResource = FeedItemResource.fromFeedItem(feedItem, hrefBuilder);
-			streamResource.items[index] = feedItemResource; 
+			items[index] = feedItemResource; 
 		}
 		
-		return streamResource;
-	}
-	
-	static class StreamResource {
-		public FeedItemResource[] items;
+		return new StreamResource(items);
 	}
 	
 }

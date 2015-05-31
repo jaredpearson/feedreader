@@ -1,4 +1,4 @@
-package feedreader.web.rest;
+package feedreader.web.rest.handlers;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -15,8 +15,8 @@ import common.web.rest.PathParameter;
 import common.web.rest.RequestHandler;
 import common.web.rest.ResourceHandler;
 import feedreader.FeedRequest;
-import feedreader.FeedRequestStatus;
 import feedreader.persist.FeedRequestEntityHandler;
+import feedreader.web.rest.output.FeedRequestResource;
 
 @Singleton
 public class FeedRequestResourceHandler implements ResourceHandler {
@@ -33,7 +33,7 @@ public class FeedRequestResourceHandler implements ResourceHandler {
 	 * Gets the feed corresponding to the request
 	 */
 	@RequestHandler(value = "^/v1/feedRequests/([0-9]+)$", method = Method.GET)
-	public FeedRequestResponseModel getFeedRequest(HttpServletRequest request, HttpServletResponse response, @PathParameter(1) String feedRequestIdValue) throws IOException {
+	public FeedRequestResource getFeedRequest(HttpServletRequest request, HttpServletResponse response, @PathParameter(1) String feedRequestIdValue) throws IOException {
 		
 		if (feedRequestIdValue == null) {
 			response.sendError(400);
@@ -60,18 +60,11 @@ public class FeedRequestResourceHandler implements ResourceHandler {
 			return null;
 		}
 		
-		FeedRequestResponseModel responseModel = new FeedRequestResponseModel();
+		final FeedRequestResource responseModel = new FeedRequestResource();
 		responseModel.id = feedRequest.getId();
 		responseModel.url = feedRequest.getUrl();
 		responseModel.status = feedRequest.getStatus();
 		responseModel.feedId = feedRequest.getFeedId();
 		return responseModel;
-	}
-	
-	public static final class FeedRequestResponseModel {
-		public int id;
-		public String url;
-		public FeedRequestStatus status;
-		public Integer feedId;
 	}
 }

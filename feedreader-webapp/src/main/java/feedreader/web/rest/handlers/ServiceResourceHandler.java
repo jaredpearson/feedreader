@@ -1,4 +1,4 @@
-package feedreader.web.rest;
+package feedreader.web.rest.handlers;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -6,6 +6,10 @@ import javax.servlet.http.HttpServletResponse;
 import common.web.rest.PathParameter;
 import common.web.rest.RequestHandler;
 import common.web.rest.ResourceHandler;
+import feedreader.web.rest.output.ResourceHrefBuilder;
+import feedreader.web.rest.output.ResourceLink;
+import feedreader.web.rest.output.VersionDirectoryResource;
+import feedreader.web.rest.output.VersionResource;
 
 public class ServiceResourceHandler implements ResourceHandler {
 	private static Version[] SUPPORTED_VERSIONS = new Version[] {
@@ -15,21 +19,15 @@ public class ServiceResourceHandler implements ResourceHandler {
 	};
 	
 	@RequestHandler("^/?$")
-	public VersionsResourceLink showVersions(HttpServletRequest httpRequest) throws Exception {
-		String[] versionApiNames = new String[]{"v1"};
-		
-		VersionsResourceLink versions = new VersionsResourceLink();
-		versions.versions = new VersionResourceLink[versionApiNames.length];
-		
+	public VersionDirectoryResource showVersions(HttpServletRequest httpRequest) throws Exception {
+		final ResourceLink[] versions = new ResourceLink[SUPPORTED_VERSIONS.length];
 		for(int index = 0; index < SUPPORTED_VERSIONS.length; index++) {
-			Version version = SUPPORTED_VERSIONS[index];
-			VersionResourceLink versionLink = new VersionResourceLink();
-			versionLink.name = version.name;
-			versionLink.href = new ResourceHrefBuilder(httpRequest, version.name).buildHref("");
-			versions.versions[index] = versionLink;
+			final Version version = SUPPORTED_VERSIONS[index];
+			final String href = new ResourceHrefBuilder(httpRequest, version.name).buildHref("");
+			versions[index] = new ResourceLink(version.name, href);
 		}
-		
-		return versions;
+
+		return new VersionDirectoryResource(versions);
 	}
 	
 	@RequestHandler("^/(v[0-9]+)")
@@ -48,40 +46,18 @@ public class ServiceResourceHandler implements ResourceHandler {
 			return null;
 		}
 		
-		ResourceHrefBuilder hrefBuilder = new ResourceHrefBuilder(httpRequest, version.getName());
+		final ResourceHrefBuilder hrefBuilder = new ResourceHrefBuilder(httpRequest, version.getName());
 		
 		//convert to a resource
-		VersionResource versionResource = new VersionResource();
-		versionResource.name = version.getName();
-		versionResource.actions = new VersionActionResourceLink[version.getActions().length];
+		final ResourceLink[] versionLinks = new ResourceLink[version.getActions().length];
 		for(int index = 0; index < version.getActions().length; index++) {
-			VersionAction versionAction = version.getActions()[index];
-			VersionActionResourceLink versionActionLink = new VersionActionResourceLink();
-			versionActionLink.name = versionAction.name;
-			versionActionLink.href = hrefBuilder.buildHref(versionAction.getPath());
-			versionResource.actions[index] = versionActionLink;
+			final VersionAction versionAction = version.getActions()[index];
+			final String href = hrefBuilder.buildHref(versionAction.getPath());
+			
+			versionLinks[index] = new ResourceLink(versionAction.name, href);
 		}
-		
-		return versionResource;
-	}
-	
-	static class VersionsResourceLink {
-		public VersionResourceLink[] versions;
-	}
-	
-	static class VersionResourceLink {
-		public String name;
-		public String href;
-	}
-	
-	static class VersionResource {
-		public String name;
-		public VersionActionResourceLink[] actions;
-	}
-	
-	static class VersionActionResourceLink {
-		public String name;
-		public String href;
+
+		return new VersionResource(version.getName(), versionLinks);
 	}
 	
 	static class Version {

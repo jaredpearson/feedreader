@@ -11,13 +11,13 @@ import feedreader.web.HomeServlet;
 import feedreader.web.ReaderServlet;
 import feedreader.web.RssSampleServlet;
 import feedreader.web.SignInServlet;
-import feedreader.web.rest.FeedItemResourceHandler;
-import feedreader.web.rest.FeedRequestResourceHandler;
-import feedreader.web.rest.FeedResourceHandler;
-import feedreader.web.rest.FeedSubscriptionResourceHandler;
 import feedreader.web.rest.RestAuthorizationFilter;
-import feedreader.web.rest.ServiceResourceHandler;
-import feedreader.web.rest.StreamResourceHandler;
+import feedreader.web.rest.handlers.FeedItemResourceHandler;
+import feedreader.web.rest.handlers.FeedRequestResourceHandler;
+import feedreader.web.rest.handlers.FeedResourceHandler;
+import feedreader.web.rest.handlers.FeedSubscriptionResourceHandler;
+import feedreader.web.rest.handlers.ServiceResourceHandler;
+import feedreader.web.rest.handlers.StreamResourceHandler;
 
 /**
  * Guice module for configuring web servlets and filters

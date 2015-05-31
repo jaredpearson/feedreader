@@ -17,6 +17,8 @@ import org.junit.Test;
 
 import feedreader.FeedReader;
 import feedreader.UserFeedItemContext;
+import feedreader.web.rest.handlers.FeedItemResourceHandler;
+import feedreader.web.rest.output.FeedItemResource;
 
 public class FeedItemResourceHandlerTest {
 	
@@ -38,7 +40,9 @@ public class FeedItemResourceHandlerTest {
 		final HttpServletResponse response = mock(HttpServletResponse.class);
 		when(response.getWriter()).thenReturn(new PrintWriter(writer));
 		
-		final FeedItemResourceHandler handler = new FeedItemResourceHandler(new ObjectMapper());
+		final DeserializerUtil deserializerUtil = new DeserializerUtil(new ObjectMapper());
+		
+		final FeedItemResourceHandler handler = new FeedItemResourceHandler(deserializerUtil);
 		final FeedItemResource resource = handler.patchFeedItem(request, response, feedReader, "1");
 		
 		verify(feedReader).markReadStatus(eq(1), eq(true));
@@ -65,7 +69,9 @@ public class FeedItemResourceHandlerTest {
 		final HttpServletResponse response = mock(HttpServletResponse.class);
 		when(response.getWriter()).thenReturn(new PrintWriter(writer));
 		
-		final FeedItemResourceHandler handler = new FeedItemResourceHandler(new ObjectMapper());
+		final DeserializerUtil deserializerUtil = new DeserializerUtil(new ObjectMapper());
+		
+		final FeedItemResourceHandler handler = new FeedItemResourceHandler(deserializerUtil);
 		final FeedItemResource resource = handler.patchFeedItem(request, response, feedReader, "1");
 		
 		verify(feedReader, never()).markReadStatus(anyInt(), anyBoolean());

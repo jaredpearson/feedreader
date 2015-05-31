@@ -8,13 +8,15 @@ import java.io.BufferedReader;
 import java.io.StringReader;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 
 import feedreader.FeedReader;
 import feedreader.FeedRequest;
-import feedreader.web.rest.FeedSubscriptionResourceHandler.CreateFeedSubscriptionResponse;
+import feedreader.web.rest.handlers.FeedSubscriptionResourceHandler;
+import feedreader.web.rest.handlers.FeedSubscriptionResourceHandler.CreateFeedSubscriptionResource;
 
 public class FeedSubscriptionResourceHandlerTest {
 	
@@ -23,18 +25,22 @@ public class FeedSubscriptionResourceHandlerTest {
 		FeedRequest feedRequest = new FeedRequest();
 		feedRequest.setId(1);
 		
-		FeedReader feedReader = mock(FeedReader.class);
+		final FeedReader feedReader = mock(FeedReader.class);
 		when(feedReader.addFeedFromUrl("http://test.com")).thenReturn(1);
 		
-		HttpServletRequest request = mock(HttpServletRequest.class);
+		final HttpServletRequest request = mock(HttpServletRequest.class);
 		when(request.getPathInfo()).thenReturn("/v1/feedSubscription");
 		when(request.getReader()).thenReturn(new BufferedReader(new StringReader("{\"url\":\"http://test.com\"}")));
+
+		final HttpServletResponse response = mock(HttpServletResponse.class);
 		
-		FeedSubscriptionResourceHandler handler = new FeedSubscriptionResourceHandler(new ObjectMapper());
-		CreateFeedSubscriptionResponse response = handler.createSubscription(request, feedReader);
+		final DeserializerUtil deserializerUtil = new DeserializerUtil(new ObjectMapper());
 		
-		assertTrue(response.success);
-		assertEquals(1, response.feedRequestId);
+		FeedSubscriptionResourceHandler handler = new FeedSubscriptionResourceHandler(deserializerUtil);
+		CreateFeedSubscriptionResource resource = handler.createSubscription(request, response, feedReader);
+		
+		assertTrue(resource.success);
+		assertEquals(1, resource.feedRequestId);
 	}
 
 }
