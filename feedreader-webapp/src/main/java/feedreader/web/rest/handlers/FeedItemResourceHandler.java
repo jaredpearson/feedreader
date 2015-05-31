@@ -20,6 +20,10 @@ import feedreader.web.rest.input.FeedItemInputResource;
 import feedreader.web.rest.output.FeedItemResource;
 import feedreader.web.rest.output.ResourceHrefBuilder;
 
+/**
+ * Resource handler for FeedItem entities
+ * @author jared.pearson
+ */
 @Singleton
 public class FeedItemResourceHandler implements ResourceHandler {
 	private final DeserializerUtil deserializerUtil;
@@ -30,7 +34,7 @@ public class FeedItemResourceHandler implements ResourceHandler {
 		this.deserializerUtil = deserializerUtil;
 	}
 
-	@RequestHandler(value = "^/v1/feedItem/([0-9]+)$", method = Method.GET) 
+	@RequestHandler(value = "^/v1/feedItems/([0-9]+)$", method = Method.GET) 
 	public FeedItemResource getFeedItem(HttpServletRequest request, HttpServletResponse response, FeedReader feedReader, @PathParameter(1) String feedItemIdValue) throws IOException {
 		final int feedItemId = Integer.valueOf(feedItemIdValue);
 		final UserFeedItemContext feedItem = feedReader.getFeedItem(feedItemId);
@@ -44,7 +48,7 @@ public class FeedItemResourceHandler implements ResourceHandler {
 		return FeedItemResource.fromFeedItem(feedItem, hrefBuilder);
 	}
 	
-	@RequestHandler(value = "^/v1/feedItem/([0-9]+)$", method = Method.PATCH) 
+	@RequestHandler(value = "^/v1/feedItems/([0-9]+)$", method = Method.PATCH) 
 	public FeedItemResource patchFeedItem(HttpServletRequest request, HttpServletResponse response, FeedReader feedReader, @PathParameter(1) String feedItemIdValue) throws IOException {
 		
 		//TODO: we assume that only content of application/json is specified

@@ -31,7 +31,7 @@ public class FeedSubscriptionResourceHandler implements ResourceHandler {
 		this.deserializerUtil = deserializerUtil;
 	}
 	
-	@RequestHandler(value="^/v1/feedSubscription$", method=Method.POST)
+	@RequestHandler(value="^/v1/feedSubscriptions$", method=Method.POST)
 	public CreateFeedSubscriptionResource createSubscription(HttpServletRequest request, HttpServletResponse response, FeedReader feedReader) 
 			throws IOException, ServletException {
 		

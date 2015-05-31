@@ -28,7 +28,7 @@ public class FeedResourceHandler implements ResourceHandler {
 	/**
 	 * Gets the feed corresponding to the request
 	 */
-	@RequestHandler(value = "^/v1/feed/([0-9]+)$", method = Method.GET)
+	@RequestHandler(value = "^/v1/feeds/([0-9]+)$", method = Method.GET)
 	public FeedResource getFeed(HttpServletRequest request, HttpServletResponse response, FeedReader feedReader, @PathParameter(1) String feedIdValue) throws IOException, ServletException {
 		
 		if (feedIdValue == null) {

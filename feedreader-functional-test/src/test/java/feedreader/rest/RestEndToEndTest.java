@@ -90,7 +90,7 @@ public class RestEndToEndTest {
 		final String rssUrl = createUrl("/rssSamples/rss" + (new Random()).nextInt() + ".xml");
 		
 		// request a new feed be added
-		final HttpPost postRequest = new HttpPost(createUrl("/services/v1/feedSubscription"));
+		final HttpPost postRequest = new HttpPost(createUrl("/services/v1/feedSubscriptions"));
 		postRequest.setEntity(new StringEntity("{\"url\":\"" + rssUrl + "\"}"));
 		postRequest.addHeader("Authorization", "SID " + sessionId);
 		final JsonRestResponse postFeedSubscriptionResponse = createFromHttpResponse(client.execute(postRequest));
@@ -201,7 +201,7 @@ public class RestEndToEndTest {
 		final FeedRequest request = requestFeedAndWait(client, sessionId, rssSample1Url);
 		
 		// request the feed
-		final HttpGet getRequest = new HttpGet(createUrl("/services/v1/feed/" + request.getFeedId()));
+		final HttpGet getRequest = new HttpGet(createUrl("/services/v1/feeds/" + request.getFeedId()));
 		getRequest.addHeader("Authorization", "SID " + sessionId);
 		
 		final JsonRestResponse requestResponse = createFromHttpResponse(client.execute(getRequest));
@@ -234,7 +234,7 @@ public class RestEndToEndTest {
 		final FeedRequest request = requestFeedAndWait(client, sessionId, rssSample1Url);
 		
 		// request the feed
-		final HttpGet getFeedRequest = new HttpGet(createUrl("/services/v1/feed/" + request.getFeedId()));
+		final HttpGet getFeedRequest = new HttpGet(createUrl("/services/v1/feeds/" + request.getFeedId()));
 		getFeedRequest.addHeader("Authorization", "SID " + sessionId);
 		
 		final JsonRestResponse getFeedRequestResponse = createFromHttpResponse(client.execute(getFeedRequest));
@@ -251,7 +251,7 @@ public class RestEndToEndTest {
 		final int feedItemId = feedItemNode.get("id").asInt();
 		
 		// patch the request so that the read status is now true
-		final HttpPatch patchRequest = new HttpPatch(createUrl("/services/v1/feedItem/" + feedItemId));
+		final HttpPatch patchRequest = new HttpPatch(createUrl("/services/v1/feedItems/" + feedItemId));
 		patchRequest.addHeader("Authorization", "SID " + sessionId);
 		patchRequest.setEntity(new StringEntity("{\"read\":true}"));
 		
@@ -261,7 +261,7 @@ public class RestEndToEndTest {
 		assertFeedItem(patchResponse.getBodyAsJsonNode(), expectedFeedItemTitle, expectedFeedItemGuid, true);
 		
 		// reload the request so that we know that the read status has been updated
-		final HttpGet feedItemRequest = new HttpGet(createUrl("/services/v1/feedItem/" + feedItemId));
+		final HttpGet feedItemRequest = new HttpGet(createUrl("/services/v1/feedItems/" + feedItemId));
 		feedItemRequest.addHeader("Authorization", "SID " + sessionId);
 		
 		final JsonRestResponse feedItemResponse = createFromHttpResponse(client.execute(patchRequest));
@@ -276,7 +276,7 @@ public class RestEndToEndTest {
 	 */
 	private FeedRequest requestFeedAndWait(HttpClient client, int sessionId, String rssUrl) throws Exception {
 		// request a new feed be added
-		final HttpPost postRequest = new HttpPost(createUrl("/services/v1/feedSubscription"));
+		final HttpPost postRequest = new HttpPost(createUrl("/services/v1/feedSubscriptions"));
 		postRequest.setEntity(new StringEntity("{\"url\":\"" + rssUrl + "\"}"));
 		postRequest.addHeader("Authorization", "SID " + sessionId);
 		final JsonRestResponse postFeedSubscriptionResponse = createFromHttpResponse(client.execute(postRequest));

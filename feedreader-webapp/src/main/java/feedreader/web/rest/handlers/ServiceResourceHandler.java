@@ -1,5 +1,6 @@
 package feedreader.web.rest.handlers;
 
+import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -11,6 +12,11 @@ import feedreader.web.rest.output.ResourceLink;
 import feedreader.web.rest.output.VersionDirectoryResource;
 import feedreader.web.rest.output.VersionResource;
 
+/**
+ * Resource handler for the REST-ful service
+ * @author jared.pearson
+ */
+@Singleton
 public class ServiceResourceHandler implements ResourceHandler {
 	private static Version[] SUPPORTED_VERSIONS = new Version[] {
 		new Version("v1", new VersionAction[]{
@@ -31,7 +37,7 @@ public class ServiceResourceHandler implements ResourceHandler {
 	}
 	
 	@RequestHandler("^/(v[0-9]+)")
-	public VersionResource showVersionRoot(HttpServletRequest httpRequest, HttpServletResponse httpResponse, @PathParameter(1) String versionName) throws Exception {
+	public VersionResource showVersion(HttpServletRequest httpRequest, HttpServletResponse httpResponse, @PathParameter(1) String versionName) throws Exception {
 		
 		//find the version resource corresponding to the name specified
 		Version version = null;

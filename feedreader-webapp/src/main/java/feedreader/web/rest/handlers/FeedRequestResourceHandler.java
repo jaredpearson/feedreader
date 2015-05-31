@@ -18,6 +18,10 @@ import feedreader.FeedRequest;
 import feedreader.persist.FeedRequestEntityHandler;
 import feedreader.web.rest.output.FeedRequestResource;
 
+/**
+ * Resource handler for FeedRequest handlers
+ * @author jared.pearson
+ */
 @Singleton
 public class FeedRequestResourceHandler implements ResourceHandler {
 	private final DataSource dataSource;
