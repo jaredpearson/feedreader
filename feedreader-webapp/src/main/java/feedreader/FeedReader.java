@@ -163,6 +163,27 @@ public class FeedReader {
 	}
 	
 	/**
+	 * Gets a page of FeedRequest instances for the current user. The results should be ordered from newest to oldest. 
+	 */
+	public @Nonnull FeedRequestPage getFeedRequestsForCurrentUser(final int pageIndex, final int pageSize) {
+		try {
+			final Connection cnn = dataSource.getConnection();
+			try {
+				
+				final List<FeedRequest> feedRequestPageItems = feedRequestEntityHandler.getFeedRequestsForUser(cnn, userId, pageIndex, pageSize);
+				final int total = feedRequestEntityHandler.getTotalNumberOfFeedRequestsForUser(cnn, userId);
+				
+				return new FeedRequestPage(feedRequestPageItems, total);
+				
+			} finally {
+				cnn.close();
+			}
+		} catch(SQLException exc) {
+			throw Throwables.propagate(exc);
+		}
+	}
+	
+	/**
 	 * Marks the feed item corresponding to the specified ID with the specified read status.
 	 */
 	public void markReadStatus(int feedItemId, boolean readStatus) {

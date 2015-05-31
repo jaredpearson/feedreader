@@ -4,12 +4,15 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.logging.Logger;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.inject.Singleton;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 import common.persist.DbUtils;
 import feedreader.FeedRequest;
@@ -21,6 +24,7 @@ import feedreader.FeedRequestStatus;
  */
 @Singleton
 public class FeedRequestEntityHandler {
+	private static final Logger logger = Logger.getLogger(FeedRequestEntityHandler.class.getName());
 
 	/**
 	 * Attempts to find the feed request with the specified ID value. If not found, then a null reference is returned.
@@ -36,19 +40,7 @@ public class FeedRequestEntityHandler {
 			final ResultSet rst = stmt.executeQuery();
 			try {
 				if(rst.next()) {
-					final FeedRequest feedRequest = new FeedRequest();
-					feedRequest.setId(rst.getInt(1));
-					feedRequest.setUrl(rst.getString("url"));
-					feedRequest.setStatus(FeedRequestStatus.fromDbValue(rst.getString("status")));
-					feedRequest.setCreated(rst.getTimestamp("created"));
-					feedRequest.setCreatedById(rst.getInt("createdBy"));
-					
-					//get the referenced feed, which is optional
-					int feedId = rst.getInt("feedId");
-					if(!rst.wasNull()) {
-						feedRequest.setFeedId(feedId); 
-					}
-					return feedRequest;
+					return mapRow(rst);
 				} else { 
 					return null;
 				}
@@ -128,4 +120,80 @@ public class FeedRequestEntityHandler {
 			DbUtils.close(stmt);
 		}
 	}
+
+	/**
+	 * Gets the page of FeedRequest instances created by the given user ID.
+	 * @param cnn the current connection 
+	 * @param userId the ID of the user to retrieve the feed requests for
+	 * @param pageIndex the zero-based index of the page to retrieve
+	 * @param pageSize the size of the page to retrieve
+	 * @return the feed request instances created by the user
+	 */
+	public @Nonnull List<FeedRequest> getFeedRequestsForUser(@Nonnull Connection cnn, int userId, int pageIndex, int pageSize) throws SQLException {
+		Preconditions.checkArgument(cnn != null, "cnn should not be null");
+
+		final PreparedStatement stmt = cnn.prepareStatement("select id, url, feedId, status, created, createdBy from feedreader.FeedRequests where createdBy = ? order by created desc limit " + pageSize + " offset " + (pageIndex * pageSize));
+		try {
+			stmt.setInt(1, userId);
+			
+			final ResultSet rst = stmt.executeQuery();
+			try {
+				final List<FeedRequest> feedRequests = Lists.newArrayListWithCapacity(pageSize);
+				while (rst.next()) {
+					feedRequests.add(mapRow(rst));
+				}
+				return feedRequests;
+			} finally {
+				DbUtils.close(rst);
+			}
+		} finally {
+			DbUtils.close(stmt);
+		}
+	}
+	
+	/**
+	 * Gets the total number of requests created by the given user ID.
+	 * @param cnn the current connection 
+	 * @param userId the ID of the user to retrieve the feed requests for
+	 * @return the total number of requests
+	 */
+	public int getTotalNumberOfFeedRequestsForUser(Connection cnn, int userId) throws SQLException {
+		Preconditions.checkArgument(cnn != null, "cnn should not be null");
+
+		final PreparedStatement stmt = cnn.prepareStatement("select count(*) from feedreader.FeedRequests where createdBy = ?");
+		try {
+			stmt.setInt(1, userId);
+			
+			final ResultSet rst = stmt.executeQuery();
+			try {
+				if (rst.next()) {
+					return rst.getInt(1);
+				} else {
+					logger.warning("Counting the FeedRequests was not executed correctly");
+					return 0;
+				}
+			} finally {
+				DbUtils.close(rst);
+			}
+		} finally {
+			DbUtils.close(stmt);
+		}
+	}
+
+	private FeedRequest mapRow(final ResultSet rst) throws SQLException {
+		final FeedRequest feedRequest = new FeedRequest();
+		feedRequest.setId(rst.getInt(1));
+		feedRequest.setUrl(rst.getString("url"));
+		feedRequest.setStatus(FeedRequestStatus.fromDbValue(rst.getString("status")));
+		feedRequest.setCreated(rst.getTimestamp("created"));
+		feedRequest.setCreatedById(rst.getInt("createdBy"));
+		
+		//get the referenced feed, which is optional
+		int feedId = rst.getInt("feedId");
+		if(!rst.wasNull()) {
+			feedRequest.setFeedId(feedId); 
+		}
+		return feedRequest;
+	}
+
 }

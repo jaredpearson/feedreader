@@ -3,12 +3,14 @@ package feedreader.rest;
 import static org.junit.Assert.*;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.sql.SQLException;
 import java.util.Random;
 
 import javax.annotation.Nonnull;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPatch;
@@ -89,18 +91,7 @@ public class RestEndToEndTest {
 		final int sessionId = userSessionUtils.createUserSession(userId);
 		final String rssUrl = createUrl("/rssSamples/rss" + (new Random()).nextInt() + ".xml");
 		
-		// request a new feed be added
-		final HttpPost postRequest = new HttpPost(createUrl("/services/v1/feedSubscriptions"));
-		postRequest.setEntity(new StringEntity("{\"url\":\"" + rssUrl + "\"}"));
-		postRequest.addHeader("Authorization", "SID " + sessionId);
-		final JsonRestResponse postFeedSubscriptionResponse = createFromHttpResponse(client.execute(postRequest));
-		final JsonNode postFeedSubscriptionResponseNode = postFeedSubscriptionResponse.getBodyAsJsonNode();
-		
-		assertEquals(200, postFeedSubscriptionResponse.getStatusCode());
-		assertTrue("Expected the feedSubscription POST response to have a \"success\" property", postFeedSubscriptionResponseNode.has("success"));
-		assertTrue("Expected the feedSubscription POST response to have a true \"success\" property", postFeedSubscriptionResponseNode.get("success").asBoolean());
-		assertTrue("Expected the feedSubscription POST response to have a \"feedRequestId\" property", postFeedSubscriptionResponseNode.has("feedRequestId"));
-		final int feedRequestId = postFeedSubscriptionResponseNode.get("feedRequestId").asInt();
+		final int feedRequestId = requestFeed(client, sessionId, rssUrl);
 		
 		// request the status of the feed. if the status has not been started, we will keep requesting the status 
 		// until it is or the max number of tries is exceeded.
@@ -269,24 +260,39 @@ public class RestEndToEndTest {
 		assertEquals(200, feedItemResponse.getStatusCode());
 		assertFeedItem(feedItemResponse.getBodyAsJsonNode(), expectedFeedItemTitle, expectedFeedItemGuid, true);
 	}
+
+	/**
+	 * Verifies that a user can mark a feed item read
+	 */
+	@Test
+	public void testGetFeedRequests() throws Exception {
+		final HttpClient client = HttpClients.createDefault();
+		final int userId = createUniqueUser();
+		final int sessionId = userSessionUtils.createUserSession(userId);
+		
+		// request the RSS feed
+		final String rssSample1Url = createUrl("/rssSamples/sample1-" + (new Random()).nextInt() + ".xml");
+		final int requestId = requestFeed(client, sessionId, rssSample1Url);
+		
+		// get the request status for the new feed
+		final HttpGet getFeedRequestRequest = new HttpGet(createUrl("/services/v1/feedRequests"));
+		getFeedRequestRequest.addHeader("Authorization", "SID " + sessionId);
+		final JsonRestResponse getFeedRequestResponse = createFromHttpResponse(client.execute(getFeedRequestRequest));
+		final JsonNode getFeedRequestResponseNode = getFeedRequestResponse.getBodyAsJsonNode();
+		
+		assertEquals(200, getFeedRequestResponse.getStatusCode());
+		assertFalse("Expected items property in feedRequestPage to not be null", getFeedRequestResponseNode.get("items").isNull());
+		assertTrue("Expected items property in feedRequestPage to be an array", getFeedRequestResponseNode.get("items").isArray());
+		assertEquals("Expected item property in feedRequestPage to have one item", 1, getFeedRequestResponseNode.get("items").size());
+		assertEquals("Unexpected value in id property of feedRequest", requestId, getFeedRequestResponseNode.get("items").get(0).get("id").asInt());
+	}
 	
 	/**
 	 * Requests a feed to be added at the given RSS url and wait until it is in a status other than NOT_STARTED
 	 * @return the request after it has been started
 	 */
 	private FeedRequest requestFeedAndWait(HttpClient client, int sessionId, String rssUrl) throws Exception {
-		// request a new feed be added
-		final HttpPost postRequest = new HttpPost(createUrl("/services/v1/feedSubscriptions"));
-		postRequest.setEntity(new StringEntity("{\"url\":\"" + rssUrl + "\"}"));
-		postRequest.addHeader("Authorization", "SID " + sessionId);
-		final JsonRestResponse postFeedSubscriptionResponse = createFromHttpResponse(client.execute(postRequest));
-		final JsonNode postFeedSubscriptionResponseNode = postFeedSubscriptionResponse.getBodyAsJsonNode();
-		
-		assertEquals(200, postFeedSubscriptionResponse.getStatusCode());
-		assertTrue("Expected the feedSubscription POST response to have a \"success\" property", postFeedSubscriptionResponseNode.has("success"));
-		assertTrue("Expected the feedSubscription POST response to have a true \"success\" property", postFeedSubscriptionResponseNode.get("success").asBoolean());
-		assertTrue("Expected the feedSubscription POST response to have a \"feedRequestId\" property", postFeedSubscriptionResponseNode.has("feedRequestId"));
-		final int feedRequestId = postFeedSubscriptionResponseNode.get("feedRequestId").asInt();
+		final int feedRequestId = requestFeed(client, sessionId, rssUrl);
 		
 		// request the status of the feed. if the status has not been started, we will keep requesting the status 
 		// until it is or the max number of tries is exceeded.
@@ -314,6 +320,26 @@ public class RestEndToEndTest {
 		} while(feedRequest.isNotStarted());
 		
 		return feedRequest;
+	}
+
+	/**
+	 * Requests a feed to be added at the given RSS url but doesn't wait for the request to be finished
+	 * @return the request ID
+	 */
+	private int requestFeed(HttpClient client, int sessionId, String rssUrl) throws UnsupportedEncodingException, IOException, ClientProtocolException {
+		// request a new feed be added
+		final HttpPost postRequest = new HttpPost(createUrl("/services/v1/feedSubscriptions"));
+		postRequest.setEntity(new StringEntity("{\"url\":\"" + rssUrl + "\"}"));
+		postRequest.addHeader("Authorization", "SID " + sessionId);
+		final JsonRestResponse postFeedSubscriptionResponse = createFromHttpResponse(client.execute(postRequest));
+		final JsonNode postFeedSubscriptionResponseNode = postFeedSubscriptionResponse.getBodyAsJsonNode();
+		
+		assertEquals(200, postFeedSubscriptionResponse.getStatusCode());
+		assertTrue("Expected the feedSubscription POST response to have a \"success\" property", postFeedSubscriptionResponseNode.has("success"));
+		assertTrue("Expected the feedSubscription POST response to have a true \"success\" property", postFeedSubscriptionResponseNode.get("success").asBoolean());
+		assertTrue("Expected the feedSubscription POST response to have a \"feedRequestId\" property", postFeedSubscriptionResponseNode.has("feedRequestId"));
+		final int feedRequestId = postFeedSubscriptionResponseNode.get("feedRequestId").asInt();
+		return feedRequestId;
 	}
 	
 	/**
