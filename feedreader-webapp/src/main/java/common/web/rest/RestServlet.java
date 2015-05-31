@@ -10,6 +10,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.servlet.ServletConfig;
@@ -72,7 +74,11 @@ public class RestServlet extends HttpServlet {
 		
 		try {
 			RequestHandlerMapping mapping = getMapping(httpRequest);
-			mapping.execute(httpRequest, httpResponse, injector);
+			if (mapping == null) {
+				httpResponse.sendError(404);
+			} else {
+				mapping.execute(httpRequest, httpResponse, injector);
+			}
 		} catch(Exception exc) {
 			exc.printStackTrace(System.err);
 			httpResponse.sendError(500);
@@ -83,14 +89,13 @@ public class RestServlet extends HttpServlet {
 	 * Gets the mapping from the request. If the no mapping is found, then
 	 * an {@link IllegalStateException} is thrown.
 	 */
-	private RequestHandlerMapping getMapping(HttpServletRequest request) {
+	private @Nullable RequestHandlerMapping getMapping(@Nonnull HttpServletRequest request) {
 		for(RequestHandlerMapping mapping : requestMappings) {
 			if(mapping.handles(request)) {
 				return mapping;
 			}
 		}
-		
-		throw new IllegalStateException("No mapping specified for request: " + request.getRequestURL());
+		return null;
 	}
 	
 	private static class RequestHandlerMapping {
