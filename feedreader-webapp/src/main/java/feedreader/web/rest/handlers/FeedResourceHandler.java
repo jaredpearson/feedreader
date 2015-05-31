@@ -1,17 +1,10 @@
 package feedreader.web.rest.handlers;
 
 import java.io.IOException;
-import java.io.Writer;
-
-import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
 
 import common.web.rest.Method;
 import common.web.rest.PathParameter;
@@ -31,51 +24,45 @@ import feedreader.web.rest.output.ResourceHrefBuilder;
  */
 @Singleton
 public class FeedResourceHandler implements ResourceHandler {
-	private final ObjectMapper objectMapper;
-	
-	@Inject
-	public FeedResourceHandler(ObjectMapper objectMapper) {
-		this.objectMapper = objectMapper;
-	}
 	
 	/**
 	 * Gets the feed corresponding to the request
 	 */
 	@RequestHandler(value = "^/v1/feed/([0-9]+)$", method = Method.GET)
-	public void getFeed(HttpServletRequest request, HttpServletResponse response, FeedReader feedReader, @PathParameter(1) String feedIdValue) throws IOException, ServletException {
+	public FeedResource getFeed(HttpServletRequest request, HttpServletResponse response, FeedReader feedReader, @PathParameter(1) String feedIdValue) throws IOException, ServletException {
+		
+		if (feedIdValue == null) {
+			response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing required parameter \"id\"");
+			return null;
+		}
 		
 		//get the requested feed
-		final int feedId = Integer.valueOf(feedIdValue);
+		final int feedId;
+		try {
+			feedId = Integer.valueOf(feedIdValue);
+		} catch(NumberFormatException exc) {
+			response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Parameter \"id\" is not a valid string");
+			return null;
+		}
 		final UserFeedContext feedContext = feedReader.getFeed(feedId);
 		
 		final ResourceHrefBuilder hrefBuilder = new ResourceHrefBuilder(request, "v1");
 		
 		//create the resource models
-		final FeedResource feedModel = new FeedResource();
-		feedModel.id = feedContext.getId();
-		feedModel.title = feedContext.getTitle();
-		feedModel.created = feedContext.getCreated();
-		feedModel.url = feedContext.getUrl();
-		feedModel.items = new FeedItemResource[feedContext.getItems().size()];
+		final FeedItemResource[] itemResources = new FeedItemResource[feedContext.getItems().size()];
 		for(int index = 0; index < feedContext.getItems().size(); index++) {
-			UserFeedItemContext feedItem = feedContext.getItems().get(index);
-
-			final FeedItemResource feedItemResource = FeedItemResource.fromFeedItem(feedItem, hrefBuilder);
-			
-			feedModel.items[index] = feedItemResource;
+			final UserFeedItemContext feedItem = feedContext.getItems().get(index);
+			itemResources[index] = FeedItemResource.fromFeedItem(feedItem, hrefBuilder);
 		}
 		
-		//output the model as the body of the response
-		writeResponse(response, feedModel);
+		final FeedResource feedResource = new FeedResource();
+		feedResource.id = feedContext.getId();
+		feedResource.title = feedContext.getTitle();
+		feedResource.created = feedContext.getCreated();
+		feedResource.url = feedContext.getUrl();
+		feedResource.items = itemResources;
+		
+		return feedResource;
 	}
 	
-	private void writeResponse(final HttpServletResponse response, final Object model) throws IOException, JsonGenerationException, JsonMappingException {
-		response.setContentType("application/json");
-		Writer out = response.getWriter();
-		try {
-			objectMapper.writeValue(out, model);
-		} finally {
-			out.close();
-		}
-	}
 }
