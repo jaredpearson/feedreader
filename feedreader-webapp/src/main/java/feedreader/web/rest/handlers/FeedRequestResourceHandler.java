@@ -72,7 +72,7 @@ public class FeedRequestResourceHandler implements ResourceHandler {
 	}
 
 	/**
-	 * Gets the feed corresponding to the request
+	 * Gets the requests that have been made by the current user
 	 */
 	@RequestHandler(value = "^/v1/feedRequests$", method = Method.GET)
 	public FeedRequestPageResource getFeedRequests(HttpServletRequest request, HttpServletResponse response, FeedReader feedReader) throws IOException {
