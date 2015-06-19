@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.sql.DataSource;
@@ -19,6 +20,8 @@ import feedreader.FeedReader;
 import feedreader.FeedRequest;
 import feedreader.FeedRequestPage;
 import feedreader.persist.FeedRequestEntityHandler;
+import feedreader.web.rest.DeserializerUtil;
+import feedreader.web.rest.input.FeedRequestInputResource;
 import feedreader.web.rest.output.FeedRequestPageResource;
 import feedreader.web.rest.output.FeedRequestResource;
 
@@ -30,11 +33,40 @@ import feedreader.web.rest.output.FeedRequestResource;
 public class FeedRequestResourceHandler implements ResourceHandler {
 	private final DataSource dataSource;
 	private final FeedRequestEntityHandler feedRequestResourceHandler;
+	private final DeserializerUtil deserializerUtil;
 	
 	@Inject
-	public FeedRequestResourceHandler(DataSource dataSource, FeedRequestEntityHandler feedRequestResourceHandler) {
+	public FeedRequestResourceHandler(DataSource dataSource, FeedRequestEntityHandler feedRequestResourceHandler, DeserializerUtil deserializerUtil) {
 		this.dataSource = dataSource;
 		this.feedRequestResourceHandler = feedRequestResourceHandler;
+		this.deserializerUtil = deserializerUtil;
+	}
+
+	@RequestHandler(value="^/v1/feedRequests$", method=Method.POST)
+	public FeedRequestResource createRequest(HttpServletRequest request, HttpServletResponse response, FeedReader feedReader) 
+			throws IOException, ServletException {
+		
+		//TODO: we assume that only content of application/json is specified
+		final FeedRequestInputResource input = deserializerUtil.deserializeFromRequestBodyAsJson(request, FeedRequestInputResource.class);
+		if (input == null) {
+			response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing input body");
+			return null;
+		}
+		if (input.url == null || input.url.isEmpty()) {
+			response.sendError(HttpServletResponse.SC_BAD_REQUEST, "URL must be specified");
+			return null;
+		}
+		
+		final int feedRequestId = feedReader.addFeedFromUrl(input.url);
+
+		final FeedRequest feedRequest;
+		try {
+			final Connection cnn = dataSource.getConnection(); 
+			feedRequest = feedRequestResourceHandler.findFeedRequestById(cnn, feedRequestId);
+		} catch (SQLException exc) {
+			throw new RuntimeException(exc);
+		}
+		return createFeedRequestResource(feedRequest);
 	}
 
 	/**
