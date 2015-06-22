@@ -16,6 +16,7 @@ import javax.inject.Singleton;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import common.persist.DbUtils;
 import feedreader.Feed;
@@ -50,9 +51,9 @@ public class FeedEntityHandler {
 	 * Finds all feeds corresponding from the given feed IDs.
 	 * @param cnn the current connection
 	 * @param feedIds the IDs of the all the feeds to load. passing null or empty set will yield an empty map
-	 * @param feedItemLimit the number of feed items to load. passing null will load the default number of feed items
+	 * @param feedItemLimit the max number of feed items to load
 	 */
-	public @Nonnull Map<Integer, Feed> findFeedsAndFeedItemsByFeedIds(final Connection cnn, final Set<Integer> feedIds, final Integer feedItemLimit) throws SQLException {
+	public @Nonnull Map<Integer, Feed> findFeedsAndFeedItemsByFeedIds(final Connection cnn, final Set<Integer> feedIds, final int feedItemLimit) throws SQLException {
 		Preconditions.checkArgument(cnn != null, "cnn should not be null");
 		if (feedIds == null || feedIds.isEmpty()) {
 			return Collections.emptyMap();
@@ -105,46 +106,16 @@ public class FeedEntityHandler {
 	/**
 	 * Finds the feed that corresponds to the specified ID. If no feed matches, then a null reference is returned.
 	 */
-	public @Nullable Feed findFeedAndFeedItemsByFeedId(final Connection cnn, final int feedId) throws SQLException {
-		Preconditions.checkArgument(cnn != null, "cnn should not be null");
-		Feed feed = null;
-		
-		final PreparedStatement stmt = cnn.prepareStatement(SELECT_SQL_FRAGMENT + "where f.id = ? limit 1");
-		try {
-			stmt.setInt(1, feedId);
-			
-			final ResultSet rst = stmt.executeQuery();
-			try {
-				if(rst.next()) {
-					feed = mapRow(rst);
-					
-					//load the related feed items
-					List<FeedItem> feedItems = feedItemEntityHandler.getFeedItemsForFeed(cnn, feed.getId());
-					feed.setItems(feedItems);
-				}
-				
-			} finally {
-				DbUtils.close(rst);
-			}
-			
-		} finally {
-			DbUtils.close(stmt);
-		}
-		return feed;
-	}
-
-	/**
-	 * Finds the feed that corresponds to the specified URL. If no feed matches, then a null reference is returned.
-	 */
-	public @Nullable Feed findFeedAndFeedItemsByUrl(@Nonnull final Connection cnn, @Nonnull final String url) throws SQLException {
-		return findFeedAndFeedItemsByUrl(cnn, url, null);
+	public @Nullable Feed findFeedAndFeedItemsByFeedId(final Connection cnn, final int feedId, final int feedItemLimit) throws SQLException {
+		final Map<Integer, Feed> feedsById = findFeedsAndFeedItemsByFeedIds(cnn, Sets.newHashSet(feedId), feedItemLimit);
+		return feedsById.get(feedId); 
 	}
 	
 	/**
 	 * Finds the feed that corresponds to the specified URL. If no feed matches, then a null reference is returned.
 	 * @param feedItemLimit the max number of feed items to retrieve. set to null to retrieve all of the feed items 
 	 */
-	public @Nullable Feed findFeedAndFeedItemsByUrl(@Nonnull final Connection cnn, @Nonnull final String url, @Nullable final Integer feedItemLimit) throws SQLException {
+	public @Nullable Feed findFeedAndFeedItemsByUrl(@Nonnull final Connection cnn, @Nonnull final String url, @Nullable final int feedItemLimit) throws SQLException {
 		Preconditions.checkArgument(cnn != null, "cnn should not be null");
 		Preconditions.checkArgument(url != null && !url.isEmpty(), "url should not be null");
 		Feed feed = null;

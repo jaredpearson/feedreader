@@ -107,22 +107,14 @@ public class FeedItemEntityHandler {
 	 * Gets the feed items for the specified feed ID.
 	 * @return the feed items for the specified feed ID.
 	 */
-	public @Nonnull List<FeedItem> getFeedItemsForFeed(Connection cnn, int feedId) throws SQLException {
-		return getFeedItemsForFeed(cnn, feedId, null);
-	}
-	
-	/**
-	 * Gets the feed items for the specified feed ID.
-	 * @return the feed items for the specified feed ID.
-	 */
-	public @Nonnull List<FeedItem> getFeedItemsForFeed(Connection cnn, int feedId, @Nullable Integer limit) throws SQLException {
+	public @Nonnull List<FeedItem> getFeedItemsForFeed(Connection cnn, int feedId, int limit) throws SQLException {
 		Preconditions.checkArgument(cnn != null, "cnn should not be null");
-		if (limit != null && limit < 1) {
+		if (limit < 1) {
 			return Collections.emptyList();
 		}
 		
 		final List<FeedItem> feedItems = new ArrayList<FeedItem>();
-		final PreparedStatement stmt = cnn.prepareStatement(SELECT_SQL_FRAGMENT + "where i.feedId = ? " + (limit != null ? " limit " + limit : ""));
+		final PreparedStatement stmt = cnn.prepareStatement(SELECT_SQL_FRAGMENT + "where i.feedId = ? limit " + limit);
 		try {
 			stmt.setInt(1, feedId);
 			

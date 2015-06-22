@@ -28,6 +28,7 @@ import feedreader.persist.UserFeedItemContextEntityHandler;
  * @author jared.pearson
  */
 public class FeedReader {
+	private final int MAX_FEED_ITEMS = 25;
 	private final DataSource dataSource;
 	private final int userId;
 	private final MessageSender messageSender;
@@ -88,8 +89,7 @@ public class FeedReader {
 			final Connection cnn = dataSource.getConnection();
 			try {
 				final int offset = 0;
-				final int size = 25;
-				List<FeedItem> feedItems = feedItemEntityHandler.getFeedItemsForStream(cnn, userId, size, offset);
+				List<FeedItem> feedItems = feedItemEntityHandler.getFeedItemsForStream(cnn, userId, MAX_FEED_ITEMS, offset);
 		
 
 				//get all of the contexts for the user from the feed items
@@ -114,7 +114,7 @@ public class FeedReader {
 		try {
 			final Connection cnn = dataSource.getConnection();
 			try {
-				final Feed feed = feedEntityHandler.findFeedAndFeedItemsByFeedId(cnn, feedId);
+				final Feed feed = feedEntityHandler.findFeedAndFeedItemsByFeedId(cnn, feedId, MAX_FEED_ITEMS);
 				if(feed == null) {
 					throw new IllegalArgumentException();
 				}

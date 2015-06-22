@@ -62,7 +62,7 @@ public class FeedItemEntityHandlerTest {
 			final int feedItemId = databaseTestUtils.insertTestFeedItem(cnn, feedId);
 			
 			final FeedItemEntityHandler handler = new FeedItemEntityHandler();
-			final List<FeedItem> feedItems = handler.getFeedItemsForFeed(cnn, feedId);
+			final List<FeedItem> feedItems = handler.getFeedItemsForFeed(cnn, feedId, 10);
 			
 			assertNotNull("Expected getFeedItemsForFeed to return a value", feedItems);
 			assertEquals("Expected only the feed item created within this test to be returned", 1, feedItems.size());

@@ -16,6 +16,7 @@ import common.persist.DbUtils;
 import feedreader.Feed;
 
 public class FeedEntityHandlerTest {
+	private static final int MAX_FEED_ITEMS = 10;
 	private DatabaseTestUtils databaseTestUtils;
 	
 	@Before
@@ -31,7 +32,7 @@ public class FeedEntityHandlerTest {
 			databaseTestUtils.insertTestFeedItem(cnn, feedId);
 			
 			final FeedEntityHandler handler = new FeedEntityHandler(new FeedItemEntityHandler());
-			final Feed feed = handler.findFeedAndFeedItemsByFeedId(cnn, feedId);
+			final Feed feed = handler.findFeedAndFeedItemsByFeedId(cnn, feedId, MAX_FEED_ITEMS);
 			
 			assertNotNull("Expected the feed to be loaded since it exists in the database", feed);
 			assertEquals("Expected the feed to coorespond to the ID specified", Integer.valueOf(feedId), feed.getId());
@@ -50,7 +51,7 @@ public class FeedEntityHandlerTest {
 			databaseTestUtils.insertTestFeedItem(cnn, feedId);
 			
 			final FeedEntityHandler handler = new FeedEntityHandler(new FeedItemEntityHandler());
-			final Feed feed = handler.findFeedAndFeedItemsByUrl(cnn, url);
+			final Feed feed = handler.findFeedAndFeedItemsByUrl(cnn, url, MAX_FEED_ITEMS);
 			
 			assertNotNull("Expected the feed to be loaded since it exists in the database", feed);
 			assertEquals("Expected the feed to coorespond to the ID specified", Integer.valueOf(feedId), feed.getId());
