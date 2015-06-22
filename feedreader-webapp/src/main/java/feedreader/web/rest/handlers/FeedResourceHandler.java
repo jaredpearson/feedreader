@@ -55,14 +55,12 @@ public class FeedResourceHandler implements ResourceHandler {
 			itemResources[index] = FeedItemResource.fromFeedItem(feedItem, hrefBuilder);
 		}
 		
-		final FeedResource feedResource = new FeedResource();
-		feedResource.id = feedContext.getId();
-		feedResource.title = feedContext.getTitle();
-		feedResource.created = feedContext.getCreated();
-		feedResource.url = feedContext.getUrl();
-		feedResource.items = itemResources;
-		
-		return feedResource;
+		return new FeedResource(
+				feedContext.getId(),
+				feedContext.getTitle(),
+				feedContext.getCreated(),
+				feedContext.getUrl(),
+				itemResources);
 	}
 	
 }

@@ -122,11 +122,10 @@ public class FeedRequestResourceHandler implements ResourceHandler {
 	}
 
 	private FeedRequestResource createFeedRequestResource(final @Nonnull FeedRequest feedRequest) {
-		final FeedRequestResource responseModel = new FeedRequestResource();
-		responseModel.id = feedRequest.getId();
-		responseModel.url = feedRequest.getUrl();
-		responseModel.status = feedRequest.getStatus();
-		responseModel.feedId = feedRequest.getFeedId();
-		return responseModel;
+		return new FeedRequestResource(
+				feedRequest.getId(),
+				feedRequest.getUrl(),
+				feedRequest.getStatus(),
+				feedRequest.getFeedId());
 	}
 }
