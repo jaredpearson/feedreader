@@ -120,7 +120,7 @@ public class FeedReader {
 				}
 		
 				//load the context for the feed items
-				final List<UserFeedItemContext> itemContexts = userFeedItemContextEntityHandler.getFeedItemsForUserFeed(cnn, userId, feedId);
+				final List<UserFeedItemContext> itemContexts = getFeedContexts(cnn, feed.getItems());
 				
 				//fanout all of the items so the user has a full set of feed items
 				final List<UserFeedItemContext> userFeedItems = fanoutFeedItems(feed.getItems(), itemContexts);
@@ -224,7 +224,7 @@ public class FeedReader {
 	 * Given all of the feed items and the persisted contexts, fanout the feed items so that there is a context for
 	 * each feed item. The order of the returned contexts are guaranteed to be the same as the given feed items. 
 	 */
-	private @Nonnull List<UserFeedItemContext> fanoutFeedItems(@Nonnull List<FeedItem> feedItems, @Nonnull List<UserFeedItemContext> contexts) {
+	private @Nonnull List<UserFeedItemContext> fanoutFeedItems(@Nonnull List<FeedItem> feedItems, @Nonnull Iterable<UserFeedItemContext> contexts) {
 
 		//map each context by feed item id
 		Map<Integer, UserFeedItemContext> contextsByFeedItemId = new Hashtable<Integer, UserFeedItemContext>();
