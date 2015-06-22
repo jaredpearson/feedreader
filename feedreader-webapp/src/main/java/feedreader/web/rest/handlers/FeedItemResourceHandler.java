@@ -14,6 +14,7 @@ import common.web.rest.PathParameter;
 import common.web.rest.RequestHandler;
 import common.web.rest.ResourceHandler;
 import feedreader.FeedReader;
+import feedreader.UserFeedContext;
 import feedreader.UserFeedItemContext;
 import feedreader.web.rest.DeserializerUtil;
 import feedreader.web.rest.input.FeedItemInputResource;
@@ -43,9 +44,11 @@ public class FeedItemResourceHandler implements ResourceHandler {
 			return null;
 		}
 		
+		final UserFeedContext feed = feedItem.getFeedId() == null ? null : feedReader.getFeed(feedItem.getFeedId());
+		
 		//output the model as the body of the response
 		final ResourceHrefBuilder hrefBuilder = new ResourceHrefBuilder(request, "v1");
-		return FeedItemResource.fromFeedItem(feedItem, hrefBuilder);
+		return FeedItemResource.fromFeedItem(feedItem, hrefBuilder, feed);
 	}
 	
 	@RequestHandler(value = "^/v1/feedItems/([0-9]+)$", method = Method.PATCH) 
@@ -74,9 +77,11 @@ public class FeedItemResourceHandler implements ResourceHandler {
 			return null;
 		}
 		
+		final UserFeedContext feed = feedItem.getFeedId() == null ? null : feedReader.getFeed(feedItem.getFeedId());
+		
 		//output the model as the body of the response
 		final ResourceHrefBuilder hrefBuilder = new ResourceHrefBuilder(request, "v1");
-		return FeedItemResource.fromFeedItem(feedItem, hrefBuilder);
+		return FeedItemResource.fromFeedItem(feedItem, hrefBuilder, feed);
 	}
 	
 }

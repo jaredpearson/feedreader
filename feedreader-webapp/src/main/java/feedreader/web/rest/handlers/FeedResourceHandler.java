@@ -52,7 +52,7 @@ public class FeedResourceHandler implements ResourceHandler {
 		final FeedItemResource[] itemResources = new FeedItemResource[feedContext.getItems().size()];
 		for(int index = 0; index < feedContext.getItems().size(); index++) {
 			final UserFeedItemContext feedItem = feedContext.getItems().get(index);
-			itemResources[index] = FeedItemResource.fromFeedItem(feedItem, hrefBuilder);
+			itemResources[index] = FeedItemResource.fromFeedItem(feedItem, hrefBuilder, feedContext);
 		}
 		
 		return new FeedResource(

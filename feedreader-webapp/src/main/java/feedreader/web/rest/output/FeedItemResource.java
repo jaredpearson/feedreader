@@ -3,7 +3,10 @@ package feedreader.web.rest.output;
 import java.util.Date;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
+import feedreader.Feed;
+import feedreader.UserFeedContext;
 import feedreader.UserFeedItemContext;
 
 /**
@@ -36,12 +39,20 @@ public class FeedItemResource {
 		this.feedId = feedId;
 	}
 	
-	public static FeedItemResource fromFeedItem(@Nonnull UserFeedItemContext feedItem, @Nonnull ResourceHrefBuilder hrefBuilder) {
+	public static FeedItemResource fromFeedItem(@Nonnull UserFeedItemContext feedItem, @Nonnull ResourceHrefBuilder hrefBuilder, @Nullable UserFeedContext feed) {
+		return fromFeedItem(feedItem, hrefBuilder, (feed == null) ? null : feed.getTitle());
+	}
+	
+	public static FeedItemResource fromFeedItem(@Nonnull UserFeedItemContext feedItem, @Nonnull ResourceHrefBuilder hrefBuilder, @Nullable Feed feed) {
+		return fromFeedItem(feedItem, hrefBuilder, (feed == null) ? null : feed.getTitle());
+	}
+	
+	private static FeedItemResource fromFeedItem(@Nonnull UserFeedItemContext feedItem, @Nonnull ResourceHrefBuilder hrefBuilder, @Nullable String feedTitle) {
 		assert feedItem != null : "feedItem should not be null";
 		assert hrefBuilder != null : "hrefBuilder should not be null";
 		
 		final String feedHref = hrefBuilder.buildHref("/feed/" + feedItem.getFeedId());
-		final FeedResourceLink feedLink = new FeedResourceLink(feedItem.getFeedId(), null, feedHref);
+		final FeedResourceLink feedLink = new FeedResourceLink(feedItem.getFeedId(), feedTitle, feedHref);
 		
 		return new FeedItemResource(
 				feedItem.getFeedItemId(),

@@ -4,7 +4,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -12,6 +15,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 
 import common.persist.DbUtils;
 import feedreader.Feed;
@@ -42,6 +46,62 @@ public class FeedEntityHandler {
 		this.feedItemEntityHandler = feedItemEntityHandler;
 	}
 
+	/**
+	 * Finds all feeds corresponding from the given feed IDs.
+	 * @param cnn the current connection
+	 * @param feedIds the IDs of the all the feeds to load. passing null or empty set will yield an empty map
+	 * @param feedItemLimit the number of feed items to load. passing null will load the default number of feed items
+	 */
+	public @Nonnull Map<Integer, Feed> findFeedsAndFeedItemsByFeedIds(final Connection cnn, final Set<Integer> feedIds, final Integer feedItemLimit) throws SQLException {
+		Preconditions.checkArgument(cnn != null, "cnn should not be null");
+		if (feedIds == null || feedIds.isEmpty()) {
+			return Collections.emptyMap();
+		}
+		
+		// build the SQL statement
+		// TODO: instead of creating a dynamic SQL statement, build a stored procedure that can take in the IDs and do this within PostgreSQL 
+		final StringBuilder sqlStringBuilder = new StringBuilder();
+		sqlStringBuilder.append(SELECT_SQL_FRAGMENT);
+		sqlStringBuilder.append(" where f.id in (");
+		boolean first = true;
+		for (Integer feedId : feedIds) {
+			if (feedId != null) {
+				if (!first) {
+					sqlStringBuilder.append(", ");
+				}
+				sqlStringBuilder.append(feedId);
+				first = false;
+			}
+		}
+		sqlStringBuilder.append(")");
+		
+		final Map<Integer, Feed> feedsById = Maps.newHashMapWithExpectedSize(feedIds.size());
+		final PreparedStatement stmt = cnn.prepareStatement(sqlStringBuilder.toString());
+		try {
+			final ResultSet rst = stmt.executeQuery();
+			try {
+				while (rst.next()) {
+					int feedId = rst.getInt("feed_id");
+					
+					final Feed feed = mapRow(rst);
+					
+					//load the related feed items
+					List<FeedItem> feedItems = feedItemEntityHandler.getFeedItemsForFeed(cnn, feedId, feedItemLimit);
+					feed.setItems(feedItems);
+					
+					feedsById.put(feedId, feed);
+				}
+				
+			} finally {
+				DbUtils.close(rst);
+			}
+			
+		} finally {
+			DbUtils.close(stmt);
+		}
+		return Collections.unmodifiableMap(feedsById);
+	}
+	
 	/**
 	 * Finds the feed that corresponds to the specified ID. If no feed matches, then a null reference is returned.
 	 */
