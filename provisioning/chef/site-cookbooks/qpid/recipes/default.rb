@@ -9,6 +9,10 @@ package 'qpid-tools' do
 	action :install
 end
 
+user node['qpid']['user'] do
+	action :create
+end 
+
 directory '/etc/qpid' do
 	owner 'root'
 	group 'root'
