@@ -37,13 +37,14 @@ The application uses Apache Qpid for processing asynchronous messages.
 The application loads its configuration from properties files loaded at runtime. To override any properties, add a properties file at `src/main/resources/feedreader/config-user.properties`. In the config-user.properties file you must specify at least the `dataSource.user`, which is the user used to connect to the PostgreSQL instance. For other properties that can be overridden, see the `config-default.properties` file.
 
 ## REST Examples
+Here are a few examples but see the tests within the feedreader-functional-test project for more.
 
 ### Viewing a stream
 To request the stream of feeds, run the following cURL command, where "<session_id>" is the ID of your session.
 
-    curl http://localhost:8080/services/v1/stream --header "Authorization:SID <session_id>"
+    curl http://localhost:8080/services/v1/stream -H "Authorization:SID <session_id>"
 
 ### Adding a new feed
 To request a new feed be added to your reader, run the following cURL command, where "<session_id>" is the ID of your session.
 
-    curl http://localhost:8080/services/v1/feedSubscription -H "Authorization:SID <session_id>" -X POST -H "Content-Type: application/json" -d '{"url":"http://www.nasa.gov/rss/dyn/breaking_news.rss"}' 
+    curl http://localhost:8080/services/v1/feedSubscriptions -H "Authorization:SID <session_id>" -X POST -H "Content-Type: application/json" -d '{"url":"http://www.nasa.gov/rss/dyn/breaking_news.rss"}' 
