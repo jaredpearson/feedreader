@@ -51,7 +51,7 @@ public class FeedItemResource {
 		assert feedItem != null : "feedItem should not be null";
 		assert hrefBuilder != null : "hrefBuilder should not be null";
 		
-		final String feedHref = hrefBuilder.buildHref("/feed/" + feedItem.getFeedId());
+		final String feedHref = hrefBuilder.buildHref("/feeds/" + feedItem.getFeedId());
 		final FeedResourceLink feedLink = new FeedResourceLink(feedItem.getFeedId(), feedTitle, feedHref);
 		
 		return new FeedItemResource(
