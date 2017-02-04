@@ -8,6 +8,8 @@ public class DateUtils {
 	private static final SimpleDateFormat[] RFC_0822_DATE_FORMATS = new SimpleDateFormat[]{
 		new SimpleDateFormat("E, dd MMM yyyy kk:mm:ss z"),
 		new SimpleDateFormat("E, dd MMM yyyy kk:mm:ss Z"),
+        new SimpleDateFormat("E, dd MMM yyyy kk:mm z"),
+        new SimpleDateFormat("E, dd MMM yyyy kk:mm Z"),
 		new SimpleDateFormat("dd MMM yyyy kk:mm:ss z"),
 		new SimpleDateFormat("dd MMM yyyy kk:mm:ss Z")
 	};
