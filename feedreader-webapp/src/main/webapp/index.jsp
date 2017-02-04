@@ -2,6 +2,16 @@
 <html>
 <head>
 <title>FeedReader</title>
+<link href="https://fonts.googleapis.com/css?family=Nunito+Sans" rel="stylesheet">
+<style>
+body {
+    font-family: 'Nunito Sans', sans-serif;
+    margin: 0;
+    padding-left: 1em;
+    padding-top: 10px;
+    padding-right: 1em;
+}
+</style>
 </head>
 <body>
 <h2>Sign In</h2>
